@@ -15,8 +15,8 @@ import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useAuth } from "./AuthContext";
 
-// Styled components to match the theme
-const LoginPaper = styled(Paper)(({ theme }) => ({
+// Styled components (similar to your Login styling)
+const SignupPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
   borderRadius: "16px",
@@ -49,31 +49,38 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const Login = () => {
+const Signup = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup } = useAuth(); // We'll create this method in AuthContext
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleSignup = (e) => {
     e.preventDefault();
 
-    // Check if credentials match (admin/admin)
-    if (username === "admin" && password === "admin") {
-      // Login using auth context
-      login(username);
+    // Very basic check:
+    if (!username || !password) {
+      setError("Please fill all fields.");
+      return;
+    }
+    if (password !== confirmPass) {
+      setError("Passwords do not match.");
+      return;
+    }
 
-      // Show success message
-      setOpenSnackbar(true);
-
-      // Navigate to home page after successful login
+    // Attempt to sign up
+    const success = signup(username, password);
+    if (success) {
+      setOpenSnackbar(true); // show success message
+      // After a short delay, navigate to home (or wherever)
       setTimeout(() => {
         navigate("/");
       }, 1500);
     } else {
-      setError("Invalid username or password");
+      setError("User already exists or sign-up failed.");
     }
   };
 
@@ -83,7 +90,7 @@ const Login = () => {
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
-      <LoginPaper>
+      <SignupPaper>
         <StyledAvatar>
           <LockOutlinedIcon fontSize="large" />
         </StyledAvatar>
@@ -93,7 +100,7 @@ const Login = () => {
           variant="h4"
           sx={{ mb: 3, fontWeight: 700, color: "#2B7B8C" }}
         >
-          Sign In
+          Sign Up
         </Typography>
 
         {error && (
@@ -105,94 +112,71 @@ const Login = () => {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleLogin} sx={{ width: "100%" }}>
+        <Box component="form" onSubmit={handleSignup} sx={{ width: "100%" }}>
           <TextField
             margin="normal"
             required
             fullWidth
-            id="username"
             label="Username"
-            name="username"
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
             autoFocus
             variant="outlined"
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-                "&:hover fieldset": {
-                  borderColor: "#2B7B8C",
-                },
-              },
-            }}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            sx={{ mb: 2 }}
           />
-
           <TextField
             margin="normal"
             required
             fullWidth
-            name="password"
             label="Password"
             type="password"
-            id="password"
-            autoComplete="current-password"
+            variant="outlined"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Confirm Password"
+            type="password"
             variant="outlined"
-            sx={{
-              mb: 3,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-                "&:hover fieldset": {
-                  borderColor: "#2B7B8C",
-                },
-              },
-            }}
+            value={confirmPass}
+            onChange={(e) => setConfirmPass(e.target.value)}
+            sx={{ mb: 2 }}
           />
 
           <StyledButton type="submit" fullWidth variant="contained">
-            Sign In
+            Sign Up
           </StyledButton>
-
-          <Typography
-            variant="body2"
-            align="center"
-            sx={{ mt: 4, color: "text.secondary" }}
-          >
-            Use username: <b>admin</b>, password: <b>admin</b>
-          </Typography>
-
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            Don’t have an account?{" "}
-            <Link to="/signup" style={{ color: "#2B7B8C" }}>
-              Sign up
-            </Link>
-          </Typography>
         </Box>
-      </LoginPaper>
 
+        <Typography variant="body2">
+          Already have an account?{" "}
+          <Link to="/login" style={{ color: "#2B7B8C" }}>
+            Log in
+          </Link>
+        </Typography>
+      </SignupPaper>
+
+      {/* Snackbar for success */}
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={1500}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity="success"
-          sx={{
-            width: "100%",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(43, 123, 140, 0.2)",
-          }}
+          sx={{ borderRadius: "8px" }}
         >
-          Login successful! Redirecting to home page...
+          Successfully signed up!
         </Alert>
       </Snackbar>
     </Container>
   );
 };
 
-export default Login;
+export default Signup;
