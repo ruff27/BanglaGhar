@@ -14,6 +14,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  wishlist: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property", // Reference to the Property model
+    },
+  ],
 });
 
 // This "pre-save" hook runs before saving a new user

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom"; // to read :mode from the URL
 import {
   Container,
@@ -18,7 +18,9 @@ import {
   alpha,
 } from "@mui/material";
 
-import { Search as SearchIcon, Clear as ClearIcon } from "@mui/icons-material";
+import { Search as SearchIcon, Clear as ClearIcon, Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon } from "@mui/icons-material";
+import axios from "axios";// Corrected path
+import { useAuth } from "./AuthContext";
 
 function Properties() {
   const theme = useTheme();
@@ -115,6 +117,65 @@ function Properties() {
     }
   };
 
+  const [wishlist, setWishlist] = useState([]);
+  const { isLoggedIn, user } = useAuth(); // Get user ID from context
+
+  // Fetch the initial wishlist state
+  useEffect(() => {
+    if (user) {
+      axios
+        .get(`http://localhost:5001/api/users/${user}/wishlist`)
+        .then((res) => { setWishlist(res.data.wishlist)})
+        .catch((err) => console.error("Error fetching wishlist:", err));
+    }
+  }, [user]);
+
+  const toggleWishlist = async (propertyId) => {
+    if (!user) {
+      console.error("User ID is required to modify the wishlist.");
+      return;
+    }
+
+    const isWishlisted = isPropertyWishlisted(propertyId);
+
+    try {
+      if (isWishlisted) {
+        // Remove from wishlist
+        await axios.delete(`http://localhost:5001/api/users/${user}/wishlist`, {
+          data: { propertyId },
+        });
+        setWishlist((prevWishlist) =>
+          prevWishlist.filter((item) => item._id !== propertyId)
+        );
+      } else {
+        // Add to wishlist
+        const response = await axios.post(
+          `http://localhost:5001/api/users/${user}/wishlist`,
+          { propertyId }
+        );
+        const updatedWishlistIds = response.data.wishlist;
+
+        // Fetch the updated wishlist details for consistency
+        const updatedWishlist = allProperties.filter((property) =>
+          updatedWishlistIds.includes(property._id)
+        );
+
+        setWishlist(updatedWishlist);
+      }
+    } catch (err) {
+      console.error("Error toggling wishlist:", err);
+    }
+  };
+
+  // Debugging: Add console logs to ensure the function is called
+  const handleWishlistClick = (propertyId) => {
+    toggleWishlist(propertyId);
+  };
+
+  const isPropertyWishlisted = (propertyId) => {
+    return wishlist?.some((item) => item._id === propertyId);
+  };
+
   // 8) The UI
   return (
     <Box
@@ -190,9 +251,27 @@ function Properties() {
                   alt={property.title}
                 />
                 <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    {property.title}
-                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                      {property.title}
+                    </Typography>
+                    <IconButton
+                      onClick={() => handleWishlistClick(property._id)}
+                      color="primary"
+                    >
+                      {wishlist?.length>0 && isPropertyWishlisted(property._id) ? (
+                        <FavoriteIcon />
+                      ) : (
+                        <FavoriteBorderIcon />
+                      )}
+                    </IconButton>
+                  </Box>
                   <Typography
                     variant="body2"
                     sx={{ color: "text.secondary", mb: 1 }}
