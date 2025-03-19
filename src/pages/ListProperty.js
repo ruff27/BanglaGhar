@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -23,90 +23,94 @@ import {
   FormControlLabel,
   Stepper,
   Step,
-  StepLabel
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import HomeWorkIcon from '@mui/icons-material/HomeWork';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import SquareFootIcon from '@mui/icons-material/SquareFoot';
-import BedIcon from '@mui/icons-material/Bed';
-import BathtubIcon from '@mui/icons-material/Bathtub';
-import SellIcon from '@mui/icons-material/Sell';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import DescriptionIcon from '@mui/icons-material/Description';
-import { useAuth } from './AuthContext';
+  StepLabel,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import HomeWorkIcon from "@mui/icons-material/HomeWork";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import SquareFootIcon from "@mui/icons-material/SquareFoot";
+import BedIcon from "@mui/icons-material/Bed";
+import BathtubIcon from "@mui/icons-material/Bathtub";
+import SellIcon from "@mui/icons-material/Sell";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import DescriptionIcon from "@mui/icons-material/Description";
+import { useAuth } from "./AuthContext";
 
 // Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
-  borderRadius: '16px',
-  boxShadow: '0 8px 24px rgba(43, 123, 140, 0.12)',
-  backgroundColor: '#FFFFFF',
+  borderRadius: "16px",
+  boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
+  backgroundColor: "#FFFFFF",
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   fontWeight: 600,
   color: theme.palette.primary.main,
-  position: 'relative',
+  position: "relative",
   paddingBottom: theme.spacing(1),
-  '&:after': {
+  "&:after": {
     content: '""',
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
-    width: '40px',
-    height: '3px',
+    width: "40px",
+    height: "3px",
     backgroundColor: theme.palette.primary.main,
-    borderRadius: '10px',
+    borderRadius: "10px",
   },
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
   padding: theme.spacing(1.5, 3),
-  borderRadius: '8px',
+  borderRadius: "8px",
   fontWeight: 600,
-  textTransform: 'none',
-  boxShadow: '0 4px 10px rgba(43, 123, 140, 0.2)',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 6px 14px rgba(43, 123, 140, 0.3)',
+  textTransform: "none",
+  boxShadow: "0 4px 10px rgba(43, 123, 140, 0.2)",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 6px 14px rgba(43, 123, 140, 0.3)",
   },
 }));
 
 const PreviewCard = styled(Card)(({ theme }) => ({
-  borderRadius: '12px',
-  overflow: 'hidden',
-  boxShadow: '0 6px 16px rgba(43, 123, 140, 0.1)',
-  height: '100%',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 12px 24px rgba(43, 123, 140, 0.15)',
+  borderRadius: "12px",
+  overflow: "hidden",
+  boxShadow: "0 6px 16px rgba(43, 123, 140, 0.1)",
+  height: "100%",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: "0 12px 24px rgba(43, 123, 140, 0.15)",
   },
 }));
 
 const ImageUpload = styled(Box)(({ theme }) => ({
-  border: '2px dashed rgba(43, 123, 140, 0.3)',
-  borderRadius: '12px',
+  border: "2px dashed rgba(43, 123, 140, 0.3)",
+  borderRadius: "12px",
   padding: theme.spacing(3),
-  backgroundColor: 'rgba(43, 123, 140, 0.05)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  transition: 'all 0.2s ease',
+  backgroundColor: "rgba(43, 123, 140, 0.05)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
   marginBottom: theme.spacing(2),
-  '&:hover': {
-    backgroundColor: 'rgba(43, 123, 140, 0.08)',
+  "&:hover": {
+    backgroundColor: "rgba(43, 123, 140, 0.08)",
     borderColor: theme.palette.primary.main,
   },
 }));
 
 // Step labels for stepper
-const steps = ['Property Details', 'Location & Features', 'Images & Description'];
+const steps = [
+  "Property Details",
+  "Location & Features",
+  "Images & Description",
+];
 
 // Main component
 const ListProperty = () => {
@@ -118,17 +122,17 @@ const ListProperty = () => {
 
   // Form state
   const [formData, setFormData] = useState({
-    title: '',
-    propertyType: '',
-    listingType: 'sell',
-    price: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    bedrooms: '',
-    bathrooms: '',
-    area: '',
+    title: "",
+    propertyType: "",
+    listingType: "sell",
+    price: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    bedrooms: "",
+    bathrooms: "",
+    area: "",
     features: {
       parking: false,
       garden: false,
@@ -136,8 +140,8 @@ const ListProperty = () => {
       furnished: false,
       pool: false,
     },
-    description: '',
-    photos: []
+    description: "",
+    photos: [],
   });
 
   // Form validation errors
@@ -146,7 +150,7 @@ const ListProperty = () => {
   // Redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [isLoggedIn, navigate]);
 
@@ -155,14 +159,14 @@ const ListProperty = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
-    
+
     // Clear error for this field when value changes
     if (errors[name]) {
       setErrors({
         ...errors,
-        [name]: ''
+        [name]: "",
       });
     }
   };
@@ -173,41 +177,48 @@ const ListProperty = () => {
       ...formData,
       features: {
         ...formData.features,
-        [feature]: !formData.features[feature]
-      }
+        [feature]: !formData.features[feature],
+      },
     });
   };
 
   // Validate form fields
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Step 1 validation
     if (activeStep === 0) {
-      if (!formData.title) newErrors.title = 'Title is required';
-      if (!formData.propertyType) newErrors.propertyType = 'Property type is required';
-      if (!formData.price) newErrors.price = 'Price is required';
-      else if (isNaN(formData.price) || formData.price <= 0) newErrors.price = 'Price must be a positive number';
+      if (!formData.title) newErrors.title = "Title is required";
+      if (!formData.propertyType)
+        newErrors.propertyType = "Property type is required";
+      if (!formData.price) newErrors.price = "Price is required";
+      else if (isNaN(formData.price) || formData.price <= 0)
+        newErrors.price = "Price must be a positive number";
     }
-    
+
     // Step 2 validation
     else if (activeStep === 1) {
-      if (!formData.address) newErrors.address = 'Address is required';
-      if (!formData.city) newErrors.city = 'City is required';
-      if (!formData.state) newErrors.state = 'State is required';
-      if (!formData.zipCode) newErrors.zipCode = 'ZIP code is required';
-      if (!formData.bedrooms) newErrors.bedrooms = 'Number of bedrooms is required';
-      if (!formData.bathrooms) newErrors.bathrooms = 'Number of bathrooms is required';
-      if (!formData.area) newErrors.area = 'Area is required';
-      else if (isNaN(formData.area) || formData.area <= 0) newErrors.area = 'Area must be a positive number';
+      if (!formData.address) newErrors.address = "Address is required";
+      if (!formData.city) newErrors.city = "City is required";
+      if (!formData.state) newErrors.state = "State is required";
+      if (!formData.zipCode) newErrors.zipCode = "ZIP code is required";
+      if (!formData.bedrooms)
+        newErrors.bedrooms = "Number of bedrooms is required";
+      if (!formData.bathrooms)
+        newErrors.bathrooms = "Number of bathrooms is required";
+      if (!formData.area) newErrors.area = "Area is required";
+      else if (isNaN(formData.area) || formData.area <= 0)
+        newErrors.area = "Area must be a positive number";
     }
-    
+
     // Step 3 validation
     else if (activeStep === 2) {
-      if (!formData.description) newErrors.description = 'Description is required';
-      if (formData.description && formData.description.length < 50) newErrors.description = 'Description should be at least 50 characters';
+      if (!formData.description)
+        newErrors.description = "Description is required";
+      if (formData.description && formData.description.length < 50)
+        newErrors.description = "Description should be at least 50 characters";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -232,24 +243,24 @@ const ListProperty = () => {
   // Handle form submission
   const handleSubmit = () => {
     // Here you would normally send the form data to your backend API
-    console.log('Form submitted with data:', formData);
+    console.log("Form submitted with data:", formData);
     setSubmitted(true);
     setOpenSuccess(true);
-    
+
     // Redirect to home after short delay
     setTimeout(() => {
-      navigate('/');
+      navigate("/");
     }, 3000);
   };
 
   // Handle photo upload
   const handlePhotoUpload = (e) => {
-    // In a real app, you would handle file uploads to storage
+    // In a real app, we would handle file uploads to storage
     // For this demo, we'll just update the state with file names
     const files = Array.from(e.target.files);
     setFormData({
       ...formData,
-      photos: [...formData.photos, ...files.map(file => file.name)]
+      photos: [...formData.photos, ...files.map((file) => file.name)],
     });
   };
 
@@ -260,25 +271,32 @@ const ListProperty = () => {
 
   // Image placeholder function
   const renderImageUpload = () => (
-    <ImageUpload onClick={() => document.getElementById('photo-upload').click()}>
+    <ImageUpload
+      onClick={() => document.getElementById("photo-upload").click()}
+    >
       <input
         id="photo-upload"
         type="file"
         multiple
         accept="image/*"
         onChange={handlePhotoUpload}
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
       />
-      <PhotoCameraIcon sx={{ fontSize: 48, color: '#2B7B8C', mb: 2 }} />
+      <PhotoCameraIcon sx={{ fontSize: 48, color: "#2B7B8C", mb: 2 }} />
       <Typography variant="body1" align="center" fontWeight={500}>
         Click to upload property photos
       </Typography>
-      <Typography variant="body2" align="center" color="textSecondary" sx={{ mt: 1 }}>
+      <Typography
+        variant="body2"
+        align="center"
+        color="textSecondary"
+        sx={{ mt: 1 }}
+      >
         You can select multiple images
       </Typography>
-      
+
       {formData.photos.length > 0 && (
-        <Box sx={{ mt: 2, width: '100%' }}>
+        <Box sx={{ mt: 2, width: "100%" }}>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
             Selected photos ({formData.photos.length}):
           </Typography>
@@ -288,14 +306,16 @@ const ListProperty = () => {
                 <Box
                   sx={{
                     p: 1,
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(43, 123, 140, 0.1)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    borderRadius: "8px",
+                    backgroundColor: "rgba(43, 123, 140, 0.1)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <Typography variant="caption" noWrap>{photo}</Typography>
+                  <Typography variant="caption" noWrap>
+                    {photo}
+                  </Typography>
                 </Box>
               </Grid>
             ))}
@@ -307,13 +327,13 @@ const ListProperty = () => {
 
   // Property type options
   const propertyTypes = [
-    'Apartment',
-    'House',
-    'Villa',
-    'Condo',
-    'Townhouse',
-    'Land',
-    'Commercial'
+    "Apartment",
+    "House",
+    "Villa",
+    "Condo",
+    "Townhouse",
+    "Land",
+    "Commercial",
   ];
 
   // Render step content
@@ -340,9 +360,9 @@ const ListProperty = () => {
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -355,13 +375,17 @@ const ListProperty = () => {
                   value={formData.propertyType}
                   onChange={handleChange}
                   label="Property Type"
-                  sx={{ borderRadius: '10px' }}
+                  sx={{ borderRadius: "10px" }}
                 >
                   {propertyTypes.map((type) => (
-                    <MenuItem key={type} value={type}>{type}</MenuItem>
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
                   ))}
                 </Select>
-                {errors.propertyType && <FormHelperText>{errors.propertyType}</FormHelperText>}
+                {errors.propertyType && (
+                  <FormHelperText>{errors.propertyType}</FormHelperText>
+                )}
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
@@ -373,7 +397,7 @@ const ListProperty = () => {
                   value={formData.listingType}
                   onChange={handleChange}
                   label="Listing Type"
-                  sx={{ borderRadius: '10px' }}
+                  sx={{ borderRadius: "10px" }}
                 >
                   <MenuItem value="sell">For Sale</MenuItem>
                   <MenuItem value="rent">For Rent</MenuItem>
@@ -383,7 +407,11 @@ const ListProperty = () => {
             <Grid item xs={12}>
               <TextField
                 name="price"
-                label={formData.listingType === 'rent' ? 'Monthly Rent (৳)' : 'Price (৳)'}
+                label={
+                  formData.listingType === "rent"
+                    ? "Monthly Rent (৳)"
+                    : "Price (৳)"
+                }
                 fullWidth
                 value={formData.price}
                 onChange={handleChange}
@@ -398,9 +426,9 @@ const ListProperty = () => {
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -427,9 +455,9 @@ const ListProperty = () => {
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -444,9 +472,9 @@ const ListProperty = () => {
                 helperText={errors.city}
                 variant="outlined"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -461,9 +489,9 @@ const ListProperty = () => {
                 helperText={errors.state}
                 variant="outlined"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -478,9 +506,9 @@ const ListProperty = () => {
                 helperText={errors.zipCode}
                 variant="outlined"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -505,9 +533,9 @@ const ListProperty = () => {
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -529,9 +557,9 @@ const ListProperty = () => {
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -552,9 +580,9 @@ const ListProperty = () => {
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -566,7 +594,7 @@ const ListProperty = () => {
                     control={
                       <Switch
                         checked={formData.features.parking}
-                        onChange={() => handleFeatureToggle('parking')}
+                        onChange={() => handleFeatureToggle("parking")}
                         color="primary"
                       />
                     }
@@ -578,7 +606,7 @@ const ListProperty = () => {
                     control={
                       <Switch
                         checked={formData.features.garden}
-                        onChange={() => handleFeatureToggle('garden')}
+                        onChange={() => handleFeatureToggle("garden")}
                         color="primary"
                       />
                     }
@@ -590,7 +618,7 @@ const ListProperty = () => {
                     control={
                       <Switch
                         checked={formData.features.airConditioning}
-                        onChange={() => handleFeatureToggle('airConditioning')}
+                        onChange={() => handleFeatureToggle("airConditioning")}
                         color="primary"
                       />
                     }
@@ -602,7 +630,7 @@ const ListProperty = () => {
                     control={
                       <Switch
                         checked={formData.features.furnished}
-                        onChange={() => handleFeatureToggle('furnished')}
+                        onChange={() => handleFeatureToggle("furnished")}
                         color="primary"
                       />
                     }
@@ -614,7 +642,7 @@ const ListProperty = () => {
                     control={
                       <Switch
                         checked={formData.features.pool}
-                        onChange={() => handleFeatureToggle('pool')}
+                        onChange={() => handleFeatureToggle("pool")}
                         color="primary"
                       />
                     }
@@ -646,15 +674,18 @@ const ListProperty = () => {
                 placeholder="Describe your property in detail. Include special features, recent renovations, nearby amenities, etc."
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.5 }}>
+                    <InputAdornment
+                      position="start"
+                      sx={{ alignSelf: "flex-start", mt: 1.5 }}
+                    >
                       <DescriptionIcon color="primary" />
                     </InputAdornment>
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
                 }}
               />
             </Grid>
@@ -663,27 +694,42 @@ const ListProperty = () => {
                 <SectionTitle variant="h6">Preview</SectionTitle>
                 <PreviewCard>
                   <CardContent>
-                    <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      fontWeight={600}
+                      color="primary"
+                    >
                       {formData.title}
                     </Typography>
                     <Typography variant="body1" gutterBottom>
-                      {formData.address}, {formData.city}, {formData.state} {formData.zipCode}
+                      {formData.address}, {formData.city}, {formData.state}{" "}
+                      {formData.zipCode}
                     </Typography>
                     <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
                       ৳{Number(formData.price).toLocaleString()}
-                      {formData.listingType === 'rent' ? '/month' : ''}
+                      {formData.listingType === "rent" ? "/month" : ""}
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                    <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                       <Typography variant="body2">
-                        <BedIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+                        <BedIcon
+                          fontSize="small"
+                          sx={{ mr: 0.5, verticalAlign: "middle" }}
+                        />
                         {formData.bedrooms} Beds
                       </Typography>
                       <Typography variant="body2">
-                        <BathtubIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+                        <BathtubIcon
+                          fontSize="small"
+                          sx={{ mr: 0.5, verticalAlign: "middle" }}
+                        />
                         {formData.bathrooms} Baths
                       </Typography>
                       <Typography variant="body2">
-                        <SquareFootIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+                        <SquareFootIcon
+                          fontSize="small"
+                          sx={{ mr: 0.5, verticalAlign: "middle" }}
+                        />
                         {formData.area} sq.ft
                       </Typography>
                     </Box>
@@ -694,7 +740,7 @@ const ListProperty = () => {
           </Grid>
         );
       default:
-        return 'Unknown step';
+        return "Unknown step";
     }
   };
 
@@ -705,8 +751,8 @@ const ListProperty = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
-        <HomeWorkIcon sx={{ fontSize: 36, mr: 2, color: '#2B7B8C' }} />
+      <Box sx={{ mb: 4, display: "flex", alignItems: "center" }}>
+        <HomeWorkIcon sx={{ fontSize: 36, mr: 2, color: "#2B7B8C" }} />
         <Typography variant="h4" fontWeight={700} color="#2B7B8C">
           List Your Property
         </Typography>
@@ -714,18 +760,19 @@ const ListProperty = () => {
 
       {submitted ? (
         <StyledPaper>
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <SellIcon sx={{ fontSize: 64, color: '#2B7B8C', mb: 3 }} />
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <SellIcon sx={{ fontSize: 64, color: "#2B7B8C", mb: 3 }} />
             <Typography variant="h5" gutterBottom fontWeight={600}>
               Property Submitted Successfully!
             </Typography>
             <Typography variant="body1" paragraph color="text.secondary">
-              Your property has been submitted for review. Our team will contact you shortly.
+              Your property has been submitted for review. Our team will contact
+              you shortly.
             </Typography>
             <StyledButton
               variant="contained"
               color="primary"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               sx={{ mt: 2 }}
             >
               Return to Home
@@ -741,23 +788,25 @@ const ListProperty = () => {
               </Step>
             ))}
           </Stepper>
-          
+
           <Box>
             {getStepContent(activeStep)}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}
+            >
               <Button
                 disabled={activeStep === 0}
                 onClick={handleBack}
                 variant="outlined"
                 color="primary"
                 sx={{
-                  borderRadius: '8px',
-                  textTransform: 'none',
+                  borderRadius: "8px",
+                  textTransform: "none",
                   fontWeight: 500,
-                  borderWidth: '2px',
-                  '&:hover': {
-                    borderWidth: '2px',
-                  }
+                  borderWidth: "2px",
+                  "&:hover": {
+                    borderWidth: "2px",
+                  },
                 }}
               >
                 Back
@@ -767,26 +816,28 @@ const ListProperty = () => {
                 color="primary"
                 onClick={handleNext}
               >
-                {activeStep === steps.length - 1 ? 'Submit Property' : 'Continue'}
+                {activeStep === steps.length - 1
+                  ? "Submit Property"
+                  : "Continue"}
               </StyledButton>
             </Box>
           </Box>
         </StyledPaper>
       )}
-      
+
       <Snackbar
         open={openSuccess}
         autoHideDuration={5000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert 
-          onClose={handleCloseSnackbar} 
+        <Alert
+          onClose={handleCloseSnackbar}
           severity="success"
-          sx={{ 
-            width: '100%',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(43, 123, 140, 0.2)',
+          sx={{
+            width: "100%",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(43, 123, 140, 0.2)",
           }}
         >
           Your property has been submitted successfully!

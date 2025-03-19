@@ -1,19 +1,19 @@
-// src/pages/AuthContext.js
+// AuthContext.js
 
 import React, { createContext, useState, useEffect, useContext } from "react";
 
-// Create a context for authentication
+// Create the context
 const AuthContext = createContext();
 
-// Custom hook to use the auth context
+// Custom hook for easy usage
 export const useAuth = () => useContext(AuthContext);
 
-// Provider component that wraps your app and makes auth available to any child component
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // store the username or user object
+  const [error, setError] = useState(null); // store any auth error messages
 
-  // On initial load, check localStorage to see if we're already logged in
+  // On mount, check localStorage to see if user is "already" logged in
   useEffect(() => {
     const storedLoginStatus = localStorage.getItem("isLoggedIn");
     const storedUser = localStorage.getItem("user");
@@ -23,53 +23,84 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Login function
-  const login = (username) => {
-    // Mark as logged in
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("user", username);
-    setIsLoggedIn(true);
-    setUser(username);
+  // Sign up function: calls our backend /api/signup
+  const signup = async (username, password) => {
+    try {
+      setError(null); // clear previous errors
+
+      const response = await fetch("http://localhost:5001/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        // success
+        // Optionally, automatically log the user in:
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("user", username);
+        setIsLoggedIn(true);
+        setUser(username);
+        return true;
+      } else {
+        // server responded with an error
+        setError(data.error || "Signup failed");
+        return false;
+      }
+    } catch (err) {
+      console.error("Signup request failed:", err);
+      setError("Server error during signup");
+      return false;
+    }
   };
 
-  // Logout function
+  // Login function: calls our backend /api/login
+  const login = async (username, password) => {
+    try {
+      setError(null);
+
+      const response = await fetch("http://localhost:5001/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        // success
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("user", username);
+        setIsLoggedIn(true);
+        setUser(username);
+        return true;
+      } else {
+        setError(data.error || "Login failed");
+        return false;
+      }
+    } catch (err) {
+      console.error("Login request failed:", err);
+      setError("Server error during login");
+      return false;
+    }
+  };
+
+  // Logout function: clears localStorage and state
   const logout = () => {
-    // Remove login status
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
+    setError(null);
   };
 
-  // Signup function
-  const signup = (username, password) => {
-    // Check if this user already exists in localStorage
-    const existingUser = localStorage.getItem(`user:${username}`);
-    if (existingUser) {
-      // User with this username already exists
-      return false;
-    }
-
-    // Otherwise, "register" them by storing credentials in localStorage
-    const userData = { password }; // You can store additional fields if needed
-    localStorage.setItem(`user:${username}`, JSON.stringify(userData));
-
-    // Automatically log them in
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("user", username);
-    setIsLoggedIn(true);
-    setUser(username);
-
-    return true;
-  };
-
-  // The context value that will be supplied to any descendants of this provider
   const value = {
     isLoggedIn,
     user,
+    error,
     login,
     logout,
-    signup, // Make sure signup is exposed here
+    signup,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

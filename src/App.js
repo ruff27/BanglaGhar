@@ -4,18 +4,20 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
-import Rent from "./pages/Rent";
-import Buy from "./pages/Buy";
-import Sold from "./pages/Sold";
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
-import Login from "./pages/Login"; // Import the Login component
-import ListProperty from "./pages/ListProperty"; // Import the ListProperty component
+import Login from "./pages/Login";
+import ListProperty from "./pages/ListProperty";
+import Signup from "./pages/Signup";
+
+// Import the new single-page component:
+import Properties from "./pages/Properties";
+
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { AuthProvider } from "./pages/AuthContext"; // Import AuthProvider
-import Signup from "./pages/signup";
-// Create a custom theme with your color palette
+import { AuthProvider } from "./pages/AuthContext";
+
+// theme
 const theme = createTheme({
   palette: {
     primary: {
@@ -43,8 +45,6 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        {" "}
-        {/* Wrap with AuthProvider */}
         <Router>
           <div className="App">
             <Navbar />
@@ -52,20 +52,12 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/home" element={<Home />} />
-                <Route path="/properties/rent" element={<Rent />} />
-                <Route path="/properties/buy" element={<Buy />} />
-                <Route path="/properties/sold" element={<Sold />} />
+                <Route path="/properties/:mode" element={<Properties />} />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/login" element={<Login />} />{" "}
-                {/* Added Login route */}
-                <Route path="/signup" element={<Signup />} /> {/* <-- NEW */}
-                <Route path="/list-property" element={<ListProperty />} />{" "}
-                {/* Added ListProperty route */}
-                {/* Add routes for other pages as they are created */}
-                {/*
-                  <Route path="/properties" element={<Properties />} />
-                */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/list-property" element={<ListProperty />} />
               </Routes>
             </main>
             <Footer />

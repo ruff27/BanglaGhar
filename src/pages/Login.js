@@ -1,3 +1,5 @@
+// Login.js
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -13,9 +15,8 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./AuthContext"; // updated import
 
-// Styled components to match the theme
 const LoginPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
@@ -51,29 +52,19 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, error } = useAuth(); // get login function and error from context
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    // Check if credentials match (admin/admin)
-    if (username === "admin" && password === "admin") {
-      // Login using auth context
-      login(username);
-
-      // Show success message
+    const success = await login(username, password);
+    if (success) {
       setOpenSnackbar(true);
-
-      // Navigate to home page after successful login
       setTimeout(() => {
         navigate("/");
       }, 1500);
-    } else {
-      setError("Invalid username or password");
     }
   };
 
@@ -96,6 +87,7 @@ const Login = () => {
           Sign In
         </Typography>
 
+        {/* If there's an error from the server, show it */}
         {error && (
           <Alert
             severity="error"
@@ -110,85 +102,51 @@ const Login = () => {
             margin="normal"
             required
             fullWidth
-            id="username"
             label="Username"
-            name="username"
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
             autoFocus
             variant="outlined"
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-                "&:hover fieldset": {
-                  borderColor: "#2B7B8C",
-                },
-              },
-            }}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            sx={{ mb: 2 }}
           />
-
           <TextField
             margin="normal"
             required
             fullWidth
-            name="password"
             label="Password"
             type="password"
-            id="password"
-            autoComplete="current-password"
+            variant="outlined"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            variant="outlined"
-            sx={{
-              mb: 3,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-                "&:hover fieldset": {
-                  borderColor: "#2B7B8C",
-                },
-              },
-            }}
+            sx={{ mb: 2 }}
           />
 
           <StyledButton type="submit" fullWidth variant="contained">
             Sign In
           </StyledButton>
-
-          <Typography
-            variant="body2"
-            align="center"
-            sx={{ mt: 4, color: "text.secondary" }}
-          >
-            Use username: <b>admin</b>, password: <b>admin</b>
-          </Typography>
-
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            Don’t have an account?{" "}
-            <Link to="/signup" style={{ color: "#2B7B8C" }}>
-              Sign up
-            </Link>
-          </Typography>
         </Box>
+
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          Don’t have an account?{" "}
+          <Link to="/signup" style={{ color: "#2B7B8C" }}>
+            Sign up
+          </Link>
+        </Typography>
       </LoginPaper>
 
+      {/* Snackbar for success */}
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={1500}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity="success"
-          sx={{
-            width: "100%",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(43, 123, 140, 0.2)",
-          }}
+          sx={{ borderRadius: "8px" }}
         >
-          Login successful! Redirecting to home page...
+          Logged in successfully!
         </Alert>
       </Snackbar>
     </Container>

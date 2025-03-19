@@ -1,3 +1,5 @@
+// Signup.js
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -15,7 +17,6 @@ import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useAuth } from "./AuthContext";
 
-// Styled components (similar to your Login styling)
 const SignupPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
@@ -51,36 +52,26 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth(); // We'll create this method in AuthContext
+  const { signup, error } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
-  const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
-    // Very basic check:
-    if (!username || !password) {
-      setError("Please fill all fields.");
-      return;
-    }
     if (password !== confirmPass) {
-      setError("Passwords do not match.");
+      alert("Passwords do not match!");
       return;
     }
 
-    // Attempt to sign up
-    const success = signup(username, password);
+    const success = await signup(username, password);
     if (success) {
-      setOpenSnackbar(true); // show success message
-      // After a short delay, navigate to home (or wherever)
+      setOpenSnackbar(true);
       setTimeout(() => {
         navigate("/");
       }, 1500);
-    } else {
-      setError("User already exists or sign-up failed.");
     }
   };
 
@@ -152,7 +143,7 @@ const Signup = () => {
           </StyledButton>
         </Box>
 
-        <Typography variant="body2">
+        <Typography variant="body2" sx={{ mt: 2 }}>
           Already have an account?{" "}
           <Link to="/login" style={{ color: "#2B7B8C" }}>
             Log in
