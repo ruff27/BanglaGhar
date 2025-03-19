@@ -42,7 +42,7 @@ function Properties() {
   // For rent: [5000, 40000]
   const defaultPriceRange =
     mode === "rent"
-      ? [0, 40000] // For rent
+      ? [0, 400000] // For rent
       : mode === "buy"
       ? [0, 200] // For buy (e.g. if your highest is ~120)
       : [0, 300]; // For sold (or any range that covers the highest sold price)
