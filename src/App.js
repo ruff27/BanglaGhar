@@ -56,7 +56,7 @@ function App() {
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+                <Route path="/Signup" element={<Signup />} />
                 <Route path="/list-property" element={<ListProperty />} />
               </Routes>
             </main>
