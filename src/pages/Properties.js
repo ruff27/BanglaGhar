@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useParams } from "react-router-dom"; // to read :mode from the URL
+// src/pages/Properties.js
+
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   Container,
   Grid,
@@ -10,54 +12,53 @@ import {
   Button,
   Box,
   TextField,
-  InputAdornment,
-  IconButton,
-  Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Slider,
   useMediaQuery,
   useTheme,
-  alpha,
 } from "@mui/material";
-
+import Fuse from "fuse.js";
+import axios from "axios";
+import { useAuth } from "./AuthContext";
 import {
-  Search as SearchIcon,
-  Clear as ClearIcon,
   Favorite as FavoriteIcon,
   FavoriteBorder as FavoriteBorderIcon,
 } from "@mui/icons-material";
-import axios from "axios"; // Corrected path
-import { useAuth } from "./AuthContext";
 
 function Properties() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // 1) We'll read the URL param to see which mode we want
-  const { mode } = useParams(); // "rent", "buy", or "sold"
+  // Read the URL param to see which mode we want: "rent", "buy", or "sold"
+  const { mode } = useParams();
 
-  // 2) State for all properties fetched from the server
+  // State for all properties from the backend
   const [allProperties, setAllProperties] = useState([]);
 
-  // 3) UI filter states (shared logic for rent/buy/sold)
+  // States for search/filter
   const [searchTerm, setSearchTerm] = useState("");
-  const [propertyType, setPropertyType] = useState("all");
-  const [bedroomFilter, setBedroomFilter] = useState(0);
-  const [bathroomFilter, setBathroomFilter] = useState(0);
+  const [bedroomFilter, setBedroomFilter] = useState(0); // 0 => Any
+  const [bathroomFilter, setBathroomFilter] = useState(0); // 0 => Any
 
-  // different default price ranges
-  // For rent: [5000, 40000]
+  // Price range: if "rent", treat price as Taka; if "buy"/"sold", treat as Lakh
   const defaultPriceRange =
     mode === "rent"
-      ? [0, 400000] // For rent
-      : mode === "buy"
-      ? [0, 200] // For buy
-      : [0, 300]; // For sold (or any range that covers the highest sold price)
-
+      ? [0, 100000] // up to 100,000 Taka for rent
+      : [0, 300]; // up to 300 Lakh for buy/sold
   const [priceRange, setPriceRange] = useState(defaultPriceRange);
 
   // Sorting
+  // "recommended" (no special sort), "priceAsc", "priceDesc", "bedroomsAsc", "bedroomsDesc"
   const [sortBy, setSortBy] = useState("recommended");
 
-  // 4) Fetch from /api/properties once
+  // Auth/wishlist
+  const { isLoggedIn, user } = useAuth();
+  const [wishlist, setWishlist] = useState([]);
+
+  // Fetch all properties once
   useEffect(() => {
     fetch("http://localhost:5001/api/properties")
       .then((res) => res.json())
@@ -67,243 +68,270 @@ function Properties() {
       .catch((err) => console.error("Error fetching properties:", err));
   }, []);
 
-  // 5) Filter the properties by mode first, then apply user filters
+  // Fetch wishlist if user is logged in
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      axios
+        .get(`http://localhost:5001/api/users/${user}/wishlist`)
+        .then((res) => {
+          setWishlist(res.data.wishlist); // array of property documents
+        })
+        .catch((err) => console.error("Error fetching wishlist:", err));
+    }
+  }, [isLoggedIn, user]);
+
+  // Helper: is a property already in wishlist?
+  const isPropertyWishlisted = (propertyId) => {
+    return wishlist.some((prop) => prop._id === propertyId);
+  };
+
+  // Toggle wishlist
+  const toggleWishlist = async (propertyId) => {
+    if (!isLoggedIn || !user) {
+      console.error("User must be logged in to modify wishlist.");
+      return;
+    }
+
+    const alreadyInWishlist = isPropertyWishlisted(propertyId);
+
+    try {
+      if (alreadyInWishlist) {
+        // Remove from wishlist
+        await axios.delete(`http://localhost:5001/api/users/${user}/wishlist`, {
+          data: { propertyId },
+        });
+        setWishlist((prev) => prev.filter((p) => p._id !== propertyId));
+      } else {
+        // Add to wishlist
+        await axios.post(`http://localhost:5001/api/users/${user}/wishlist`, {
+          propertyId,
+        });
+        // Find that property in allProperties
+        const addedProp = allProperties.find((p) => p._id === propertyId);
+        setWishlist((prev) => [...prev, addedProp]);
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+    }
+  };
+
+  // 1) Filter by mode first
   const filteredByMode = allProperties.filter((prop) => prop.mode === mode);
 
-  const filteredProperties = filteredByMode
-    // Price range
+  // 2) Fuzzy search with Fuse.js
+  const fuse = new Fuse(filteredByMode, {
+    keys: ["title", "location"], // fields to fuzzy match
+    threshold: 0.3, // stricter matching
+  });
+  const fuseResults = searchTerm
+    ? fuse.search(searchTerm)
+    : filteredByMode.map((item) => ({ item }));
+  const fuzzyFiltered = fuseResults.map((result) => result.item);
+
+  // 3) Numeric filters (price, bedrooms, bathrooms)
+  const numericFiltered = fuzzyFiltered
     .filter((property) => {
-      const price = property.price;
-      return price >= priceRange[0] && price <= priceRange[1];
+      const p = property.price;
+      // If "rent", interpret as Taka; if "buy"/"sold", interpret as Lakh
+      return p >= priceRange[0] && p <= priceRange[1];
     })
-    // Property type
-    .filter((property) => {
-      return propertyType === "all" || property.type === propertyType;
-    })
-    // Search term
-    .filter((property) => {
-      const lowerTitle = property.title.toLowerCase();
-      const lowerLoc = property.location.toLowerCase();
-      const lowerSearch = searchTerm.toLowerCase();
-      return lowerTitle.includes(lowerSearch) || lowerLoc.includes(lowerSearch);
-    })
-    // Bedrooms
     .filter((property) => {
       return bedroomFilter === 0 || property.bedrooms === bedroomFilter;
     })
-    // Bathrooms
     .filter((property) => {
       return bathroomFilter === 0 || property.bathrooms === bathroomFilter;
     });
 
-  // 6) Sorting logic
-  const sortedProperties = [...filteredProperties].sort((a, b) => {
-    if (sortBy === "priceAsc") return a.price - b.price;
-    if (sortBy === "priceDesc") return b.price - a.price;
-    return 0;
-  });
+  // 4) Sorting
+  let sortedProperties = [...numericFiltered];
+  if (sortBy === "priceAsc") {
+    sortedProperties.sort((a, b) => a.price - b.price);
+  } else if (sortBy === "priceDesc") {
+    sortedProperties.sort((a, b) => b.price - a.price);
+  } else if (sortBy === "bedroomsAsc") {
+    sortedProperties.sort((a, b) => a.bedrooms - b.bedrooms);
+  } else if (sortBy === "bedroomsDesc") {
+    sortedProperties.sort((a, b) => b.bedrooms - a.bedrooms);
+  }
+  // "recommended" => no change
 
-  // 7) Example price formatting (for buy, we might show Lakh/Crore, for rent, just show numbers)
+  // Helper to format price display
   const formatPrice = (price) => {
     if (mode === "rent") {
-      // e.g. "৳12,000/mo"
+      // treat as Taka
       return `৳${price.toLocaleString()}/mo`;
-    } else if (mode === "buy") {
-      // e.g. 45 => "45 Lakh", or if > 100 => "1.2 Crore"
+    } else {
+      // treat as Lakh
       if (price >= 100) {
         const crore = price / 100;
         return `৳${crore.toFixed(crore % 1 === 0 ? 0 : 2)} Crore`;
       } else {
         return `৳${price} Lakh`;
       }
-    } else {
-      // 'sold' or default
-      return `৳${price.toLocaleString() + " Lakh"}`;
     }
   };
 
-  const [wishlist, setWishlist] = useState([]);
-  const { isLoggedIn, user } = useAuth(); // Get user ID from context
-
-  // Fetch the initial wishlist state
-  useEffect(() => {
-    if (user) {
-      axios
-        .get(`http://localhost:5001/api/users/${user}/wishlist`)
-        .then((res) => {
-          setWishlist(res.data.wishlist);
-        })
-        .catch((err) => console.error("Error fetching wishlist:", err));
-    }
-  }, [user]);
-
-  const toggleWishlist = async (propertyId) => {
-    if (!user) {
-      console.error("User ID is required to modify the wishlist.");
-      return;
-    }
-
-    const isWishlisted = isPropertyWishlisted(propertyId);
-
-    try {
-      if (isWishlisted) {
-        // Remove from wishlist
-        await axios.delete(`http://localhost:5001/api/users/${user}/wishlist`, {
-          data: { propertyId },
-        });
-        setWishlist((prevWishlist) =>
-          prevWishlist.filter((item) => item._id !== propertyId)
-        );
-      } else {
-        // Add to wishlist
-        const response = await axios.post(
-          `http://localhost:5001/api/users/${user}/wishlist`,
-          { propertyId }
-        );
-        const updatedWishlistIds = response.data.wishlist;
-
-        // Fetch the updated wishlist details for consistency
-        const updatedWishlist = allProperties.filter((property) =>
-          updatedWishlistIds.includes(property._id)
-        );
-
-        setWishlist(updatedWishlist);
-      }
-    } catch (err) {
-      console.error("Error toggling wishlist:", err);
-    }
-  };
-
-  // Debugging: Add console logs to ensure the function is called
-  const handleWishlistClick = (propertyId) => {
-    toggleWishlist(propertyId);
-  };
-
-  const isPropertyWishlisted = (propertyId) => {
-    return wishlist?.some((item) => item._id === propertyId);
-  };
-
-  // 8) The UI
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        bgcolor: theme.palette.background.default,
-      }}
-    >
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        {/* Title - depends on mode */}
-        <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
-          {mode === "buy" && "Properties for Sale"}
-          {mode === "rent" && "Properties for Rent"}
-          {mode === "sold" && "Recently Sold Properties"}
-        </Typography>
+    <Container sx={{ py: 4 }}>
+      {/* Page Title */}
+      <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
+        {mode === "rent" && "Properties for Rent"}
+        {mode === "buy" && "Properties for Sale"}
+        {mode === "sold" && "Recently Sold Properties"}
+      </Typography>
 
-        {/* Example search bar */}
-        <Paper
+      {/* ADVANCED SEARCH FORM */}
+      <Box
+        sx={{
+          mb: 4,
+          p: 2,
+          borderRadius: 2,
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <Box
           sx={{
-            p: 2,
-            mb: 3,
-            borderRadius: 2,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            alignItems: "center",
           }}
         >
+          {/* Fuzzy search text input */}
           <TextField
-            fullWidth
-            placeholder="Search by title or location..."
+            label="Search (title or location)"
+            variant="outlined"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: theme.palette.primary.main }} />
-                </InputAdornment>
-              ),
-              endAdornment: searchTerm && (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setSearchTerm("")}>
-                    <ClearIcon />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
+            size="small"
+            sx={{ width: 220 }}
           />
-          {/* 
-            You can add more UI for propertyType, bedroomFilter, bathroomFilter, 
-            priceRange sliders, etc. from your old code 
-          */}
-        </Paper>
 
-        {/* Show results */}
-        <Grid container spacing={3}>
-          {sortedProperties.map((property) => (
-            <Grid item key={property._id} xs={12} sm={6} md={4}>
-              <Card
-                sx={{
-                  borderRadius: 2,
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={
-                    property.images && property.images[0]
-                      ? `/pictures/${property.images[0]}`
-                      : "/pictures/placeholder.png"
-                  }
-                  alt={property.title}
-                />
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
+          {/* Bedrooms */}
+          <FormControl size="small" sx={{ width: 120 }}>
+            <InputLabel>Bedrooms</InputLabel>
+            <Select
+              label="Bedrooms"
+              value={bedroomFilter}
+              onChange={(e) => setBedroomFilter(Number(e.target.value))}
+            >
+              <MenuItem value={0}>Any</MenuItem>
+              <MenuItem value={1}>1</MenuItem>
+              <MenuItem value={2}>2</MenuItem>
+              <MenuItem value={3}>3</MenuItem>
+              <MenuItem value={4}>4</MenuItem>
+              <MenuItem value={5}>5</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Bathrooms */}
+          <FormControl size="small" sx={{ width: 120 }}>
+            <InputLabel>Bathrooms</InputLabel>
+            <Select
+              label="Bathrooms"
+              value={bathroomFilter}
+              onChange={(e) => setBathroomFilter(Number(e.target.value))}
+            >
+              <MenuItem value={0}>Any</MenuItem>
+              <MenuItem value={1}>1</MenuItem>
+              <MenuItem value={2}>2</MenuItem>
+              <MenuItem value={3}>3</MenuItem>
+              <MenuItem value={4}>4</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Price Slider */}
+          <Box sx={{ width: 200 }}>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Max Price: {priceRange[1]}
+              {mode === "rent" ? " Taka" : " Lakh"}
+            </Typography>
+            <Slider
+              value={priceRange}
+              onChange={(e, newVal) => setPriceRange(newVal)}
+              valueLabelDisplay="auto"
+              min={0}
+              max={mode === "rent" ? 100000 : 300}
+            />
+          </Box>
+
+          {/* Sort By Dropdown */}
+          <FormControl size="small" sx={{ width: 180 }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select
+              label="Sort By"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <MenuItem value="recommended">Recommended</MenuItem>
+              <MenuItem value="priceAsc">Price (Low to High)</MenuItem>
+              <MenuItem value="priceDesc">Price (High to Low)</MenuItem>
+              <MenuItem value="bedroomsAsc">Bedrooms (Few to Many)</MenuItem>
+              <MenuItem value="bedroomsDesc">Bedrooms (Many to Few)</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
+
+      {/* Property Grid */}
+      <Grid container spacing={3}>
+        {sortedProperties.map((property) => (
+          <Grid item xs={12} sm={6} md={4} key={property._id}>
+            <Card>
+              <CardMedia
+                component="img"
+                height="200"
+                image={
+                  property.images && property.images[0]
+                    ? `/pictures/${property.images[0]}`
+                    : "/pictures/placeholder.png"
+                }
+                alt={property.title}
+              />
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {property.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {property.location}
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
+                  {formatPrice(property.price)}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  {property.bedrooms} bed &bull; {property.bathrooms} bath
+                  &bull; {property.area} sqft
+                </Typography>
+
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() =>
+                      (window.location.href = `/properties/${property._id}`)
+                    }
                   >
-                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                      {property.title}
-                    </Typography>
-                    <IconButton
-                      onClick={() => handleWishlistClick(property._id)}
-                      color="primary"
-                    >
-                      {wishlist?.length > 0 &&
-                      isPropertyWishlisted(property._id) ? (
-                        <FavoriteIcon />
-                      ) : (
-                        <FavoriteBorderIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "text.secondary", mb: 1 }}
+                    Details
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => toggleWishlist(property._id)}
+                    sx={{ ml: 2 }}
                   >
-                    {property.location}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: theme.palette.primary.main }}
-                  >
-                    {formatPrice(property.price)}
-                  </Typography>
-                  <Typography variant="body2">
-                    Bedrooms: {property.bedrooms}, Bathrooms:{" "}
-                    {property.bathrooms}, Area: {property.area} ft²
-                  </Typography>
-                  {/* ... any other info ... */}
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-    </Box>
+                    {isPropertyWishlisted(property._id) ? (
+                      <FavoriteIcon sx={{ color: "red" }} />
+                    ) : (
+                      <FavoriteBorderIcon />
+                    )}
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
   );
 }
 

@@ -36,6 +36,17 @@ const Saved = () => {
     );
   }
 
+  const removeFromWishlist = async (propertyId) => {
+    try {
+      await axios.delete(`http://localhost:5001/api/users/${user}/wishlist`, {
+        data: { propertyId },
+      });
+      setSavedProperties((prev) => prev.filter((p) => p._id !== propertyId));
+    } catch (err) {
+      console.error("Error removing from wishlist:", err);
+    }
+  };
+
   return (
     <Container sx={{ py: 4 }}>
       <Typography variant="h4" sx={{ mb: 4 }}>
@@ -72,6 +83,14 @@ const Saved = () => {
                   }
                 >
                   View Details
+                </Button>
+                <Button //remove from saved properties
+                  variant="outlined"
+                  color="secondary"
+                  sx={{ mt: 2, ml: 1 }}
+                  onClick={() => removeFromWishlist(property._id)}
+                >
+                  Remove
                 </Button>
               </CardContent>
             </Card>
