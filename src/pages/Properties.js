@@ -18,8 +18,13 @@ import {
   alpha,
 } from "@mui/material";
 
-import { Search as SearchIcon, Clear as ClearIcon, Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon } from "@mui/icons-material";
-import axios from "axios";// Corrected path
+import {
+  Search as SearchIcon,
+  Clear as ClearIcon,
+  Favorite as FavoriteIcon,
+  FavoriteBorder as FavoriteBorderIcon,
+} from "@mui/icons-material";
+import axios from "axios"; // Corrected path
 import { useAuth } from "./AuthContext";
 
 function Properties() {
@@ -125,7 +130,9 @@ function Properties() {
     if (user) {
       axios
         .get(`http://localhost:5001/api/users/${user}/wishlist`)
-        .then((res) => { setWishlist(res.data.wishlist)})
+        .then((res) => {
+          setWishlist(res.data.wishlist);
+        })
         .catch((err) => console.error("Error fetching wishlist:", err));
     }
   }, [user]);
@@ -265,7 +272,8 @@ function Properties() {
                       onClick={() => handleWishlistClick(property._id)}
                       color="primary"
                     >
-                      {wishlist?.length>0 && isPropertyWishlisted(property._id) ? (
+                      {wishlist?.length > 0 &&
+                      isPropertyWishlisted(property._id) ? (
                         <FavoriteIcon />
                       ) : (
                         <FavoriteBorderIcon />
