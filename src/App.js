@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 
 // Import the new single-page component:
 import Properties from "./pages/Properties";
+import Saved from "./pages/Saved";
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/Signup" element={<Signup />} />
                 <Route path="/list-property" element={<ListProperty />} />
+                <Route path="/saved" element={<Saved />} />
               </Routes>
             </main>
             <Footer />

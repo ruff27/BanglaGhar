@@ -28,6 +28,9 @@ import BedIcon from "@mui/icons-material/Bed";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
 import CloseIcon from "@mui/icons-material/Close";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import axios from "axios";
 import dhaka2 from "../pictures/dhaka2.jpg";
 import house1 from "../pictures/house1.png";
 import house2 from "../pictures/house2.png";
@@ -191,13 +194,50 @@ const featuredProperties = allProperties.slice(0, 3);
 const Home = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth(); // Get authentication status
+  const { isLoggedIn, user } = useAuth(); // Get user info from AuthContext
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("Any location");
   const [searchType, setSearchType] = useState("rent"); // Default to 'rent'
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredProperties, setFilteredProperties] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      axios
+        .get(`http://localhost:5001/api/users/${user}/wishlist`)
+        .then((response) => {
+          setWishlist(response.data.wishlist.map((property) => property._id));
+        });
+    }
+  }, [isLoggedIn, user]);
+
+  const toggleWishlist = async (propertyId) => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+
+    const isInWishlist = wishlist.includes(propertyId);
+    try {
+      if (isInWishlist) {
+        // Remove from wishlist
+        await axios.delete(`http://localhost:5001/api/users/${user}/wishlist`, {
+          data: { propertyId },
+        });
+        setWishlist(wishlist.filter((id) => id !== propertyId));
+      } else {
+        // Add to wishlist
+        await axios.post(`http://localhost:5001/api/users/${user}/wishlist`, {
+          propertyId,
+        });
+        setWishlist([...wishlist, propertyId]);
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+    }
+  };
 
   // Function to handle map dialog opening
   const handleOpenMap = () => {
@@ -1021,6 +1061,32 @@ const Home = () => {
             {featuredProperties.map((property) => (
               <Grid item xs={12} sm={6} md={4} key={property.id}>
                 <PropertyCard>
+                  <Box sx={{ position: "relative" }}>
+                    <IconButton
+                      sx={{
+                        position: "absolute",
+                        top: 16,
+                        right: 16,
+                        zIndex: 2,
+                        bgcolor: "rgba(255, 255, 255, 0.8)",
+                        "&:hover": { bgcolor: "rgba(255, 255, 255, 1)" },
+                      }}
+                      onClick={() => toggleWishlist(property.id)}
+                    >
+                      {wishlist.includes(property.id) ? (
+                        <FavoriteIcon color="error" />
+                      ) : (
+                        <FavoriteBorderIcon />
+                      )}
+                    </IconButton>
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={property.image}
+                      alt={property.title}
+                      sx={{ objectFit: "cover" }}
+                    />
+                  </Box>
                   {/* Property Label */}
                   <Box
                     sx={{

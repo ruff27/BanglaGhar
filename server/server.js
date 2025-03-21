@@ -198,6 +198,76 @@ app.delete("/api/properties/:id", async (req, res) => {
   }
 });
 
+// ADD PROPERTY TO WISHLIST
+app.post("/api/users/:username/wishlist", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { propertyId } = req.body;
+
+    // Find the user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the property is already in the wishlist
+    if (user.wishlist.includes(propertyId)) {
+      return res.status(400).json({ error: "Property already in wishlist" });
+    }
+
+    // Add the property to the wishlist
+    user.wishlist.push(propertyId);
+    await user.save();
+
+    res.json({ message: "Property added to wishlist successfully", wishlist: user.wishlist });
+  } catch (err) {
+    console.error("Add to wishlist error:", err);
+    res.status(500).json({ error: err });
+  }
+});
+
+// FETCH WISHLISTED PROPERTIES
+app.get("/api/users/:username/wishlist", async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Find the user by username
+    const user = await User.findOne({ username }).populate("wishlist");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Return the wishlist properties
+    res.json({ wishlist: user.wishlist });
+  } catch (err) {
+    console.error("Fetch wishlist error:", err);
+    res.status(500).json({ error: "Server error fetching wishlist" });
+  }
+});
+
+// REMOVE PROPERTY FROM WISHLIST
+app.delete("/api/users/:username/wishlist", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { propertyId } = req.body;
+
+    // Find the user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Remove the property from the wishlist
+    user.wishlist = user.wishlist.filter((id) => id.toString() !== propertyId);
+    await user.save();
+
+    res.json({ message: "Property removed from wishlist successfully", wishlist: user.wishlist });
+  } catch (err) {
+    console.error("Remove from wishlist error:", err);
+    res.status(500).json({ error: "Server error removing property from wishlist" });
+  }
+});
+
 // 9) START THE SERVER
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
