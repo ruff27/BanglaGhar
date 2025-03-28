@@ -35,6 +35,7 @@ import dhaka2 from "../pictures/dhaka2.jpg";
 import house1 from "../pictures/house1.png";
 import house2 from "../pictures/house2.png";
 import house3 from "../pictures/house3.png";
+import land from "../pictures/land.jpg"
 import BangladeshMap from "./BangladeshMap"; // Import the BangladeshMap component
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext"; // Import the AuthContext

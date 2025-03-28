@@ -38,6 +38,7 @@ import HotelIcon from "@mui/icons-material/Hotel";
 import House1 from '../pictures/house1.png';
 import House2 from '../pictures/house2.png';
 import House3 from '../pictures/house3.png';
+import land from '../pictures/land.jpg'
 
 // Fix for Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -292,6 +293,22 @@ const propertiesForSale = [
     features: ["Lake View", "Balcony", "Parking"],
     mode: "buy"
   }
+
+  {
+    id: 107,
+    title: "Open Land Plot in Savar",
+    location: "Savar",
+    price: 250, // in Lakh
+    bedrooms: 0,
+    bathrooms: 0,
+    area: 10000, // square feet
+    type: "land",
+    position: [23.8500, 90.2667], // Approximate coordinates of Savar
+    image: land,
+    features: ["Clear Title", "Great Location", "Road Access"],
+    mode: "buy"
+  }
+  
 ];
 
 const BangladeshMap = ({ onLocationSelected, mapCenter = [23.8103, 90.4125], mapZoom = 10, showProperties = true }) => {
