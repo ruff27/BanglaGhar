@@ -10,9 +10,14 @@ import {
   Alert,
   Snackbar,
   Avatar,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import { userPool } from "../aws/CognitoConfig";
 
@@ -54,11 +59,32 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // Added confirm password field
-  const [step, setStep] = useState(1); // 1: Enter email, 2: Enter code + passwords
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [cognitoUser, setCognitoUser] = useState(null);
+
+  // Password validation states
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecial, setHasSpecial] = useState(false);
+  const [hasUppercase, setHasUppercase] = useState(false);
+  const [hasLowercase, setHasLowercase] = useState(false);
+  const [hasMinLength, setHasMinLength] = useState(false);
+
+  const validatePassword = (pwd) => {
+    setHasNumber(/\d/.test(pwd));
+    setHasSpecial(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd));
+    setHasUppercase(/[A-Z]/.test(pwd));
+    setHasLowercase(/[a-z]/.test(pwd));
+    setHasMinLength(pwd.length >= 8);
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPasswordValue = e.target.value;
+    setNewPassword(newPasswordValue);
+    validatePassword(newPasswordValue);
+  };
 
   // Send verification code to email
   const handleSendCode = (e) => {
@@ -71,7 +97,7 @@ const ForgotPassword = () => {
 
     user.forgotPassword({
       onSuccess: () => {
-        setStep(2); // Move to code + passwords step
+        setStep(2);
         setCognitoUser(user);
         setError("");
       },
@@ -90,11 +116,16 @@ const ForgotPassword = () => {
       return;
     }
 
+    if (!hasNumber || !hasSpecial || !hasUppercase || !hasLowercase || !hasMinLength) {
+      setError("Password doesn't meet all requirements!");
+      return;
+    }
+
     cognitoUser.confirmPassword(verificationCode, newPassword, {
       onSuccess: () => {
         setOpenSnackbar(true);
         setTimeout(() => {
-          navigate("/login"); // Redirect to login after reset
+          navigate("/login");
         }, 1500);
       },
       onFailure: (err) => {
@@ -167,6 +198,74 @@ const ForgotPassword = () => {
                 onChange={(e) => setVerificationCode(e.target.value)}
                 sx={{ mb: 2 }}
               />
+
+              {/* Password Policy Information */}
+              <Box sx={{ mb: 2, width: "100%" }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1, color: "#2B7B8C", fontWeight: 600 }}
+                >
+                  New password must contain:
+                </Typography>
+                <List dense>
+                  <ListItem sx={{ py: 0 }}>
+                    <ListItemIcon>
+                      <CheckCircleOutlineIcon 
+                        sx={{ color: hasMinLength ? "green" : "#2B7B8C" }} 
+                      />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Minimum 8 characters"
+                      sx={{ color: hasMinLength ? "green" : "inherit" }}
+                    />
+                  </ListItem>
+                  <ListItem sx={{ py: 0 }}>
+                    <ListItemIcon>
+                      <CheckCircleOutlineIcon 
+                        sx={{ color: hasNumber ? "green" : "#2B7B8C" }} 
+                      />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="At least 1 number"
+                      sx={{ color: hasNumber ? "green" : "inherit" }}
+                    />
+                  </ListItem>
+                  <ListItem sx={{ py: 0 }}>
+                    <ListItemIcon>
+                      <CheckCircleOutlineIcon 
+                        sx={{ color: hasSpecial ? "green" : "#2B7B8C" }} 
+                      />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="At least 1 special character"
+                      sx={{ color: hasSpecial ? "green" : "inherit" }}
+                    />
+                  </ListItem>
+                  <ListItem sx={{ py: 0 }}>
+                    <ListItemIcon>
+                      <CheckCircleOutlineIcon 
+                        sx={{ color: hasUppercase ? "green" : "#2B7B8C" }} 
+                      />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="At least 1 uppercase letter"
+                      sx={{ color: hasUppercase ? "green" : "inherit" }}
+                    />
+                  </ListItem>
+                  <ListItem sx={{ py: 0 }}>
+                    <ListItemIcon>
+                      <CheckCircleOutlineIcon 
+                        sx={{ color: hasLowercase ? "green" : "#2B7B8C" }} 
+                      />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="At least 1 lowercase letter"
+                      sx={{ color: hasLowercase ? "green" : "inherit" }}
+                    />
+                  </ListItem>
+                </List>
+              </Box>
+
               <TextField
                 margin="normal"
                 required
@@ -175,7 +274,7 @@ const ForgotPassword = () => {
                 type="password"
                 variant="outlined"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 sx={{ mb: 2 }}
               />
               <TextField

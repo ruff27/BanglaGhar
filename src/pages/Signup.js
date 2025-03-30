@@ -1,5 +1,3 @@
-// Signup.js
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -12,9 +10,14 @@ import {
   Alert,
   Snackbar,
   Avatar,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { userPool } from "../aws/CognitoConfig";
 
 const SignupPaper = styled(Paper)(({ theme }) => ({
@@ -52,17 +55,43 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState(""); // Email as username
+  const [username, setUsername] = useState(""); 
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  // Password validation states
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecial, setHasSpecial] = useState(false);
+  const [hasUppercase, setHasUppercase] = useState(false);
+  const [hasLowercase, setHasLowercase] = useState(false);
+  const [hasMinLength, setHasMinLength] = useState(false);
+
+  const validatePassword = (pwd) => {
+    setHasNumber(/\d/.test(pwd));
+    setHasSpecial(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd));
+    setHasUppercase(/[A-Z]/.test(pwd));
+    setHasLowercase(/[a-z]/.test(pwd));
+    setHasMinLength(pwd.length >= 8);
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    validatePassword(newPassword);
+  };
 
   const handleSignup = (e) => {
     e.preventDefault();
 
     if (password !== confirmPass) {
       setError("Passwords do not match!");
+      return;
+    }
+
+    if (!hasNumber || !hasSpecial || !hasUppercase || !hasLowercase || !hasMinLength) {
+      setError("Password doesn't meet all requirements!");
       return;
     }
 
@@ -74,7 +103,6 @@ const Signup = () => {
       }
       setOpenSnackbar(true);
       setTimeout(() => {
-        // Redirect to OTP verification page with the email in state.
         navigate("/verify-otp", { state: { email: username } });
       }, 1500);
     });
@@ -120,6 +148,74 @@ const Signup = () => {
             onChange={(e) => setUsername(e.target.value)}
             sx={{ mb: 2 }}
           />
+
+          {/* Password Policy Information */}
+          <Box sx={{ mb: 2, width: "100%" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ mb: 1, color: "#2B7B8C", fontWeight: 600 }}
+            >
+              Password must contain:
+            </Typography>
+            <List dense>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemIcon>
+                  <CheckCircleOutlineIcon 
+                    sx={{ color: hasMinLength ? "green" : "#2B7B8C" }} 
+                  />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Minimum 8 characters"
+                  sx={{ color: hasMinLength ? "green" : "inherit" }}
+                />
+              </ListItem>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemIcon>
+                  <CheckCircleOutlineIcon 
+                    sx={{ color: hasNumber ? "green" : "#2B7B8C" }} 
+                  />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="At least 1 number"
+                  sx={{ color: hasNumber ? "green" : "inherit" }}
+                />
+              </ListItem>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemIcon>
+                  <CheckCircleOutlineIcon 
+                    sx={{ color: hasSpecial ? "green" : "#2B7B8C" }} 
+                  />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="At least 1 special character"
+                  sx={{ color: hasSpecial ? "green" : "inherit" }}
+                />
+              </ListItem>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemIcon>
+                  <CheckCircleOutlineIcon 
+                    sx={{ color: hasUppercase ? "green" : "#2B7B8C" }} 
+                  />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="At least 1 uppercase letter"
+                  sx={{ color: hasUppercase ? "green" : "inherit" }}
+                />
+              </ListItem>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemIcon>
+                  <CheckCircleOutlineIcon 
+                    sx={{ color: hasLowercase ? "green" : "#2B7B8C" }} 
+                  />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="At least 1 lowercase letter"
+                  sx={{ color: hasLowercase ? "green" : "inherit" }}
+                />
+              </ListItem>
+            </List>
+          </Box>
+
           <TextField
             margin="normal"
             required
@@ -128,7 +224,7 @@ const Signup = () => {
             type="password"
             variant="outlined"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             sx={{ mb: 2 }}
           />
           <TextField

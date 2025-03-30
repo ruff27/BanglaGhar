@@ -1,6 +1,6 @@
 // models/User.js
 
-const mongoose = require("mongoose");
+/*const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 // Define the schema (i.e., the structure) for your "User" collection
@@ -41,3 +41,4 @@ userSchema.methods.comparePassword = async function (plainPassword) {
 
 // Export the model based on this schema
 module.exports = mongoose.model("User", userSchema);
+*/
