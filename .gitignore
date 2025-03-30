@@ -8,6 +8,8 @@
 # testing
 /coverage
 
+#Cognito_Credentials
+.env
 # production
 /build
 
