@@ -22,35 +22,30 @@ mongoose
     console.error("Error connecting to MongoDB Atlas:", err);
   });
 
-// 4) USER MODEL
+// 4) MODELS
+
 const User = require("./models/User");
-
-// 5) PROPERTY MODEL
 const Property = require("./models/Property");
+// New Wishlist model for handling user-specific wishlist data without needing a MongoDB user record.
+const Wishlist = require("./models/Wishlist");
 
-// 6) TEST ROUTE
+// 5) TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Hello from the backend server! MongoDB connection is active.");
 });
 
-// 7) AUTH ROUTES
-// SIGN UP
+// 6) (Optional) AUTH ROUTES for backward compatibility
 app.post("/api/signup", async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    // Check if user already exists
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(400).json({
         error: "User already exists. Please choose a different name.",
       });
     }
-
-    // Create a new user
     const newUser = new User({ username, password });
     await newUser.save();
-
     return res.json({ message: "Signup successful!" });
   } catch (err) {
     console.error("Signup error:", err);
@@ -58,24 +53,17 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
-// LOGIN
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    // Find user by username
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ error: "Invalid username or password" });
     }
-
-    // Check if password matches
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid username or password" });
     }
-
-    // If match, respond with success (or token if you want)
     return res.json({ message: "Login successful!" });
   } catch (err) {
     console.error("Login error:", err);
@@ -83,12 +71,11 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// 8) PROPERTY ROUTES
+// 7) PROPERTY ROUTES
 
 // CREATE property
 app.post("/api/properties", async (req, res) => {
   try {
-    // Typically you'd check if user is logged in, but let's skip that for now
     const {
       title,
       price,
@@ -101,10 +88,6 @@ app.post("/api/properties", async (req, res) => {
       images,
       createdBy,
     } = req.body;
-
-    // createdBy is the user ID of whoever is creating it
-    // In a real app, you'd get this from an auth token or session
-
     const newProperty = new Property({
       title,
       price,
@@ -117,9 +100,7 @@ app.post("/api/properties", async (req, res) => {
       images,
       createdBy,
     });
-
     await newProperty.save();
-
     res.json({
       message: "Property created successfully",
       property: newProperty,
@@ -133,7 +114,6 @@ app.post("/api/properties", async (req, res) => {
 // READ all properties
 app.get("/api/properties", async (req, res) => {
   try {
-    // .populate('createdBy') to get user info from User model
     const properties = await Property.find().populate("createdBy", "username");
     res.json(properties);
   } catch (err) {
@@ -164,7 +144,7 @@ app.get("/api/properties/:id", async (req, res) => {
 app.put("/api/properties/:id", async (req, res) => {
   try {
     const propertyId = req.params.id;
-    const updates = req.body; // title, price, etc.
+    const updates = req.body;
     const updatedProperty = await Property.findByIdAndUpdate(
       propertyId,
       updates,
@@ -198,73 +178,67 @@ app.delete("/api/properties/:id", async (req, res) => {
   }
 });
 
-// ADD PROPERTY TO WISHLIST
+// 8) WISHLIST ROUTES (Using the Wishlist model)
+
 app.post("/api/users/:username/wishlist", async (req, res) => {
   try {
     const { username } = req.params;
     const { propertyId } = req.body;
 
-    // Find the user by username
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    let wishlistDoc = await Wishlist.findOne({ username });
+    if (!wishlistDoc) {
+      wishlistDoc = new Wishlist({ username, items: [] });
     }
-
-    // Check if the property is already in the wishlist
-    if (user.wishlist.includes(propertyId)) {
+    if (wishlistDoc.items.includes(propertyId)) {
       return res.status(400).json({ error: "Property already in wishlist" });
     }
-
-    // Add the property to the wishlist
-    user.wishlist.push(propertyId);
-    await user.save();
-
-    res.json({ message: "Property added to wishlist successfully", wishlist: user.wishlist });
+    wishlistDoc.items.push(propertyId);
+    await wishlistDoc.save();
+    res.json({
+      message: "Property added to wishlist successfully",
+      wishlist: wishlistDoc.items,
+    });
   } catch (err) {
     console.error("Add to wishlist error:", err);
     res.status(500).json({ error: err });
   }
 });
 
-// FETCH WISHLISTED PROPERTIES
 app.get("/api/users/:username/wishlist", async (req, res) => {
   try {
     const { username } = req.params;
-
-    // Find the user by username
-    const user = await User.findOne({ username }).populate("wishlist");
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    let wishlistDoc = await Wishlist.findOne({ username }).populate("items");
+    if (!wishlistDoc) {
+      return res.json({ wishlist: [] });
     }
-
-    // Return the wishlist properties
-    res.json({ wishlist: user.wishlist });
+    res.json({ wishlist: wishlistDoc.items });
   } catch (err) {
     console.error("Fetch wishlist error:", err);
     res.status(500).json({ error: "Server error fetching wishlist" });
   }
 });
 
-// REMOVE PROPERTY FROM WISHLIST
 app.delete("/api/users/:username/wishlist", async (req, res) => {
   try {
     const { username } = req.params;
     const { propertyId } = req.body;
-
-    // Find the user by username
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    let wishlistDoc = await Wishlist.findOne({ username });
+    if (!wishlistDoc) {
+      return res.status(404).json({ error: "Wishlist not found" });
     }
-
-    // Remove the property from the wishlist
-    user.wishlist = user.wishlist.filter((id) => id.toString() !== propertyId);
-    await user.save();
-
-    res.json({ message: "Property removed from wishlist successfully", wishlist: user.wishlist });
+    wishlistDoc.items = wishlistDoc.items.filter(
+      (id) => id.toString() !== propertyId
+    );
+    await wishlistDoc.save();
+    res.json({
+      message: "Property removed from wishlist successfully",
+      wishlist: wishlistDoc.items,
+    });
   } catch (err) {
     console.error("Remove from wishlist error:", err);
-    res.status(500).json({ error: "Server error removing property from wishlist" });
+    res
+      .status(500)
+      .json({ error: "Server error removing property from wishlist" });
   }
 });
 

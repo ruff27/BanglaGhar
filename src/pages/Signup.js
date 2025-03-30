@@ -1,3 +1,5 @@
+// Signup.js
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -48,8 +50,6 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-
-
 const Signup = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState(""); // Email as username
@@ -74,7 +74,8 @@ const Signup = () => {
       }
       setOpenSnackbar(true);
       setTimeout(() => {
-        navigate("/verify-otp", { state: { email: username } }); // Redirect to OTP page with email
+        // Redirect to OTP verification page with the email in state.
+        navigate("/verify-otp", { state: { email: username } });
       }, 1500);
     });
   };

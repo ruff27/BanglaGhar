@@ -1,3 +1,5 @@
+// Login.js
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -15,6 +17,7 @@ import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
 import { userPool } from "../aws/CognitoConfig";
+import { useAuth } from "./AuthContext";
 
 const LoginPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -51,6 +54,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Login = () => {
   const navigate = useNavigate();
+  const { updateAuthState } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -71,6 +75,10 @@ const Login = () => {
 
     user.authenticateUser(authenticationDetails, {
       onSuccess: () => {
+        // Save login status and update AuthContext
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("user", username);
+        updateAuthState(true, username);
         setOpenSnackbar(true);
         setTimeout(() => {
           navigate("/");
