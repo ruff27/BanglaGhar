@@ -19,6 +19,7 @@ import {
   Slider,
   useMediaQuery,
   useTheme,
+  Chip,
 } from "@mui/material";
 import Fuse from "fuse.js";
 import axios from "axios";
@@ -26,6 +27,7 @@ import { useAuth } from "./AuthContext";
 import {
   Favorite as FavoriteIcon,
   FavoriteBorder as FavoriteBorderIcon,
+  Landscape as LandscapeIcon,
 } from "@mui/icons-material";
 
 function Properties() {
@@ -35,6 +37,46 @@ function Properties() {
   // Read the URL param to see which mode we want: "rent", "buy", or "sold"
   const { mode } = useParams();
 
+  // For demo purposes, let's add some sample land properties
+  const sampleLandProperties = [
+    {
+      _id: "land001",
+      title: "Prime Land in Gulshan",
+      location: "Gulshan Avenue, Dhaka",
+      price: mode === "rent" ? 50000 : 200, // 50k Taka rent or 200 Lakh purchase
+      area: 10000,
+      propertyType: "Land",
+      mode: mode, // dynamically set based on current view
+      pricePerUnit: mode === "rent" ? "5 Tk/sqft/month" : "2000 Tk/sqft",
+      description: "Premium land plot in upscale Gulshan area, perfect for commercial development.",
+      images: ["land.jpg"]
+    },
+    {
+      _id: "land002",
+      title: "Residential Plot in Uttara",
+      location: "Sector 10, Uttara, Dhaka",
+      price: mode === "rent" ? 35000 : 150, // 35k Taka rent or 150 Lakh purchase
+      area: 7200,
+      propertyType: "Land",
+      mode: mode,
+      pricePerUnit: mode === "rent" ? "4.9 Tk/sqft/month" : "2083 Tk/sqft",
+      description: "Well-connected residential plot in Uttara with all utilities ready.",
+      images: ["land.jpg"]
+    },
+    {
+      _id: "land003",
+      title: "Commercial Land in Motijheel",
+      location: "Motijheel C/A, Dhaka",
+      price: mode === "rent" ? 90000 : 280, // 90k Taka rent or 280 Lakh purchase
+      area: 8500,
+      propertyType: "Land",
+      mode: mode,
+      pricePerUnit: mode === "rent" ? "10.6 Tk/sqft/month" : "3294 Tk/sqft",
+      description: "Prime commercial land in Dhaka's business district with excellent frontage.",
+      images: ["dhaka2.jpg"]
+    }
+  ];
+
   // State for all properties from the backend
   const [allProperties, setAllProperties] = useState([]);
 
@@ -42,6 +84,7 @@ function Properties() {
   const [searchTerm, setSearchTerm] = useState("");
   const [bedroomFilter, setBedroomFilter] = useState(0); // 0 => Any
   const [bathroomFilter, setBathroomFilter] = useState(0); // 0 => Any
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all"); // "all", "land", "other"
 
   // Price range: if "rent", treat price as Taka; if "buy"/"sold", treat as Lakh
   const defaultPriceRange =
@@ -51,22 +94,26 @@ function Properties() {
   const [priceRange, setPriceRange] = useState(defaultPriceRange);
 
   // Sorting
-  // "recommended" (no special sort), "priceAsc", "priceDesc", "bedroomsAsc", "bedroomsDesc"
   const [sortBy, setSortBy] = useState("recommended");
 
   // Auth/wishlist
   const { isLoggedIn, user } = useAuth();
   const [wishlist, setWishlist] = useState([]);
 
-  // Fetch all properties once
+  // Fetch all properties once and add our sample land properties
   useEffect(() => {
     fetch("http://localhost:5001/api/properties")
       .then((res) => res.json())
       .then((data) => {
-        setAllProperties(data);
+        // Combine backend properties with our sample land properties
+        setAllProperties([...data, ...sampleLandProperties]);
       })
-      .catch((err) => console.error("Error fetching properties:", err));
-  }, []);
+      .catch((err) => {
+        console.error("Error fetching properties:", err);
+        // If fetch fails, at least show our sample properties
+        setAllProperties(sampleLandProperties);
+      });
+  }, [mode]); // Re-run when mode changes to update land properties
 
   // Fetch wishlist if user is logged in
   useEffect(() => {
@@ -118,17 +165,26 @@ function Properties() {
   // 1) Filter by mode first
   const filteredByMode = allProperties.filter((prop) => prop.mode === mode);
 
-  // 2) Fuzzy search with Fuse.js
-  const fuse = new Fuse(filteredByMode, {
+  // 2) Filter by property type if selected
+  const filteredByType = propertyTypeFilter === "all" 
+    ? filteredByMode 
+    : filteredByMode.filter(property => 
+        propertyTypeFilter === "land" 
+          ? property.propertyType === "Land" 
+          : property.propertyType !== "Land"
+      );
+
+  // 3) Fuzzy search with Fuse.js
+  const fuse = new Fuse(filteredByType, {
     keys: ["title", "location"], // fields to fuzzy match
     threshold: 0.3, // stricter matching
   });
   const fuseResults = searchTerm
     ? fuse.search(searchTerm)
-    : filteredByMode.map((item) => ({ item }));
+    : filteredByType.map((item) => ({ item }));
   const fuzzyFiltered = fuseResults.map((result) => result.item);
 
-  // 3) Numeric filters (price, bedrooms, bathrooms)
+  // 4) Numeric filters (price, bedrooms, bathrooms)
   const numericFiltered = fuzzyFiltered
     .filter((property) => {
       const p = property.price;
@@ -136,22 +192,38 @@ function Properties() {
       return p >= priceRange[0] && p <= priceRange[1];
     })
     .filter((property) => {
-      return bedroomFilter === 0 || property.bedrooms === bedroomFilter;
+      // Skip bedroom filter for Land properties
+      return property.propertyType === "Land" || bedroomFilter === 0 || property.bedrooms === bedroomFilter;
     })
     .filter((property) => {
-      return bathroomFilter === 0 || property.bathrooms === bathroomFilter;
+      // Skip bathroom filter for Land properties
+      return property.propertyType === "Land" || bathroomFilter === 0 || property.bathrooms === bathroomFilter;
     });
 
-  // 4) Sorting
+  // 5) Sorting
   let sortedProperties = [...numericFiltered];
   if (sortBy === "priceAsc") {
     sortedProperties.sort((a, b) => a.price - b.price);
   } else if (sortBy === "priceDesc") {
     sortedProperties.sort((a, b) => b.price - a.price);
   } else if (sortBy === "bedroomsAsc") {
-    sortedProperties.sort((a, b) => a.bedrooms - b.bedrooms);
+    sortedProperties.sort((a, b) => {
+      // Handle Land properties which might not have bedrooms
+      const bedroomsA = a.propertyType === "Land" ? 0 : a.bedrooms;
+      const bedroomsB = b.propertyType === "Land" ? 0 : b.bedrooms;
+      return bedroomsA - bedroomsB;
+    });
   } else if (sortBy === "bedroomsDesc") {
-    sortedProperties.sort((a, b) => b.bedrooms - a.bedrooms);
+    sortedProperties.sort((a, b) => {
+      // Handle Land properties which might not have bedrooms
+      const bedroomsA = a.propertyType === "Land" ? 0 : a.bedrooms;
+      const bedroomsB = b.propertyType === "Land" ? 0 : b.bedrooms;
+      return bedroomsB - bedroomsA;
+    });
+  } else if (sortBy === "areaAsc") {
+    sortedProperties.sort((a, b) => a.area - b.area);
+  } else if (sortBy === "areaDesc") {
+    sortedProperties.sort((a, b) => b.area - a.area);
   }
   // "recommended" => no change
 
@@ -169,6 +241,23 @@ function Properties() {
         return `৳${price} Lakh`;
       }
     }
+  };
+
+  // Get appropriate image for property
+  const getPropertyImage = (property) => {
+    // Use specified image for Land properties if available or fallback
+    if (property.propertyType === "Land") {
+      if (property.images && property.images.length > 0) {
+        return `/pictures/${property.images[0]}`;
+      }
+      return "/pictures/land.jpg"; // Default land image
+    }
+    
+    // For non-Land properties, use first image or placeholder
+    if (property.images && property.images.length > 0) {
+      return `/pictures/${property.images[0]}`;
+    }
+    return "/pictures/placeholder.png";
   };
 
   return (
@@ -207,38 +296,57 @@ function Properties() {
             sx={{ width: 220 }}
           />
 
-          {/* Bedrooms */}
-          <FormControl size="small" sx={{ width: 120 }}>
-            <InputLabel>Bedrooms</InputLabel>
+          {/* Property Type Filter */}
+          <FormControl size="small" sx={{ width: 150 }}>
+            <InputLabel>Property Type</InputLabel>
             <Select
-              label="Bedrooms"
-              value={bedroomFilter}
-              onChange={(e) => setBedroomFilter(Number(e.target.value))}
+              label="Property Type"
+              value={propertyTypeFilter}
+              onChange={(e) => setPropertyTypeFilter(e.target.value)}
             >
-              <MenuItem value={0}>Any</MenuItem>
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
-              <MenuItem value={3}>3</MenuItem>
-              <MenuItem value={4}>4</MenuItem>
-              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value="all">All Types</MenuItem>
+              <MenuItem value="other">Buildings</MenuItem>
+              <MenuItem value="land">Land Only</MenuItem>
             </Select>
           </FormControl>
 
-          {/* Bathrooms */}
-          <FormControl size="small" sx={{ width: 120 }}>
-            <InputLabel>Bathrooms</InputLabel>
-            <Select
-              label="Bathrooms"
-              value={bathroomFilter}
-              onChange={(e) => setBathroomFilter(Number(e.target.value))}
-            >
-              <MenuItem value={0}>Any</MenuItem>
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
-              <MenuItem value={3}>3</MenuItem>
-              <MenuItem value={4}>4</MenuItem>
-            </Select>
-          </FormControl>
+          {/* Only show bedroom/bathroom filters if not filtering for land only */}
+          {propertyTypeFilter !== "land" && (
+            <>
+              {/* Bedrooms */}
+              <FormControl size="small" sx={{ width: 120 }}>
+                <InputLabel>Bedrooms</InputLabel>
+                <Select
+                  label="Bedrooms"
+                  value={bedroomFilter}
+                  onChange={(e) => setBedroomFilter(Number(e.target.value))}
+                >
+                  <MenuItem value={0}>Any</MenuItem>
+                  <MenuItem value={1}>1</MenuItem>
+                  <MenuItem value={2}>2</MenuItem>
+                  <MenuItem value={3}>3</MenuItem>
+                  <MenuItem value={4}>4</MenuItem>
+                  <MenuItem value={5}>5</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Bathrooms */}
+              <FormControl size="small" sx={{ width: 120 }}>
+                <InputLabel>Bathrooms</InputLabel>
+                <Select
+                  label="Bathrooms"
+                  value={bathroomFilter}
+                  onChange={(e) => setBathroomFilter(Number(e.target.value))}
+                >
+                  <MenuItem value={0}>Any</MenuItem>
+                  <MenuItem value={1}>1</MenuItem>
+                  <MenuItem value={2}>2</MenuItem>
+                  <MenuItem value={3}>3</MenuItem>
+                  <MenuItem value={4}>4</MenuItem>
+                </Select>
+              </FormControl>
+            </>
+          )}
 
           {/* Price Slider */}
           <Box sx={{ width: 200 }}>
@@ -266,8 +374,14 @@ function Properties() {
               <MenuItem value="recommended">Recommended</MenuItem>
               <MenuItem value="priceAsc">Price (Low to High)</MenuItem>
               <MenuItem value="priceDesc">Price (High to Low)</MenuItem>
-              <MenuItem value="bedroomsAsc">Bedrooms (Few to Many)</MenuItem>
-              <MenuItem value="bedroomsDesc">Bedrooms (Many to Few)</MenuItem>
+              {propertyTypeFilter !== "land" && (
+                <MenuItem value="bedroomsAsc">Bedrooms (Few to Many)</MenuItem>
+              )}
+              {propertyTypeFilter !== "land" && (
+                <MenuItem value="bedroomsDesc">Bedrooms (Many to Few)</MenuItem>
+              )}
+              <MenuItem value="areaAsc">Area (Small to Large)</MenuItem>
+              <MenuItem value="areaDesc">Area (Large to Small)</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -278,16 +392,28 @@ function Properties() {
         {sortedProperties.map((property) => (
           <Grid item xs={12} sm={6} md={4} key={property._id}>
             <Card>
-              <CardMedia
-                component="img"
-                height="200"
-                image={
-                  property.images && property.images[0]
-                    ? `/pictures/${property.images[0]}`
-                    : "/pictures/placeholder.png"
-                }
-                alt={property.title}
-              />
+              <Box sx={{ position: 'relative' }}>
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={getPropertyImage(property)}
+                  alt={property.title}
+                />
+                {property.propertyType === "Land" && (
+                  <Chip
+                    icon={<LandscapeIcon />}
+                    label="Land"
+                    color="primary"
+                    size="small"
+                    sx={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      backgroundColor: 'rgba(43, 123, 140, 0.8)',
+                    }}
+                  />
+                )}
+              </Box>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {property.title}
@@ -298,10 +424,23 @@ function Properties() {
                 <Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
                   {formatPrice(property.price)}
                 </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  {property.bedrooms} bed &bull; {property.bathrooms} bath
-                  &bull; {property.area} sqft
-                </Typography>
+                
+                {/* Show different details based on property type */}
+                {property.propertyType === "Land" ? (
+                  <>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      {property.area} sqft of Land
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {property.pricePerUnit}
+                    </Typography>
+                  </>
+                ) : (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    {property.bedrooms} bed &bull; {property.bathrooms} bath
+                    &bull; {property.area} sqft
+                  </Typography>
+                )}
 
                 <Box sx={{ mt: 2 }}>
                   <Button

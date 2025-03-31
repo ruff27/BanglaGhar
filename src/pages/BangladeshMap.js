@@ -292,7 +292,7 @@ const propertiesForSale = [
     image: House3,
     features: ["Lake View", "Balcony", "Parking"],
     mode: "buy"
-  }
+  },
 
   {
     id: 107,
