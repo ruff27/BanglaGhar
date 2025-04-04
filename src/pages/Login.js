@@ -33,7 +33,7 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   margin: theme.spacing(1),
   backgroundColor: theme.palette.primary.main,
   width: 56,
-  height: 56,
+  height: 56, 
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -55,7 +55,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 const Login = () => {
   const navigate = useNavigate();
   const { updateAuthState } = useAuth();
-  const [username, setUsername] = useState("");
+  const [useremail, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -64,12 +64,12 @@ const Login = () => {
     e.preventDefault();
 
     const authenticationDetails = new AuthenticationDetails({
-      Username: username,
+      Username: useremail,
       Password: password,
     });
 
     const user = new CognitoUser({
-      Username: username,
+      Username: useremail,
       Pool: userPool,
     });
 
@@ -77,8 +77,8 @@ const Login = () => {
       onSuccess: () => {
         // Save login status and update AuthContext
         localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("user", username);
-        updateAuthState(true, username);
+        localStorage.setItem("user", useremail);
+        updateAuthState(true, useremail);
         setOpenSnackbar(true);
         setTimeout(() => {
           navigate("/");
@@ -126,7 +126,7 @@ const Login = () => {
             label="Email"
             autoFocus
             variant="outlined"
-            value={username}
+            value={useremail}
             onChange={(e) => setUsername(e.target.value)}
             sx={{ mb: 2 }}
           />

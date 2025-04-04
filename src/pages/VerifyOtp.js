@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -49,11 +49,10 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-
 const VerifyOtp = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { email } = location.state || {}; // Get email from signup page
+  const { email, from } = location.state || {};
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -66,18 +65,26 @@ const VerifyOtp = () => {
       Pool: userPool,
     });
 
-    cognitoUser.confirmRegistration(otp, true, (err, result) => {
-      if (err) {
-        setError(err.message || JSON.stringify(err));
-        return;
-      }
+    if (from === "forgot-password") {
+      // Simply pass the OTP to ForgotPassword without pre-validation
       setOpenSnackbar(true);
       setTimeout(() => {
-        navigate("/login"); // Redirect to login page after OTP verification
+        navigate("/forgot-password", { state: { email, step: 2, otp } });
       }, 1500);
-    });
+    } else {
+      // Signup flow
+      cognitoUser.confirmRegistration(otp, true, (err, result) => {
+        if (err) {
+          setError(err.message || JSON.stringify(err));
+          return;
+        }
+        setOpenSnackbar(true);
+        setTimeout(() => {
+          navigate("/login");
+        }, 1500);
+      });
+    }
   };
-
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
@@ -125,6 +132,13 @@ const VerifyOtp = () => {
           <StyledButton type="submit" fullWidth variant="contained">
             Verify OTP
           </StyledButton>
+          {from === "forgot-password" && (
+            <Typography variant="body2" sx={{ mt: 2 }}>
+              <Link to="/forgot-password" style={{ color: "#2B7B8C" }}>
+                Back to Forgot Password
+              </Link>
+            </Typography>
+          )}
         </Box>
       </VerifyOtpPaper>
 
@@ -139,7 +153,9 @@ const VerifyOtp = () => {
           severity="success"
           sx={{ borderRadius: "8px" }}
         >
-          Email verified successfully! Redirecting to login...
+          {from === "forgot-password"
+            ? "OTP verified! Redirecting to reset password..."
+            : "Email verified successfully! Redirecting to login..."}
         </Alert>
       </Snackbar>
     </Container>

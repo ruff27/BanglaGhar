@@ -19,6 +19,7 @@ import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { userPool } from "../aws/CognitoConfig";
+import { CognitoUserAttribute } from "amazon-cognito-identity-js";
 
 const SignupPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -55,6 +56,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [useremail, setUseremail] = useState(""); 
   const [username, setUsername] = useState(""); 
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -95,15 +97,23 @@ const Signup = () => {
       return;
     }
 
-    const attributeList = [];
-    userPool.signUp(username, password, attributeList, null, (err, result) => {
+    const attributeList = [ new CognitoUserAttribute
+      ({
+        Name: 'email',
+        Value: useremail,
+      }),
+    ({
+      Name:'name',
+      Value:username,
+    })];
+    userPool.signUp(useremail, password, attributeList, null, (err, result) => {
       if (err) {
         setError(err.message || JSON.stringify(err));
         return;
       }
       setOpenSnackbar(true);
       setTimeout(() => {
-        navigate("/verify-otp", { state: { email: username } });
+        navigate("/verify-otp", { state: { email: useremail } });
       }, 1500);
     });
   };
@@ -142,6 +152,17 @@ const Signup = () => {
             required
             fullWidth
             label="Email"
+            autoFocus
+            variant="outlined"
+            value={useremail}
+            onChange={(e) => setUseremail(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Name"
             autoFocus
             variant="outlined"
             value={username}

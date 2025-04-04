@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -56,14 +56,15 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [cognitoUser, setCognitoUser] = useState(null);
+  const [otp, setOtp] = useState(""); // Store OTP from VerifyOtp
 
   // Password validation states
   const [hasNumber, setHasNumber] = useState(false);
@@ -71,6 +72,21 @@ const ForgotPassword = () => {
   const [hasUppercase, setHasUppercase] = useState(false);
   const [hasLowercase, setHasLowercase] = useState(false);
   const [hasMinLength, setHasMinLength] = useState(false);
+
+  // Handle state from VerifyOtp redirect
+  const { email: initialEmail, step: initialStep, otp: initialOtp } = location.state || {};
+  useEffect(() => {
+    if (initialEmail) setEmail(initialEmail);
+    if (initialStep) setStep(initialStep);
+    if (initialOtp) setOtp(initialOtp);
+    if (initialStep === 2 && initialEmail && !cognitoUser) {
+      const user = new CognitoUser({
+        Username: initialEmail,
+        Pool: userPool,
+      });
+      setCognitoUser(user);
+    }
+  }, [initialEmail, initialStep, initialOtp]);
 
   const validatePassword = (pwd) => {
     setHasNumber(/\d/.test(pwd));
@@ -86,7 +102,7 @@ const ForgotPassword = () => {
     validatePassword(newPasswordValue);
   };
 
-  // Send verification code to email
+  // Send verification code to email and redirect to VerifyOtp
   const handleSendCode = (e) => {
     e.preventDefault();
 
@@ -95,10 +111,11 @@ const ForgotPassword = () => {
       Pool: userPool,
     });
 
+    setCognitoUser(user);
+
     user.forgotPassword({
       onSuccess: () => {
-        setStep(2);
-        setCognitoUser(user);
+        navigate("/verify-otp", { state: { email, from: "forgot-password" } });
         setError("");
       },
       onFailure: (err) => {
@@ -107,7 +124,7 @@ const ForgotPassword = () => {
     });
   };
 
-  // Confirm new password with verification code
+  // Confirm new password with verified OTP from VerifyOtp
   const handleResetPassword = (e) => {
     e.preventDefault();
 
@@ -121,7 +138,13 @@ const ForgotPassword = () => {
       return;
     }
 
-    cognitoUser.confirmPassword(verificationCode, newPassword, {
+    if (!cognitoUser) {
+      setError("User session not found. Please try again.");
+      return;
+    }
+
+
+    cognitoUser.confirmPassword(otp,newPassword, {
       onSuccess: () => {
         setOpenSnackbar(true);
         setTimeout(() => {
@@ -188,18 +211,6 @@ const ForgotPassword = () => {
 
           {step === 2 && (
             <>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                label="Verification Code"
-                variant="outlined"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-
-              {/* Password Policy Information */}
               <Box sx={{ mb: 2, width: "100%" }}>
                 <Typography
                   variant="subtitle2"

@@ -75,6 +75,8 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+
+
 const PreviewCard = styled(Card)(({ theme }) => ({
   borderRadius: "12px",
   overflow: "hidden",
@@ -112,6 +114,9 @@ const steps = [
   "Images & Description",
 ];
 
+
+
+
 // Main component
 const ListProperty = () => {
   const navigate = useNavigate();
@@ -119,7 +124,8 @@ const ListProperty = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [openSuccess, setOpenSuccess] = useState(false);
-
+  const [aiGeneratedDescription, setAiGeneratedDescription] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   // Form state
   const [formData, setFormData] = useState({
     title: "",
@@ -146,7 +152,47 @@ const ListProperty = () => {
 
   // Form validation errors
   const [errors, setErrors] = useState({});
+  const generateDescriptionWithAI = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch("http://localhost:5001/api/generate-description", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyData: {
+            title: formData.title,
+            propertyType: formData.propertyType,
+            listingType: formData.listingType,
+            price: formData.price,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            bedrooms: formData.bedrooms,
+            bathrooms: formData.bathrooms,
+            area: formData.area,
+            features: formData.features,
+          },
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error("Failed to generate description");
+      }
+
+      const data = await response.json();
+      setAiGeneratedDescription(data.description);
+    } catch (error) {
+      console.error("Error generating description:", error);
+      setErrors({
+        ...errors,
+        description: "Failed to generate description. Please try again.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   // Redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
@@ -242,12 +288,16 @@ const ListProperty = () => {
 
   // Handle form submission
   const handleSubmit = () => {
-    // Here you would normally send the form data to your backend API
-    console.log("Form submitted with data:", formData);
+    const finalDescription = aiGeneratedDescription || formData.description;
+    const submissionData = {
+      ...formData,
+      description: finalDescription,
+    };
+  
+    console.log("Form submitted with data:", submissionData);
     setSubmitted(true);
     setOpenSuccess(true);
-
-    // Redirect to home after short delay
+  
     setTimeout(() => {
       navigate("/");
     }, 3000);
@@ -660,35 +710,64 @@ const ListProperty = () => {
               {renderImageUpload()}
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                name="description"
-                label="Property Description"
-                multiline
-                rows={6}
-                fullWidth
-                value={formData.description}
-                onChange={handleChange}
-                error={Boolean(errors.description)}
-                helperText={errors.description}
-                variant="outlined"
-                placeholder="Describe your property in detail. Include special features, recent renovations, nearby amenities, etc."
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment
-                      position="start"
-                      sx={{ alignSelf: "flex-start", mt: 1.5 }}
-                    >
-                      <DescriptionIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "10px",
-                  },
-                }}
-              />
-            </Grid>
+  <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+    <StyledButton
+      variant="outlined"
+      onClick={generateDescriptionWithAI}
+      disabled={isGenerating || !formData.title}
+      startIcon={<DescriptionIcon />}
+      sx={{ mb: 1 }}
+    >
+      {isGenerating ? "Generating..." : "Generate with AI"}
+    </StyledButton>
+  </Box>
+  <TextField
+    name="description"
+    label="Property Description"
+    multiline
+    rows={6}
+    fullWidth
+    value={aiGeneratedDescription || formData.description}
+    onChange={handleChange}
+    error={Boolean(errors.description)}
+    helperText={errors.description}
+    variant="outlined"
+    placeholder="Describe your property in detail. Include special features, recent renovations, nearby amenities, etc."
+    InputProps={{
+      startAdornment: (
+        <InputAdornment
+          position="start"
+          sx={{ alignSelf: "flex-start", mt: 1.5 }}
+        >
+          <DescriptionIcon color="primary" />
+        </InputAdornment>
+      ),
+    }}
+    sx={{
+      "& .MuiOutlinedInput-root": {
+        borderRadius: "10px",
+      },
+    }}
+  />
+  {aiGeneratedDescription && (
+    <Box sx={{ mt: 2, textAlign: "right" }}>
+      <Button
+        variant="text"
+        color="primary"
+        size="small"
+        onClick={() => {
+          setFormData({
+            ...formData,
+            description: aiGeneratedDescription,
+          });
+          setAiGeneratedDescription("");
+        }}
+      >
+        Use this description
+      </Button>
+    </Box>
+  )}
+</Grid>
             {formData.title && formData.price && (
               <Grid item xs={12}>
                 <SectionTitle variant="h6">Preview</SectionTitle>
