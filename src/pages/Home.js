@@ -35,10 +35,12 @@ import dhaka2 from "../pictures/dhaka2.jpg";
 import house1 from "../pictures/house1.png";
 import house2 from "../pictures/house2.png";
 import house3 from "../pictures/house3.png";
-import land from "../pictures/land.jpg"
+import land from "../pictures/land.jpg";
 import BangladeshMap from "./BangladeshMap"; // Import the BangladeshMap component
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext"; // Import the AuthContext
+import { useTranslation } from "react-i18next";
+import LanguageToggle from "./LanguageToggle";
 
 // Styled components with modern design
 const StyledButton = styled(Button)(({ theme, variant }) => ({
@@ -366,6 +368,19 @@ const Home = () => {
 
   return (
     <Box onClick={handleClickOutside}>
+      {/* Language Toggle Button - Top Right */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 20,
+          right: 30,
+          zIndex: 999,
+          display: { xs: "none", md: "block" }, // Only show on desktop
+        }}
+      >
+        <LanguageToggle />
+      </Box>
+
       {/* Hero Section with expanded search */}
       <Box
         sx={{

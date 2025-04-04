@@ -1,0 +1,25 @@
+{
+    "welcome": "Welcome to BanglaGhar",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "home": "Home",
+    "about": "About Us",
+    "contact": "Contact",
+    "search": "Search Properties",
+    "list_property": "List Your Property",
+    "saved": "Saved",
+    "properties": "Properties",
+    "language": "Language",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "submit": "Submit",
+    "name": "Name",
+    "address": "Address",
+    "price": "Price",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "description": "Description"
+  }
+  

@@ -9,6 +9,7 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import ListProperty from "./pages/ListProperty";
 import Signup from "./pages/Signup";
+import LanguageToggle from "./components/LanguageToggle";
 
 // Import the new single-page component:
 import Properties from "./pages/Properties";
@@ -48,6 +49,7 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="App">
+            <LanguageToggle />
             <Navbar />
             <main className="content">
               <Routes>
