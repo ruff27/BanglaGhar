@@ -40,7 +40,7 @@ import BangladeshMap from "./BangladeshMap"; // Import the BangladeshMap compone
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext"; // Import the AuthContext
 import { useTranslation } from "react-i18next";
-import LanguageToggle from "../components/LanguageToggle";
+//import LanguageToggle from "../components/LanguageToggle";
 
 // Styled components with modern design
 const StyledButton = styled(Button)(({ theme, variant }) => ({
@@ -378,9 +378,6 @@ const Home = () => {
           display: { xs: "none", md: "block" }, // Only show on desktop
         }}
       >
-        {/* 🌐 Language toggle button start */}
-        <LanguageToggle />
-        {/* 🌐 Language toggle button end */}
       </Box>
 
       {/* Hero Section with expanded search */}
