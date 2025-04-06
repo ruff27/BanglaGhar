@@ -40,7 +40,7 @@ import BangladeshMap from "./BangladeshMap"; // Import the BangladeshMap compone
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext"; // Import the AuthContext
 import { useTranslation } from "react-i18next";
-import LanguageToggle from "./LanguageToggle";
+import LanguageToggle from "../components/LanguageToggle";
 
 // Styled components with modern design
 const StyledButton = styled(Button)(({ theme, variant }) => ({
@@ -205,6 +205,7 @@ const Home = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const { t } = useTranslation(); // ✅ enables translation
 
   useEffect(() => {
     if (isLoggedIn && user) {

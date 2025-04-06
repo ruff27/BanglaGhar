@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import LanguageToggle from "./LanguageToggle"; // correct path from components
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -451,6 +452,18 @@ const Navbar = () => {
               </Logo>
 
               {/* Search Bar removed */}
+              {/* Language Toggle Button */}
+              <Box
+                sx={{
+                  display: { xs: "none", md: "block" }, // hide on mobile
+                  position: "absolute",
+                  top: "18px",
+                  right: "90px",
+                  zIndex: 99,
+                }}
+              >
+                <LanguageToggle />
+              </Box>
 
               {/* Desktop navigation */}
               {!isMobile && (
