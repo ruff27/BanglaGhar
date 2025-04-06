@@ -369,7 +369,6 @@ const Home = () => {
 
   return (
     <Box onClick={handleClickOutside}>
-      {/* Language Toggle Button - Top Right */}
       <Box
         sx={{
           position: "absolute",
@@ -379,7 +378,9 @@ const Home = () => {
           display: { xs: "none", md: "block" }, // Only show on desktop
         }}
       >
+        {/* 🌐 Language toggle button start */}
         <LanguageToggle />
+        {/* 🌐 Language toggle button end */}
       </Box>
 
       {/* Hero Section with expanded search */}
@@ -387,7 +388,7 @@ const Home = () => {
         sx={{
           background: `linear-gradient(160deg, #EFF9FE 60%, rgba(139, 198, 206, 0.4) 100%)`,
           pt: { xs: 12, md: 15 },
-          pb: { xs: 10, md: 12 }, // Increased bottom padding
+          pb: { xs: 10, md: 12 },
           position: "relative",
           overflow: "hidden",
         }}
@@ -419,11 +420,13 @@ const Home = () => {
                   color: "#0B1F23",
                 }}
               >
-                Find Your Perfect{" "}
+                {/* 🌐 Translated hero title start */}
+                {t("hero_title")}{" "}
                 <Box component="span" sx={{ color: "#2B7B8C" }}>
                   Home
                 </Box>{" "}
-                in Bangladesh
+                {t("in_bangladesh")}
+                {/* 🌐 Translated hero title end */}
               </Typography>
 
               <Typography
@@ -436,9 +439,9 @@ const Home = () => {
                   maxWidth: "650px",
                 }}
               >
-                BanglaGhor helps you discover your dream property with ease.
-                Whether you're buying, selling, or renting, we've got you
-                covered.
+                {/* 🌐 Translated subtitle start */}
+                {t("hero_subtitle")}
+                {/* 🌐 Translated subtitle end */}
               </Typography>
 
               <Box
@@ -448,67 +451,26 @@ const Home = () => {
                   gap: { xs: 2, sm: 2 },
                 }}
               >
+                {/* 🌐 Translated buttons start */}
                 <StyledButton
                   variant="contained"
                   size="large"
                   endIcon={<ArrowForwardIcon />}
                   onClick={() => navigate("/properties/rent")}
                 >
-                  Explore Properties
+                  {t("explore_properties")}
                 </StyledButton>
                 <StyledButton
                   variant="outlined"
                   size="large"
-                  onClick={handleListPropertyClick}
+                  onClick={() =>
+                    navigate(isLoggedIn ? "/list-property" : "/login")
+                  }
                 >
-                  List Your Property
+                  {t("list_property")}
                 </StyledButton>
+                {/* 🌐 Translated buttons end */}
               </Box>
-
-              {/* Stats with proper spacing */}
-              <Grid
-                container
-                spacing={3}
-                sx={{
-                  mt: 8, // Increased top margin
-                  mb: 2, // Added bottom margin
-                  py: 2, // Added vertical padding
-                  px: { xs: 2, md: 4 }, // Added horizontal padding
-                  bgcolor: "rgba(255, 255, 255, 0.6)", // Optional: light background
-                  borderRadius: "12px", // Optional: rounded corners
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.03)", // Optional: very subtle shadow
-                }}
-              >
-                {[
-                  { value: "5K+", label: "Properties" },
-                  { value: "1500+", label: "Happy Clients" },
-                  { value: "10+", label: "Years Experience" },
-                ].map((stat, index) => (
-                  <Grid item xs={4} key={index} sx={{ textAlign: "center" }}>
-                    <Typography
-                      variant="h3"
-                      sx={{
-                        fontSize: { xs: "2rem", md: "2.8rem" }, // Increased font size
-                        fontWeight: 800,
-                        color: "#2B7B8C",
-                        mb: 1, // Increased margin bottom
-                      }}
-                    >
-                      {stat.value}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#0B1F23",
-                        opacity: 0.8,
-                        fontSize: { xs: "0.9rem", md: "1rem" }, // Slightly larger font
-                      }}
-                    >
-                      {stat.label}
-                    </Typography>
-                  </Grid>
-                ))}
-              </Grid>
             </Grid>
 
             {/* Hero Image */}
