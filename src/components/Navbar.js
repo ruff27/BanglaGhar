@@ -47,6 +47,9 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import logo from "../pictures/logo.png";
 // Import auth context
 import { useAuth } from "../pages/AuthContext";
+//Import React i18
+import { useTranslation } from "react-i18next";
+
 
 // Custom styled components with enhanced design
 const NavbarContainer = styled(AppBar)(({ theme }) => ({
@@ -298,6 +301,7 @@ const Navbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
+  const { t } = useTranslation(); //Initialise translation
 
   // Use the auth context
   const { isLoggedIn, user, logout } = useAuth();
@@ -329,18 +333,18 @@ const Navbar = () => {
   }, [location]);
 
   const navLinks = [
-    { id: "home", label: "Home", path: "/", icon: <HomeIcon /> },
+    { id: "home", label: t("nav_home"), path: "/", icon: <HomeIcon /> },
     {
       id: "properties",
-      label: "Properties",
+      label: t("nav_properties"),
       path: "/properties",
       icon: <HomeWorkIcon />,
       hasDropdown: true,
     },
-    { id: "about", label: "About Us", path: "/about", icon: <InfoIcon /> },
+    { id: "about", label: t("nav_about"), path: "/about", icon: <InfoIcon /> },
     {
       id: "contact",
-      label: "Contact",
+      label: t("nav_contact"),
       path: "/contact",
       icon: <ContactsIcon />,
     },
@@ -525,7 +529,7 @@ const Navbar = () => {
                                 sx={{ color: "#2B7B8C" }}
                               />
                             </ListItemIcon>
-                            <ListItemText>Buy</ListItemText>
+                            <ListItemText>{t("nav_buy")}</ListItemText>
                           </MenuItem>
                           <MenuItem
                             component={Link}
@@ -539,7 +543,7 @@ const Navbar = () => {
                                 sx={{ color: "#2B7B8C" }}
                               />
                             </ListItemIcon>
-                            <ListItemText>Rent</ListItemText>
+                            <ListItemText>{t("nav_rent")}</ListItemText>
                           </MenuItem>
                           <MenuItem
                             component={Link}
@@ -553,7 +557,7 @@ const Navbar = () => {
                                 sx={{ color: "#2B7B8C" }}
                               />
                             </ListItemIcon>
-                            <ListItemText>Sold</ListItemText>
+                            <ListItemText>{t("nav_sold")}</ListItemText>
                           </MenuItem>
                         </Menu>
                       </Box>
@@ -585,7 +589,7 @@ const Navbar = () => {
                       onClick={handleLoginClick}
                       startIcon={<LoginIcon />}
                     >
-                      Login
+                      {t("nav_login")}
                     </LoginButton>
                   )}
                 </Box>
@@ -694,7 +698,7 @@ const Navbar = () => {
                       <LogoutIcon fontSize="small" sx={{ color: "#d32f2f" }} />
                     </ListItemIcon>
                     <ListItemText sx={{ color: "#d32f2f" }}>
-                      Logout
+                      {t("nav_logout")}
                     </ListItemText>
                   </MenuItem>
                 </Menu>
@@ -827,7 +831,7 @@ const Navbar = () => {
                           sx={{ color: "#2B7B8C" }}
                         />
                       </ListItemIcon>
-                      <ListItemText primary="My Profile" />
+                      <ListItemText primary={t("nav_profile")} />
                     </ListItem>
                     <ListItem
                       button
@@ -845,7 +849,7 @@ const Navbar = () => {
                           sx={{ color: "#2B7B8C" }}
                         />
                       </ListItemIcon>
-                      <ListItemText primary="Saved Properties" />
+                      <ListItemText primary={t("nav_saved")} />
                     </ListItem>
                     <ListItem
                       button
@@ -863,7 +867,7 @@ const Navbar = () => {
                         />
                       </ListItemIcon>
                       <ListItemText sx={{ color: "#d32f2f" }}>
-                        Logout
+                        {t("nav_logout")}
                       </ListItemText>
                     </ListItem>
                   </List>

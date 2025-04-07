@@ -420,7 +420,7 @@ const Home = () => {
                 {/* 🌐 Translated hero title start */}
                 {t("hero_title")}{" "}
                 <Box component="span" sx={{ color: "#2B7B8C" }}>
-                  Home
+                  {t("home_translated")}
                 </Box>{" "}
                 {t("in_bangladesh")}
                 {/* 🌐 Translated hero title end */}
@@ -523,8 +523,9 @@ const Home = () => {
                 width: "100%",
               }}
             >
+              {/* 🌐 Search input placeholder */}
               <TextField
-                placeholder="Search for properties (e.g., 3 bedroom, Gulshan, apartment)"
+                placeholder={t("search_placeholder")}
                 variant="outlined"
                 fullWidth
                 value={searchQuery}
@@ -941,7 +942,7 @@ const Home = () => {
               }}
               onClick={handleSearch}
             >
-              SEARCH
+              {t("search_button")}
             </Button>
           </Box>
 
@@ -1002,6 +1003,7 @@ const Home = () => {
             }}
           >
             <Box>
+              {/* 🌐 Translated section title start */}
               <Typography
                 variant="h2"
                 sx={{
@@ -1011,8 +1013,11 @@ const Home = () => {
                   color: "#0B1F23",
                 }}
               >
-                Featured Properties
+                {t("featured_properties")}
               </Typography>
+              {/* 🌐 Translated section title end */}
+
+              {/* 🌐 Translated section subtitle start */}
               <Typography
                 variant="body1"
                 sx={{
@@ -1020,17 +1025,20 @@ const Home = () => {
                   opacity: 0.7,
                 }}
               >
-                Handpicked properties for you to explore
+                {t("handpicked_intro")}
               </Typography>
+              {/* 🌐 Translated section subtitle end */}
             </Box>
 
+            {/* 🌐 Translated button start */}
             <StyledButton
               variant="outlined"
               endIcon={<ArrowForwardIcon />}
               onClick={() => navigate("/properties/rent")}
             >
-              View All Properties
+              {t("view_all_properties")}
             </StyledButton>
+            {/* 🌐 Translated button end */}
           </Box>
 
           <Grid container spacing={3}>
@@ -1225,6 +1233,7 @@ const Home = () => {
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={8}>
+              {/* 🌐 Translated CTA heading start */}
               <Typography
                 variant="h3"
                 sx={{
@@ -1233,8 +1242,11 @@ const Home = () => {
                   fontSize: { xs: "2rem", md: "2.8rem" },
                 }}
               >
-                Start Your Property Journey Today
+                {t("start_journey")}
               </Typography>
+              {/* 🌐 Translated CTA heading end */}
+
+              {/* 🌐 Translated CTA subtitle start */}
               <Typography
                 variant="h6"
                 sx={{
@@ -1244,9 +1256,10 @@ const Home = () => {
                   fontSize: { xs: "1.1rem", md: "1.25rem" },
                 }}
               >
-                Whether you're looking to buy, sell, or rent, BanglaGhor is here
-                to make your experience seamless.
+                {t("journey_description")}
               </Typography>
+              {/* 🌐 Translated CTA subtitle end */}
+
             </Grid>
             <Grid
               item
@@ -1254,6 +1267,7 @@ const Home = () => {
               md={4}
               sx={{ textAlign: { xs: "left", md: "right" } }}
             >
+              {/* 🌐 Translated CTA button start */}
               <Button
                 variant="contained"
                 size="large"
@@ -1272,8 +1286,9 @@ const Home = () => {
                   },
                 }}
               >
-                Contact Us
+                {t("contact_us")}
               </Button>
+              {/* 🌐 Translated CTA button end */}
             </Grid>
           </Grid>
         </Container>
