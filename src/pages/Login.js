@@ -1,5 +1,3 @@
-// Login.js
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -15,9 +13,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
-import { userPool } from "../aws/CognitoConfig";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./AuthContext"; 
 
 const LoginPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -33,7 +29,7 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   margin: theme.spacing(1),
   backgroundColor: theme.palette.primary.main,
   width: 56,
-  height: 56, 
+  height: 56,
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -54,40 +50,24 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Login = () => {
   const navigate = useNavigate();
-  const { updateAuthState } = useAuth();
-  const [useremail, setUsername] = useState("");
+  const { login } = useAuth(); // Use the login function from AuthContext
+  const [useremail, setUseremail] = useState(""); // Rename for clarity
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const authenticationDetails = new AuthenticationDetails({
-      Username: useremail,
-      Password: password,
-    });
-
-    const user = new CognitoUser({
-      Username: useremail,
-      Pool: userPool,
-    });
-
-    user.authenticateUser(authenticationDetails, {
-      onSuccess: () => {
-        // Save login status and update AuthContext
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("user", useremail);
-        updateAuthState(true, useremail);
-        setOpenSnackbar(true);
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      },
-      onFailure: (err) => {
-        setError(err.message || JSON.stringify(err));
-      },
-    });
+    try {
+      const userData = await login(useremail, password); // Call login from AuthContext
+      setOpenSnackbar(true);
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    } catch (err) {
+      setError(err.message || "Login failed");
+    }
   };
 
   const handleCloseSnackbar = () => {
@@ -127,7 +107,7 @@ const Login = () => {
             autoFocus
             variant="outlined"
             value={useremail}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUseremail(e.target.value)} // Fixed variable name
             sx={{ mb: 2 }}
           />
           <TextField

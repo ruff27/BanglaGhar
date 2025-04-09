@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -10,14 +10,9 @@ import {
   Alert,
   Snackbar,
   Avatar,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import { userPool } from "../aws/CognitoConfig";
 
@@ -56,15 +51,14 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP + Password Reset
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [cognitoUser, setCognitoUser] = useState(null);
-  const [otp, setOtp] = useState(""); // Store OTP from VerifyOtp
 
   // Password validation states
   const [hasNumber, setHasNumber] = useState(false);
@@ -72,21 +66,6 @@ const ForgotPassword = () => {
   const [hasUppercase, setHasUppercase] = useState(false);
   const [hasLowercase, setHasLowercase] = useState(false);
   const [hasMinLength, setHasMinLength] = useState(false);
-
-  // Handle state from VerifyOtp redirect
-  const { email: initialEmail, step: initialStep, otp: initialOtp } = location.state || {};
-  useEffect(() => {
-    if (initialEmail) setEmail(initialEmail);
-    if (initialStep) setStep(initialStep);
-    if (initialOtp) setOtp(initialOtp);
-    if (initialStep === 2 && initialEmail && !cognitoUser) {
-      const user = new CognitoUser({
-        Username: initialEmail,
-        Pool: userPool,
-      });
-      setCognitoUser(user);
-    }
-  }, [initialEmail, initialStep, initialOtp]);
 
   const validatePassword = (pwd) => {
     setHasNumber(/\d/.test(pwd));
@@ -102,9 +81,13 @@ const ForgotPassword = () => {
     validatePassword(newPasswordValue);
   };
 
-  // Send verification code to email and redirect to VerifyOtp
+  // Send verification code to email
   const handleSendCode = (e) => {
     e.preventDefault();
+    if (!email) {
+      setError("Please enter your email");
+      return;
+    }
 
     const user = new CognitoUser({
       Username: email,
@@ -115,7 +98,7 @@ const ForgotPassword = () => {
 
     user.forgotPassword({
       onSuccess: () => {
-        navigate("/verify-otp", { state: { email, from: "forgot-password" } });
+        setStep(2); // Move to OTP + Password reset step
         setError("");
       },
       onFailure: (err) => {
@@ -124,9 +107,14 @@ const ForgotPassword = () => {
     });
   };
 
-  // Confirm new password with verified OTP from VerifyOtp
+  // Reset password with OTP
   const handleResetPassword = (e) => {
     e.preventDefault();
+
+    if (!otp) {
+      setError("Please enter the verification code");
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match!");
@@ -139,12 +127,11 @@ const ForgotPassword = () => {
     }
 
     if (!cognitoUser) {
-      setError("User session not found. Please try again.");
+      setError("User session not found. Please start over.");
       return;
     }
 
-
-    cognitoUser.confirmPassword(otp,newPassword, {
+    cognitoUser.confirmPassword(otp, newPassword, {
       onSuccess: () => {
         setOpenSnackbar(true);
         setTimeout(() => {
@@ -152,7 +139,7 @@ const ForgotPassword = () => {
         }, 1500);
       },
       onFailure: (err) => {
-        setError(err.message || JSON.stringify(err));
+        setError(err.message || "Invalid verification code. Please try again.");
       },
     });
   };
@@ -160,6 +147,9 @@ const ForgotPassword = () => {
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
+
+  // Check if password meets all requirements
+  const isPasswordValid = hasNumber && hasSpecial && hasUppercase && hasLowercase && hasMinLength;
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
@@ -211,72 +201,19 @@ const ForgotPassword = () => {
 
           {step === 2 && (
             <>
-              <Box sx={{ mb: 2, width: "100%" }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 1, color: "#2B7B8C", fontWeight: 600 }}
-                >
-                  New password must contain:
-                </Typography>
-                <List dense>
-                  <ListItem sx={{ py: 0 }}>
-                    <ListItemIcon>
-                      <CheckCircleOutlineIcon 
-                        sx={{ color: hasMinLength ? "green" : "#2B7B8C" }} 
-                      />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary="Minimum 8 characters"
-                      sx={{ color: hasMinLength ? "green" : "inherit" }}
-                    />
-                  </ListItem>
-                  <ListItem sx={{ py: 0 }}>
-                    <ListItemIcon>
-                      <CheckCircleOutlineIcon 
-                        sx={{ color: hasNumber ? "green" : "#2B7B8C" }} 
-                      />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary="At least 1 number"
-                      sx={{ color: hasNumber ? "green" : "inherit" }}
-                    />
-                  </ListItem>
-                  <ListItem sx={{ py: 0 }}>
-                    <ListItemIcon>
-                      <CheckCircleOutlineIcon 
-                        sx={{ color: hasSpecial ? "green" : "#2B7B8C" }} 
-                      />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary="At least 1 special character"
-                      sx={{ color: hasSpecial ? "green" : "inherit" }}
-                    />
-                  </ListItem>
-                  <ListItem sx={{ py: 0 }}>
-                    <ListItemIcon>
-                      <CheckCircleOutlineIcon 
-                        sx={{ color: hasUppercase ? "green" : "#2B7B8C" }} 
-                      />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary="At least 1 uppercase letter"
-                      sx={{ color: hasUppercase ? "green" : "inherit" }}
-                    />
-                  </ListItem>
-                  <ListItem sx={{ py: 0 }}>
-                    <ListItemIcon>
-                      <CheckCircleOutlineIcon 
-                        sx={{ color: hasLowercase ? "green" : "#2B7B8C" }} 
-                      />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary="At least 1 lowercase letter"
-                      sx={{ color: hasLowercase ? "green" : "inherit" }}
-                    />
-                  </ListItem>
-                </List>
-              </Box>
-
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Enter the verification code sent to {email}
+              </Typography>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="Verification Code"
+                variant="outlined"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                sx={{ mb: 2 }}
+              />
               <TextField
                 margin="normal"
                 required
@@ -286,7 +223,18 @@ const ForgotPassword = () => {
                 variant="outlined"
                 value={newPassword}
                 onChange={handlePasswordChange}
-                sx={{ mb: 2 }}
+                sx={{ mb: 1 }}
+                helperText={
+                  <Typography
+                    variant="caption"
+                    sx={{ 
+                      color: isPasswordValid ? "green" : "#2B7B8C",
+                      lineHeight: 1.2
+                    }}
+                  >
+                    Must be 8+ characters with number, special character, uppercase, and lowercase
+                  </Typography>
+                }
               />
               <TextField
                 margin="normal"

@@ -20,6 +20,7 @@ import Saved from "./pages/Saved";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider } from "./pages/AuthContext";
+import UserProfile from "./pages/UserProfile";
 
 // theme
 const theme = createTheme({
@@ -65,6 +66,7 @@ function App() {
                 <Route path="forgot-password" element={<ForgotPassword/>} />
                 <Route path="/list-property" element={<ListProperty />} />
                 <Route path="/saved" element={<Saved />} />
+                <Route path="/user-profile" element={<UserProfile />} />
               </Routes>
             </main>
             <Footer />

@@ -569,11 +569,11 @@ const Navbar = () => {
                         fontWeight: 'bold'
                       }}
                     >
-                      A
+                      {user?.name ? user.name.charAt(0).toUpperCase() : "A"} {/* Dynamic initial */}
                     </Avatar>
                     <Box sx={{ ml: 1, display: { xs: 'none', md: 'block' } }}>
                       <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                        {user || 'Admin'}
+                        {user?.name}
                       </Typography>
                       <Typography variant="caption" sx={{ color: '#BFBBB8', lineHeight: 1 }}>
                         Account
@@ -618,7 +618,7 @@ const Navbar = () => {
                 >
                   <MenuItem 
                     component={Link} 
-                    to="/profile" 
+                    to="/user-profile" 
                     onClick={handleProfileClose} 
                     sx={{ borderRadius: '8px' }}
                   >
@@ -726,11 +726,12 @@ const Navbar = () => {
                       mr: 2
                     }}
                   >
-                    A
+                  {user?.name ? user.name.charAt(0).toUpperCase() : "A"} {/* Dynamic initial */}
+
                   </Avatar>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {user || 'Admin'}
+                      {user?.name}
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#BFBBB8' }}>
                       Logged In
@@ -750,7 +751,7 @@ const Navbar = () => {
                     <ListItem 
                       button 
                       component={Link}
-                      to="/profile"
+                      to="/user-profile"
                       sx={{ pl: 6, py: 1, borderRadius: '8px', mx: 2, my: 0.5 }}
                       onClick={() => {
                         setProfileAnchor(null);
