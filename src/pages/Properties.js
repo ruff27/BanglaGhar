@@ -120,7 +120,7 @@ const getSampleLandProperties = (mode) => {
       bedrooms: 3,
       bathrooms: 2,
       description: "Modern luxury apartment with spacious rooms and premium finishes in Banani.",
-      images: ["apartment1.jpg"],
+      images: ["house1.png"],
       featured: true
     },
     {
