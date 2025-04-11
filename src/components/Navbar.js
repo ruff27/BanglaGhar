@@ -666,7 +666,8 @@ const Navbar = () => {
                 >
                   <MenuItem
                     component={Link}
-                    to="/profile"
+                    to="/user-
+                      profile"
                     onClick={handleProfileClose}
                     sx={{ borderRadius: "8px" }}
                   >
@@ -819,7 +820,7 @@ const Navbar = () => {
                     <ListItem
                       button
                       component={Link}
-                      to="/profile"
+                      to="/user-profile"
                       sx={{ pl: 6, py: 1, borderRadius: "8px", mx: 2, my: 0.5 }}
                       onClick={() => {
                         setProfileAnchor(null);
