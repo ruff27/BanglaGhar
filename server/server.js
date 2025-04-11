@@ -88,7 +88,8 @@ app.post("/api/login", async (req, res) => {
 // CREATE property
 app.post("/api/properties", async (req, res) => {
   try {
-    // Typically you'd check if user is logged in, but let's skip that for now
+    console.log("Received property data:", req.body); // Debug line
+
     const {
       title,
       price,
@@ -101,25 +102,35 @@ app.post("/api/properties", async (req, res) => {
       images,
       createdBy,
     } = req.body;
-
-    // createdBy is the user ID of whoever is creating it
-    // In a real app, you'd get this from an auth token or session
+    if (!createdBy) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: user must be logged in" });
+    }
+    const userDoc = await User.findOne({ username: createdBy });
+    if (!userDoc) {
+      return res.status(401).json({ error: "Unauthorized: user not found" });
+    }
+    const parsedPrice = Number(price);
+    if (isNaN(parsedPrice)) {
+      return res.status(400).json({ error: "Price must be a number" });
+    }
+    const propertyImages =
+      images && images.length > 0 ? images : ["house1.png"];
 
     const newProperty = new Property({
       title,
-      price,
+      price: parsedPrice,
       location,
       mode,
       bedrooms,
       bathrooms,
       area,
       description,
-      images,
-      createdBy,
+      images: propertyImages,
+      createdBy: userDoc._id,
     });
-
     await newProperty.save();
-
     res.json({
       message: "Property created successfully",
       property: newProperty,
@@ -219,7 +230,10 @@ app.post("/api/users/:username/wishlist", async (req, res) => {
     user.wishlist.push(propertyId);
     await user.save();
 
-    res.json({ message: "Property added to wishlist successfully", wishlist: user.wishlist });
+    res.json({
+      message: "Property added to wishlist successfully",
+      wishlist: user.wishlist,
+    });
   } catch (err) {
     console.error("Add to wishlist error:", err);
     res.status(500).json({ error: err });
@@ -261,10 +275,15 @@ app.delete("/api/users/:username/wishlist", async (req, res) => {
     user.wishlist = user.wishlist.filter((id) => id.toString() !== propertyId);
     await user.save();
 
-    res.json({ message: "Property removed from wishlist successfully", wishlist: user.wishlist });
+    res.json({
+      message: "Property removed from wishlist successfully",
+      wishlist: user.wishlist,
+    });
   } catch (err) {
     console.error("Remove from wishlist error:", err);
-    res.status(500).json({ error: "Server error removing property from wishlist" });
+    res
+      .status(500)
+      .json({ error: "Server error removing property from wishlist" });
   }
 });
 
