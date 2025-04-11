@@ -35,6 +35,7 @@ import SellIcon from "@mui/icons-material/Sell";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { useAuth } from "./AuthContext";
+import axios from "axios";
 
 // Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -115,7 +116,7 @@ const steps = [
 // Main component
 const ListProperty = () => {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [openSuccess, setOpenSuccess] = useState(false);
@@ -146,6 +147,9 @@ const ListProperty = () => {
 
   // Form validation errors
   const [errors, setErrors] = useState({});
+
+  // Manage the snackbar state
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -191,9 +195,16 @@ const ListProperty = () => {
       if (!formData.title) newErrors.title = "Title is required";
       if (!formData.propertyType)
         newErrors.propertyType = "Property type is required";
-      if (!formData.price) newErrors.price = "Price is required";
-      else if (isNaN(formData.price) || formData.price <= 0)
-        newErrors.price = "Price must be a positive number";
+      if (!formData.price) {
+        newErrors.price = "Price is required";
+      } else {
+        const numberPrice = Number(formData.price);
+        if (isNaN(numberPrice) || numberPrice <= 0) {
+          newErrors.price = "Price must be a positive number";
+        } else if (numberPrice >= 1000000000) {
+          newErrors.price = "Price is too high";
+        }
+      }
     }
 
     // Step 2 validation
@@ -241,27 +252,52 @@ const ListProperty = () => {
   };
 
   // Handle form submission
-  const handleSubmit = () => {
-    // Here you would normally send the form data to your backend API
-    console.log("Form submitted with data:", formData);
-    setSubmitted(true);
-    setOpenSuccess(true);
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-    // Redirect to home after short delay
-    setTimeout(() => {
-      navigate("/");
-    }, 3000);
+    // Clean up the price field: remove commas and any non-digit (except dot)
+    const rawPrice = formData.price || "";
+    const cleanedPrice = parseFloat(rawPrice.replace(/[^\d.]/g, ""));
+
+    // Construct the propertyData object
+    const propertyData = {
+      title: formData.title,
+      price: cleanedPrice,
+      location: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
+      mode: formData.listingType === "rent" ? "rent" : "buy",
+      bedrooms: Number(formData.bedrooms),
+      bathrooms: Number(formData.bathrooms),
+      area: Number(formData.area),
+      description: formData.description,
+      images:
+        formData.photos && formData.photos.length > 0
+          ? formData.photos
+          : ["house1.png"],
+      // Updated createdBy assignment:
+      createdBy: typeof user === "string" ? user : user.username || user._id,
+    };
+
+    console.log("Submitting property data:", propertyData);
+    console.log("Type of price:", typeof propertyData.price); // Should log "number"
+
+    try {
+      await axios.post("http://localhost:5001/api/properties", propertyData);
+      setOpenSnackbar(true);
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
+    } catch (error) {
+      console.error("Error submitting property:", error);
+    }
   };
 
   // Handle photo upload
   const handlePhotoUpload = (e) => {
-    // In a real app, we would handle file uploads to storage
-    // For this demo, we'll just update the state with file names
-    const files = Array.from(e.target.files);
-    setFormData({
-      ...formData,
-      photos: [...formData.photos, ...files.map((file) => file.name)],
-    });
+    // Discard the uploaded file and use a default seed image.
+    setFormData((prevData) => ({
+      ...prevData,
+      photos: ["house1.png"],
+    }));
   };
 
   // Handle snackbar close
@@ -413,6 +449,7 @@ const ListProperty = () => {
                     : "Price (৳)"
                 }
                 fullWidth
+                type="number"
                 value={formData.price}
                 onChange={handleChange}
                 error={Boolean(errors.price)}
