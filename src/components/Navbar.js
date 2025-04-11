@@ -50,7 +50,6 @@ import { useAuth } from "../pages/AuthContext";
 //Import React i18
 import { useTranslation } from "react-i18next";
 
-
 // Custom styled components with enhanced design
 const NavbarContainer = styled(AppBar)(({ theme }) => ({
   backgroundColor: "#EFF9FE",
@@ -609,14 +608,15 @@ const Navbar = () => {
                         fontWeight: "bold",
                       }}
                     >
-                      A
+                      {user?.name ? user.name.charAt(0).toUpperCase() : "A"}{" "}
+                      {/* Dynamic initial */}
                     </Avatar>
                     <Box sx={{ ml: 1, display: { xs: "none", md: "block" } }}>
                       <Typography
                         variant="body2"
                         sx={{ fontWeight: 600, lineHeight: 1.2 }}
                       >
-                        {user || "Admin"}
+                        {user?.name}
                       </Typography>
                       <Typography
                         variant="caption"
@@ -788,11 +788,12 @@ const Navbar = () => {
                       mr: 2,
                     }}
                   >
-                    A
+                    {user?.name ? user.name.charAt(0).toUpperCase() : "A"}{" "}
+                    {/* Dynamic initial */}
                   </Avatar>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {user || "Admin"}
+                      {user?.name}
                     </Typography>
                     <Typography variant="body2" sx={{ color: "#BFBBB8" }}>
                       Logged In

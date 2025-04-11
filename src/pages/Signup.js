@@ -1,11 +1,8 @@
-
-// Signup.js
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Container,
-  Paper, 
+  Paper,
   Typography,
   TextField,
   Button,
@@ -16,7 +13,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../pages/AuthContext"; 
 
 const SignupPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -53,32 +50,56 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { signup, error } = useAuth();
+  const { signup } = useAuth(); // Use signup from AuthContext
+  const [useremail, setUseremail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  // Password validation states
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecial, setHasSpecial] = useState(false);
+  const [hasUppercase, setHasUppercase] = useState(false);
+  const [hasLowercase, setHasLowercase] = useState(false);
+  const [hasMinLength, setHasMinLength] = useState(false);
+
+  const validatePassword = (pwd) => {
+    setHasNumber(/\d/.test(pwd));
+    setHasSpecial(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd));
+    setHasUppercase(/[A-Z]/.test(pwd));
+    setHasLowercase(/[a-z]/.test(pwd));
+    setHasMinLength(pwd.length >= 8);
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    validatePassword(newPassword); 
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    if (password !== confirmPass) {
-      alert("Passwords do not match!");
-      return;
-    }
 
-    const success = await signup(username, password);
-    if (success) {
+    try {
+      await signup(useremail, username, password); // Call centralized signup
       setOpenSnackbar(true);
       setTimeout(() => {
-        navigate("/");
+        navigate("/verify-otp", { state: { email: useremail } });
       }, 1500);
+    } catch (err) {
+      setError(err.message || "Signup failed"); // Use error from catch
     }
   };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
+
+  // Check if password meets all requirements
+  const isPasswordValid = hasNumber && hasSpecial && hasUppercase && hasLowercase && hasMinLength;
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
@@ -109,8 +130,18 @@ const Signup = () => {
             margin="normal"
             required
             fullWidth
-            label="Username"
+            label="Email"
             autoFocus
+            variant="outlined"
+            value={useremail}
+            onChange={(e) => setUseremail(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Name"
             variant="outlined"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -124,8 +155,20 @@ const Signup = () => {
             type="password"
             variant="outlined"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            sx={{ mb: 2 }}
+            onChange={handlePasswordChange}
+            sx={{ mb: 1 }}
+            helperText={
+              <Typography
+                variant="caption"
+                sx={{ 
+                  color: hasMinLength ? "green" : "#2B7B8C",
+                  lineHeight: 1.2
+                }}
+              >
+                  Must be 8 characters with number, special character, uppercase, and lowercase  
+              </Typography>
+              
+            }
           />
           <TextField
             margin="normal"
@@ -138,7 +181,6 @@ const Signup = () => {
             onChange={(e) => setConfirmPass(e.target.value)}
             sx={{ mb: 2 }}
           />
-
           <StyledButton type="submit" fullWidth variant="contained">
             Sign Up
           </StyledButton>
@@ -152,7 +194,6 @@ const Signup = () => {
         </Typography>
       </SignupPaper>
 
-      {/* Snackbar for success */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
@@ -164,7 +205,7 @@ const Signup = () => {
           severity="success"
           sx={{ borderRadius: "8px" }}
         >
-          Successfully signed up!
+          Successfully signed up! Please verify your email with OTP.
         </Alert>
       </Snackbar>
     </Container>

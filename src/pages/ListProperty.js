@@ -120,7 +120,8 @@ const ListProperty = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [openSuccess, setOpenSuccess] = useState(false);
-
+  const [aiGeneratedDescription, setAiGeneratedDescription] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   // Form state
   const [formData, setFormData] = useState({
     title: "",
@@ -147,10 +148,50 @@ const ListProperty = () => {
 
   // Form validation errors
   const [errors, setErrors] = useState({});
+  const generateDescriptionWithAI = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch(
+        "http://localhost:5001/api/generate-description",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            propertyData: {
+              title: formData.title,
+              propertyType: formData.propertyType,
+              listingType: formData.listingType,
+              price: formData.price,
+              address: formData.address,
+              city: formData.city,
+              state: formData.state,
+              bedrooms: formData.bedrooms,
+              bathrooms: formData.bathrooms,
+              area: formData.area,
+              features: formData.features,
+            },
+          }),
+        }
+      );
 
-  // Manage the snackbar state
-  const [openSnackbar, setOpenSnackbar] = useState(false);
+      if (!response.ok) {
+        throw new Error("Failed to generate description");
+      }
 
+      const data = await response.json();
+      setAiGeneratedDescription(data.description);
+    } catch (error) {
+      console.error("Error generating description:", error);
+      setErrors({
+        ...errors,
+        description: "Failed to generate description. Please try again.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   // Redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
@@ -697,13 +738,24 @@ const ListProperty = () => {
               {renderImageUpload()}
             </Grid>
             <Grid item xs={12}>
+              <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+                <StyledButton
+                  variant="outlined"
+                  onClick={generateDescriptionWithAI}
+                  disabled={isGenerating || !formData.title}
+                  startIcon={<DescriptionIcon />}
+                  sx={{ mb: 1 }}
+                >
+                  {isGenerating ? "Generating..." : "Generate with AI"}
+                </StyledButton>
+              </Box>
               <TextField
                 name="description"
                 label="Property Description"
                 multiline
                 rows={6}
                 fullWidth
-                value={formData.description}
+                value={aiGeneratedDescription || formData.description}
                 onChange={handleChange}
                 error={Boolean(errors.description)}
                 helperText={errors.description}
@@ -725,6 +777,24 @@ const ListProperty = () => {
                   },
                 }}
               />
+              {aiGeneratedDescription && (
+                <Box sx={{ mt: 2, textAlign: "right" }}>
+                  <Button
+                    variant="text"
+                    color="primary"
+                    size="small"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        description: aiGeneratedDescription,
+                      });
+                      setAiGeneratedDescription("");
+                    }}
+                  >
+                    Use this description
+                  </Button>
+                </Box>
+              )}
             </Grid>
             {formData.title && formData.price && (
               <Grid item xs={12}>

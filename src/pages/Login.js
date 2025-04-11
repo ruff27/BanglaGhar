@@ -1,5 +1,3 @@
-// Login.js
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -15,7 +13,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "./AuthContext"; // updated import
+import { useAuth } from "./AuthContext"; 
 
 const LoginPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -52,19 +50,23 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, error } = useAuth(); // get login function and error from context
-  const [username, setUsername] = useState("");
+  const { login } = useAuth(); // Use the login function from AuthContext
+  const [useremail, setUseremail] = useState(""); // Rename for clarity
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const success = await login(username, password);
-    if (success) {
+
+    try {
+      const userData = await login(useremail, password); // Call login from AuthContext
       setOpenSnackbar(true);
       setTimeout(() => {
         navigate("/");
       }, 1500);
+    } catch (err) {
+      setError(err.message || "Login failed");
     }
   };
 
@@ -87,7 +89,6 @@ const Login = () => {
           Sign In
         </Typography>
 
-        {/* If there's an error from the server, show it */}
         {error && (
           <Alert
             severity="error"
@@ -102,11 +103,11 @@ const Login = () => {
             margin="normal"
             required
             fullWidth
-            label="Username"
+            label="Email"
             autoFocus
             variant="outlined"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={useremail}
+            onChange={(e) => setUseremail(e.target.value)} // Fixed variable name
             sx={{ mb: 2 }}
           />
           <TextField
@@ -127,6 +128,12 @@ const Login = () => {
         </Box>
 
         <Typography variant="body2" sx={{ mt: 2 }}>
+          <Link to="/forgot-password" style={{ color: "#2B7B8C" }}>
+            Forgot Password?
+          </Link>
+        </Typography>
+
+        <Typography variant="body2" sx={{ mt: 2 }}>
           Don’t have an account?{" "}
           <Link to="/signup" style={{ color: "#2B7B8C" }}>
             Sign up
@@ -134,7 +141,6 @@ const Login = () => {
         </Typography>
       </LoginPaper>
 
-      {/* Snackbar for success */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}

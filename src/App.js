@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import ListProperty from "./pages/ListProperty";
 import Signup from "./pages/Signup";
 import LanguageToggle from "./components/LanguageToggle";
+import VerifyOtp from "./pages/VerifyOtp";
+import ForgotPassword from "./pages/ForgotPassword";
 
 // Import the new single-page component:
 import Properties from "./pages/Properties";
@@ -18,6 +20,7 @@ import Saved from "./pages/Saved";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider } from "./pages/AuthContext";
+import UserProfile from "./pages/UserProfile";
 
 // theme
 const theme = createTheme({
@@ -60,8 +63,11 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/Signup" element={<Signup />} />
+                <Route path="/verify-otp" element={<VerifyOtp />} />
+                <Route path="forgot-password" element={<ForgotPassword />} />
                 <Route path="/list-property" element={<ListProperty />} />
                 <Route path="/saved" element={<Saved />} />
+                <Route path="/user-profile" element={<UserProfile />} />
               </Routes>
             </main>
             <Footer />
