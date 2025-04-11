@@ -40,7 +40,6 @@ import BangladeshMap from "./BangladeshMap"; // Import the BangladeshMap compone
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext"; // Import the AuthContext
 import { useTranslation } from "react-i18next";
-//import LanguageToggle from "../components/LanguageToggle";
 
 // Styled components with modern design
 const StyledButton = styled(Button)(({ theme, variant }) => ({
@@ -369,17 +368,6 @@ const Home = () => {
 
   return (
     <Box onClick={handleClickOutside}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: 20,
-          right: 30,
-          zIndex: 999,
-          display: { xs: "none", md: "block" }, // Only show on desktop
-        }}
-      >
-      </Box>
-
       {/* Hero Section with expanded search */}
       <Box
         sx={{
@@ -1070,34 +1058,26 @@ const Home = () => {
                       alt={property.title}
                       sx={{ objectFit: "cover" }}
                     />
+                    {/* Property Label */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 16,
+                        left: 16,
+                        bgcolor: "#2B7B8C",
+                        color: "white",
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: "50px",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        zIndex: 1,
+                        boxShadow: "0 2px 8px rgba(43, 123, 140, 0.3)",
+                      }}
+                    >
+                      {property.status}
+                    </Box>
                   </Box>
-                  {/* Property Label */}
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 16,
-                      left: 16,
-                      bgcolor: "#2B7B8C",
-                      color: "white",
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: "50px",
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      zIndex: 1,
-                      boxShadow: "0 2px 8px rgba(43, 123, 140, 0.3)",
-                    }}
-                  >
-                    {property.status}
-                  </Box>
-
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={property.image}
-                    alt={property.title}
-                    sx={{ objectFit: "cover" }}
-                  />
 
                   <CardContent
                     sx={{ flex: 1, display: "flex", flexDirection: "column" }}
@@ -1162,13 +1142,20 @@ const Home = () => {
                         mt: "auto",
                       }}
                     >
-                      <Typography
-                        variant="h6"
-                        sx={{ color: "#2B7B8C", fontWeight: 700 }}
-                      >
-                        {property.price}
-                      </Typography>
-
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ color: "#2B7B8C", fontWeight: 700 }}
+                        >
+                          {property.price}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          {property.status === "For Rent" ? "per month" : ""}
+                        </Typography>
+                      </Box>
                       <Chip
                         icon={
                           property.type === "house" ? (
@@ -1259,7 +1246,6 @@ const Home = () => {
                 {t("journey_description")}
               </Typography>
               {/* 🌐 Translated CTA subtitle end */}
-
             </Grid>
             <Grid
               item

@@ -9,7 +9,6 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import ListProperty from "./pages/ListProperty";
 import Signup from "./pages/Signup";
-import LanguageToggle from "./components/LanguageToggle";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 
@@ -52,7 +51,10 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="App">
-            <LanguageToggle />
+            {/*
+              Removed LanguageToggle from here to avoid duplication.
+              The LanguageToggle component is already rendered inside Navbar.
+            */}
             <Navbar />
             <main className="content">
               <Routes>
