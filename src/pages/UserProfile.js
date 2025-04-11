@@ -31,7 +31,7 @@ import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import {  CognitoUserAttribute } from "amazon-cognito-identity-js";
 import { userPool } from "../aws/CognitoConfig";
-import { useAuth } from "../pages/AuthContext"; // Adjust path as needed
+import { useAuth } from "../pages/AuthContext"; 
 
 const ProfilePaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",

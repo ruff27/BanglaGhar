@@ -15,6 +15,7 @@ import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import { userPool } from "../aws/CognitoConfig";
+import axios from "axios"; // Add axios for API calls
 
 const ForgotPasswordPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -81,30 +82,73 @@ const ForgotPassword = () => {
     validatePassword(newPasswordValue);
   };
 
-  // Send verification code to email
-  const handleSendCode = (e) => {
+  // Validate user via Lambda function
+  const validateUser = async (email) => {
+    try {
+      const response = await axios.post(
+        process.env.REACT_APP_APIGATEWAY_URL,// API Gateway invoke URL 
+        { email },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return response.data; // { exists: boolean, verified: boolean }
+    } catch (err) {
+      console.error("Validation API error:", err);
+      throw new Error("Failed to validate user. Please try again.");
+    }
+  };
+
+  // Send verification code to email after validation
+  const handleSendCode = async (e) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
+
     if (!email) {
       setError("Please enter your email");
       return;
     }
 
-    const user = new CognitoUser({
-      Username: email,
-      Pool: userPool,
-    });
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
 
-    setCognitoUser(user);
+    try {
+      const { exists, verified } = await validateUser(email);
+      console.log("Validation result:", { exists, verified }); // Debug log
 
-    user.forgotPassword({
-      onSuccess: () => {
-        setStep(2); // Move to OTP + Password reset step
-        setError("");
-      },
-      onFailure: (err) => {
-        setError(err.message || JSON.stringify(err));
-      },
-    });
+      if (!exists) {
+        setError("No account found with this email address");
+        return;
+      }
+
+      if (!verified) {
+        setError("Your account is not verified. Please verify your email first.");
+        return;
+      }
+
+      // If we reach here, the user exists and is verified
+      const user = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      setCognitoUser(user);
+
+      user.forgotPassword({
+        onSuccess: () => {
+          console.log("OTP sent successfully for:", email);
+          setStep(2); // Move to OTP + Password reset step
+          setError("");
+        },
+        onFailure: (err) => {
+          console.error("Error during forgotPassword:", err);
+          setError(err.message || "Failed to send verification code. Please try again.");
+        },
+      });
+    } catch (err) {
+      setError(err.message || "An error occurred during validation. Please try again.");
+    }
   };
 
   // Reset password with OTP
@@ -116,13 +160,13 @@ const ForgotPassword = () => {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match!");
+    if (!hasNumber || !hasSpecial || !hasUppercase || !hasLowercase || !hasMinLength) {
+      setError("Password doesn't meet all requirements!");
       return;
     }
 
-    if (!hasNumber || !hasSpecial || !hasUppercase || !hasLowercase || !hasMinLength) {
-      setError("Password doesn't meet all requirements!");
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match!");
       return;
     }
 
@@ -148,7 +192,6 @@ const ForgotPassword = () => {
     setOpenSnackbar(false);
   };
 
-  // Check if password meets all requirements
   const isPasswordValid = hasNumber && hasSpecial && hasUppercase && hasLowercase && hasMinLength;
 
   return (
@@ -227,12 +270,12 @@ const ForgotPassword = () => {
                 helperText={
                   <Typography
                     variant="caption"
-                    sx={{ 
+                    sx={{
                       color: isPasswordValid ? "green" : "#2B7B8C",
-                      lineHeight: 1.2
+                      lineHeight: 1.2,
                     }}
                   >
-                    Must be 8+ characters with number, special character, uppercase, and lowercase
+                    Must be 8 characters with number, special character, uppercase, and lowercase
                   </Typography>
                 }
               />

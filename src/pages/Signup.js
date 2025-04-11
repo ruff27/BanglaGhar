@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "../pages/AuthContext"; // Adjust path as needed
+import { useAuth } from "../pages/AuthContext"; 
 
 const SignupPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -161,12 +161,13 @@ const Signup = () => {
               <Typography
                 variant="caption"
                 sx={{ 
-                  color: isPasswordValid ? "green" : "#2B7B8C",
+                  color: hasMinLength ? "green" : "#2B7B8C",
                   lineHeight: 1.2
                 }}
               >
-                Must be 8+ chars with number, special char, uppercase, and lowercase
+                  Must be 8 characters with number, special character, uppercase, and lowercase  
               </Typography>
+              
             }
           />
           <TextField
