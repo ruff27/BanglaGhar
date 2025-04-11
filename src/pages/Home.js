@@ -35,10 +35,12 @@ import dhaka2 from "../pictures/dhaka2.jpg";
 import house1 from "../pictures/house1.png";
 import house2 from "../pictures/house2.png";
 import house3 from "../pictures/house3.png";
-import land from "../pictures/land.jpg"
+import land from "../pictures/land.jpg";
 import BangladeshMap from "./BangladeshMap"; // Import the BangladeshMap component
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext"; // Import the AuthContext
+import { useTranslation } from "react-i18next";
+//import LanguageToggle from "../components/LanguageToggle";
 
 // Styled components with modern design
 const StyledButton = styled(Button)(({ theme, variant }) => ({
@@ -203,6 +205,7 @@ const Home = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const { t } = useTranslation(); // ✅ enables translation
 
   useEffect(() => {
     if (isLoggedIn && user) {
@@ -366,12 +369,23 @@ const Home = () => {
 
   return (
     <Box onClick={handleClickOutside}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: 20,
+          right: 30,
+          zIndex: 999,
+          display: { xs: "none", md: "block" }, // Only show on desktop
+        }}
+      >
+      </Box>
+
       {/* Hero Section with expanded search */}
       <Box
         sx={{
           background: `linear-gradient(160deg, #EFF9FE 60%, rgba(139, 198, 206, 0.4) 100%)`,
           pt: { xs: 12, md: 15 },
-          pb: { xs: 10, md: 12 }, // Increased bottom padding
+          pb: { xs: 10, md: 12 },
           position: "relative",
           overflow: "hidden",
         }}
@@ -403,11 +417,13 @@ const Home = () => {
                   color: "#0B1F23",
                 }}
               >
-                Find Your Perfect{" "}
+                {/* 🌐 Translated hero title start */}
+                {t("hero_title")}{" "}
                 <Box component="span" sx={{ color: "#2B7B8C" }}>
-                  Home
+                  {t("home_translated")}
                 </Box>{" "}
-                in Bangladesh
+                {t("in_bangladesh")}
+                {/* 🌐 Translated hero title end */}
               </Typography>
 
               <Typography
@@ -420,9 +436,9 @@ const Home = () => {
                   maxWidth: "650px",
                 }}
               >
-                BanglaGhor helps you discover your dream property with ease.
-                Whether you're buying, selling, or renting, we've got you
-                covered.
+                {/* 🌐 Translated subtitle start */}
+                {t("hero_subtitle")}
+                {/* 🌐 Translated subtitle end */}
               </Typography>
 
               <Box
@@ -432,67 +448,26 @@ const Home = () => {
                   gap: { xs: 2, sm: 2 },
                 }}
               >
+                {/* 🌐 Translated buttons start */}
                 <StyledButton
                   variant="contained"
                   size="large"
                   endIcon={<ArrowForwardIcon />}
                   onClick={() => navigate("/properties/rent")}
                 >
-                  Explore Properties
+                  {t("explore_properties")}
                 </StyledButton>
                 <StyledButton
                   variant="outlined"
                   size="large"
-                  onClick={handleListPropertyClick}
+                  onClick={() =>
+                    navigate(isLoggedIn ? "/list-property" : "/login")
+                  }
                 >
-                  List Your Property
+                  {t("list_property")}
                 </StyledButton>
+                {/* 🌐 Translated buttons end */}
               </Box>
-
-              {/* Stats with proper spacing */}
-              <Grid
-                container
-                spacing={3}
-                sx={{
-                  mt: 8, // Increased top margin
-                  mb: 2, // Added bottom margin
-                  py: 2, // Added vertical padding
-                  px: { xs: 2, md: 4 }, // Added horizontal padding
-                  bgcolor: "rgba(255, 255, 255, 0.6)", // Optional: light background
-                  borderRadius: "12px", // Optional: rounded corners
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.03)", // Optional: very subtle shadow
-                }}
-              >
-                {[
-                  { value: "5K+", label: "Properties" },
-                  { value: "1500+", label: "Happy Clients" },
-                  { value: "10+", label: "Years Experience" },
-                ].map((stat, index) => (
-                  <Grid item xs={4} key={index} sx={{ textAlign: "center" }}>
-                    <Typography
-                      variant="h3"
-                      sx={{
-                        fontSize: { xs: "2rem", md: "2.8rem" }, // Increased font size
-                        fontWeight: 800,
-                        color: "#2B7B8C",
-                        mb: 1, // Increased margin bottom
-                      }}
-                    >
-                      {stat.value}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#0B1F23",
-                        opacity: 0.8,
-                        fontSize: { xs: "0.9rem", md: "1rem" }, // Slightly larger font
-                      }}
-                    >
-                      {stat.label}
-                    </Typography>
-                  </Grid>
-                ))}
-              </Grid>
             </Grid>
 
             {/* Hero Image */}
@@ -548,8 +523,9 @@ const Home = () => {
                 width: "100%",
               }}
             >
+              {/* 🌐 Search input placeholder */}
               <TextField
-                placeholder="Search for properties (e.g., 3 bedroom, Gulshan, apartment)"
+                placeholder={t("search_placeholder")}
                 variant="outlined"
                 fullWidth
                 value={searchQuery}
@@ -966,7 +942,7 @@ const Home = () => {
               }}
               onClick={handleSearch}
             >
-              SEARCH
+              {t("search_button")}
             </Button>
           </Box>
 
@@ -1027,6 +1003,7 @@ const Home = () => {
             }}
           >
             <Box>
+              {/* 🌐 Translated section title start */}
               <Typography
                 variant="h2"
                 sx={{
@@ -1036,8 +1013,11 @@ const Home = () => {
                   color: "#0B1F23",
                 }}
               >
-                Featured Properties
+                {t("featured_properties")}
               </Typography>
+              {/* 🌐 Translated section title end */}
+
+              {/* 🌐 Translated section subtitle start */}
               <Typography
                 variant="body1"
                 sx={{
@@ -1045,17 +1025,20 @@ const Home = () => {
                   opacity: 0.7,
                 }}
               >
-                Handpicked properties for you to explore
+                {t("handpicked_intro")}
               </Typography>
+              {/* 🌐 Translated section subtitle end */}
             </Box>
 
+            {/* 🌐 Translated button start */}
             <StyledButton
               variant="outlined"
               endIcon={<ArrowForwardIcon />}
               onClick={() => navigate("/properties/rent")}
             >
-              View All Properties
+              {t("view_all_properties")}
             </StyledButton>
+            {/* 🌐 Translated button end */}
           </Box>
 
           <Grid container spacing={3}>
@@ -1250,6 +1233,7 @@ const Home = () => {
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={8}>
+              {/* 🌐 Translated CTA heading start */}
               <Typography
                 variant="h3"
                 sx={{
@@ -1258,8 +1242,11 @@ const Home = () => {
                   fontSize: { xs: "2rem", md: "2.8rem" },
                 }}
               >
-                Start Your Property Journey Today
+                {t("start_journey")}
               </Typography>
+              {/* 🌐 Translated CTA heading end */}
+
+              {/* 🌐 Translated CTA subtitle start */}
               <Typography
                 variant="h6"
                 sx={{
@@ -1269,9 +1256,10 @@ const Home = () => {
                   fontSize: { xs: "1.1rem", md: "1.25rem" },
                 }}
               >
-                Whether you're looking to buy, sell, or rent, BanglaGhor is here
-                to make your experience seamless.
+                {t("journey_description")}
               </Typography>
+              {/* 🌐 Translated CTA subtitle end */}
+
             </Grid>
             <Grid
               item
@@ -1279,6 +1267,7 @@ const Home = () => {
               md={4}
               sx={{ textAlign: { xs: "left", md: "right" } }}
             >
+              {/* 🌐 Translated CTA button start */}
               <Button
                 variant="contained"
                 size="large"
@@ -1297,8 +1286,9 @@ const Home = () => {
                   },
                 }}
               >
-                Contact Us
+                {t("contact_us")}
               </Button>
+              {/* 🌐 Translated CTA button end */}
             </Grid>
           </Grid>
         </Container>
