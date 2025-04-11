@@ -122,6 +122,8 @@ const ListProperty = () => {
   const [openSuccess, setOpenSuccess] = useState(false);
   const [aiGeneratedDescription, setAiGeneratedDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   // Form state
   const [formData, setFormData] = useState({
     title: "",
@@ -296,7 +298,7 @@ const ListProperty = () => {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    // Clean up the price field: remove commas and any non-digit (except dot)
+    // Clean up the price field
     const rawPrice = formData.price || "";
     const cleanedPrice = parseFloat(rawPrice.replace(/[^\d.]/g, ""));
 
@@ -314,12 +316,11 @@ const ListProperty = () => {
         formData.photos && formData.photos.length > 0
           ? formData.photos
           : ["house1.png"],
-      // Updated createdBy assignment:
-      createdBy: typeof user === "string" ? user : user.username || user._id,
+      // Set createdBy using user.email from Auth context
+      createdBy: user?.email || user?.username || "unknown",
     };
 
     console.log("Submitting property data:", propertyData);
-    console.log("Type of price:", typeof propertyData.price); // Should log "number"
 
     try {
       await axios.post("http://localhost:5001/api/properties", propertyData);
@@ -329,6 +330,11 @@ const ListProperty = () => {
       }, 3000);
     } catch (error) {
       console.error("Error submitting property:", error);
+      // Add error handling
+      setErrors({
+        ...errors,
+        submit: error.response?.data?.error || "Failed to submit property",
+      });
     }
   };
 
@@ -933,10 +939,9 @@ const ListProperty = () => {
       )}
 
       <Snackbar
-        open={openSuccess}
-        autoHideDuration={5000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
       >
         <Alert
           onClose={handleCloseSnackbar}

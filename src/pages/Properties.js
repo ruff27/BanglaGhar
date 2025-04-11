@@ -68,50 +68,52 @@ const formatPrice = (price, mode) => {
 
 // Sample land properties data
 const getSampleLandProperties = (mode) => {
-  // Define base properties
   const landProperties = [
     {
-      _id: "land001",
+      _id: "60d0fe4f5311236168a109ca", // valid ObjectId string (24 hex characters)
       title: "Prime Land in Gulshan",
       location: "Gulshan Avenue, Dhaka",
       price: mode === "rent" ? 50000 : 200, // 50k Taka rent or 200 Lakh purchase
       area: 10000,
       propertyType: "Land",
       pricePerUnit: mode === "rent" ? "5 Tk/sqft/month" : "2000 Tk/sqft",
-      description: "Premium land plot in upscale Gulshan area, perfect for commercial development.",
+      description:
+        "Premium land plot in upscale Gulshan area, perfect for commercial development.",
       images: ["land.jpg"],
-      featured: true
+      featured: true,
     },
     {
-      _id: "land002",
+      _id: "60d0fe4f5311236168a109cb",
       title: "Residential Plot in Uttara",
       location: "Sector 10, Uttara, Dhaka",
       price: mode === "rent" ? 35000 : 150, // 35k Taka rent or 150 Lakh purchase
       area: 7200,
       propertyType: "Land",
       pricePerUnit: mode === "rent" ? "4.9 Tk/sqft/month" : "2083 Tk/sqft",
-      description: "Well-connected residential plot in Uttara with all utilities ready.",
+      description:
+        "Well-connected residential plot in Uttara with all utilities ready.",
       images: ["land.jpg"],
-      featured: false
+      featured: false,
     },
     {
-      _id: "land003",
+      _id: "60d0fe4f5311236168a109cc",
       title: "Commercial Land in Motijheel",
       location: "Motijheel C/A, Dhaka",
       price: mode === "rent" ? 90000 : 280, // 90k Taka rent or 280 Lakh purchase
       area: 8500,
       propertyType: "Land",
       pricePerUnit: mode === "rent" ? "10.6 Tk/sqft/month" : "3294 Tk/sqft",
-      description: "Prime commercial land in Dhaka's business district with excellent frontage.",
+      description:
+        "Prime commercial land in Dhaka's business district with excellent frontage.",
       images: ["dhaka2.jpg"],
-      featured: true
-    }
+      featured: true,
+    },
   ];
-  
-  // Get sample building properties for buy mode
+
+  // Define building sample properties with valid _id strings:
   const buildingProperties = [
     {
-      _id: "build001",
+      _id: "60d0fe4f5311236168a109cd",
       title: "Luxury Apartment in Banani",
       location: "Banani, Dhaka",
       price: mode === "rent" ? 75000 : 180,
@@ -119,12 +121,13 @@ const getSampleLandProperties = (mode) => {
       propertyType: "Apartment",
       bedrooms: 3,
       bathrooms: 2,
-      description: "Modern luxury apartment with spacious rooms and premium finishes in Banani.",
+      description:
+        "Modern luxury apartment with spacious rooms and premium finishes in Banani.",
       images: ["house1.png"],
-      featured: true
+      featured: true,
     },
     {
-      _id: "build002",
+      _id: "60d0fe4f5311236168a109ce",
       title: "Family House in Dhanmondi",
       location: "Dhanmondi, Dhaka",
       price: mode === "rent" ? 90000 : 250,
@@ -132,23 +135,33 @@ const getSampleLandProperties = (mode) => {
       propertyType: "House",
       bedrooms: 4,
       bathrooms: 3,
-      description: "Spacious family house in a quiet street with garden and parking.",
+      description:
+        "Spacious family house in a quiet street with garden and parking.",
       images: ["house1.jpg"],
-      featured: false
-    }
+      featured: false,
+    },
   ];
-  
-  // Set the correct mode for each property
-  const allSampleProperties = [...landProperties, ...buildingProperties].map(prop => ({
-    ...prop,
-    mode: mode // Ensure mode is explicitly set
-  }));
-  
+
+  // Combine land and building sample properties and explicitly set their mode:
+  const allSampleProperties = [...landProperties, ...buildingProperties].map(
+    (prop) => ({
+      ...prop,
+      mode: mode, // Ensure each sample property has the correct mode ("rent", "buy", or "sold")
+    })
+  );
+
   return allSampleProperties;
 };
 
 // Property Card Component
-const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLoggedIn, onViewDetails }) => {
+const PropertyCard = ({
+  property,
+  mode,
+  isWishlisted,
+  onToggleWishlist,
+  isLoggedIn,
+  onViewDetails,
+}) => {
   const navigate = useNavigate();
   const theme = useTheme();
 
@@ -161,7 +174,7 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
       }
       return "/pictures/land.jpg"; // Default land image
     }
-    
+
     // For non-Land properties, use first image or placeholder
     if (property.images && property.images.length > 0) {
       return `/pictures/${property.images[0]}`;
@@ -179,17 +192,17 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
   };
 
   return (
-    <Card 
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        cursor: 'pointer',
-        '&:hover': {
-          transform: 'translateY(-5px)',
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        cursor: "pointer",
+        "&:hover": {
+          transform: "translateY(-5px)",
           boxShadow: theme.shadows[8],
-        }
+        },
       }}
       onClick={() => {
         if (onViewDetails) {
@@ -199,21 +212,21 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
         }
       }}
     >
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: "relative" }}>
         <CardMedia
           component="img"
           height="200"
           image={getPropertyImage()}
           alt={property.title}
-          sx={{ objectFit: 'cover' }} // Improve image display
+          sx={{ objectFit: "cover" }} // Improve image display
         />
-        <Box 
-          sx={{ 
-            position: 'absolute', 
-            top: 10, 
-            right: 10, 
-            display: 'flex', 
-            gap: 1 
+        <Box
+          sx={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            display: "flex",
+            gap: 1,
           }}
         >
           {property.propertyType === "Land" ? (
@@ -221,14 +234,14 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
               icon={<LandscapeIcon />}
               label="Land"
               size="small"
-              sx={{ backgroundColor: 'rgba(43, 123, 140, 0.9)' }}
+              sx={{ backgroundColor: "rgba(43, 123, 140, 0.9)" }}
             />
           ) : (
             <Chip
               icon={<ApartmentIcon />}
               label="Building"
               size="small"
-              sx={{ backgroundColor: 'rgba(76, 175, 80, 0.9)' }}
+              sx={{ backgroundColor: "rgba(76, 175, 80, 0.9)" }}
             />
           )}
           {property.featured && (
@@ -236,17 +249,34 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
               label="Featured"
               color="secondary"
               size="small"
-              sx={{ fontWeight: 'bold', backgroundColor: 'rgba(220, 0, 78, 0.9)' }}
+              sx={{
+                fontWeight: "bold",
+                backgroundColor: "rgba(220, 0, 78, 0.9)",
+              }}
             />
           )}
         </Box>
-        
+
         {/* Add availability tag */}
-        <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, bgcolor: 'rgba(0,0,0,0.6)', p: 1 }}>
-          <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>
-            {mode === "rent" ? "Available for Rent" : 
-             mode === "buy" ? "For Sale" : 
-             "Recently Sold"}
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            bgcolor: "rgba(0,0,0,0.6)",
+            p: 1,
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{ color: "white", fontWeight: "bold" }}
+          >
+            {mode === "rent"
+              ? "Available for Rent"
+              : mode === "buy"
+              ? "For Sale"
+              : "Recently Sold"}
           </Typography>
         </Box>
       </Box>
@@ -257,10 +287,13 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
         <Typography variant="body2" color="text.secondary" noWrap>
           {property.location}
         </Typography>
-        <Typography variant="h6" sx={{ mt: 1, color: theme.palette.primary.main }}>
+        <Typography
+          variant="h6"
+          sx={{ mt: 1, color: theme.palette.primary.main }}
+        >
           {formatPrice(property.price, mode)}
         </Typography>
-        
+
         {/* Show different details based on property type */}
         {property.propertyType === "Land" ? (
           <>
@@ -273,12 +306,19 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
           </>
         ) : (
           <Typography variant="body2" sx={{ mt: 1 }}>
-            {property.bedrooms} bed • {property.bathrooms} bath
-            • {property.area.toLocaleString()} sqft
+            {property.bedrooms} bed • {property.bathrooms} bath •{" "}
+            {property.area.toLocaleString()} sqft
           </Typography>
         )}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mt: 2,
+          }}
+        >
           <Button
             variant="contained"
             size="small"
@@ -293,71 +333,62 @@ const PropertyCard = ({ property, mode, isWishlisted, onToggleWishlist, isLogged
           >
             View Details
           </Button>
-          <IconButton 
+          <IconButton
             color={isWishlisted ? "error" : "default"}
             onClick={handleWishlistClick}
             size="small"
           >
-            {isWishlisted ? (
-              <FavoriteIcon />
-            ) : (
-              <FavoriteBorderIcon />
-            )}
+            {isWishlisted ? <FavoriteIcon /> : <FavoriteBorderIcon />}
           </IconButton>
         </Box>
       </CardContent>
     </Card>
   );
-}
+};
 
 // Filters Component
-const PropertyFilters = ({ 
-  searchTerm, 
-  setSearchTerm, 
-  propertyTypeFilter, 
+const PropertyFilters = ({
+  searchTerm,
+  setSearchTerm,
+  propertyTypeFilter,
   setPropertyTypeFilter,
-  bedroomFilter, 
+  bedroomFilter,
   setBedroomFilter,
-  bathroomFilter, 
+  bathroomFilter,
   setBathroomFilter,
-  priceRange, 
+  priceRange,
   setPriceRange,
-  sortBy, 
+  sortBy,
   setSortBy,
   mode,
   onResetFilters,
-  isMobile
+  isMobile,
 }) => {
   const [showFilters, setShowFilters] = useState(!isMobile);
 
   return (
-    <Paper 
-      elevation={2}
-      sx={{ mb: 4, p: 2, borderRadius: 2 }}
-    >
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          mb: isMobile && !showFilters ? 0 : 2
+    <Paper elevation={2} sx={{ mb: 4, p: 2, borderRadius: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: isMobile && !showFilters ? 0 : 2,
         }}
       >
-        <Typography variant="h6">
-          Filters
-        </Typography>
+        <Typography variant="h6">Filters</Typography>
         <Box>
           {isMobile && (
-            <Button 
+            <Button
               startIcon={showFilters ? <ClearIcon /> : <FilterIcon />}
               onClick={() => setShowFilters(!showFilters)}
               sx={{ mr: 1 }}
             >
-              {showFilters ? 'Hide' : 'Show'}
+              {showFilters ? "Hide" : "Show"}
             </Button>
           )}
-          <Button 
-            startIcon={<RefreshIcon />} 
+          <Button
+            startIcon={<RefreshIcon />}
             onClick={onResetFilters}
             color="secondary"
           >
@@ -459,7 +490,7 @@ const PropertyFilters = ({
               label="Sort By"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              startAdornment={<SortIcon sx={{ ml: 1, mr: 1, color: 'gray' }} />}
+              startAdornment={<SortIcon sx={{ ml: 1, mr: 1, color: "gray" }} />}
             >
               <MenuItem value="recommended">Recommended</MenuItem>
               <MenuItem value="priceAsc">Price (Low to High)</MenuItem>
@@ -484,9 +515,9 @@ const PropertyFilters = ({
 const PropertyDetailsDialog = ({ open, property, onClose, mode }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  
+
   if (!property) return null;
-  
+
   // Get property image
   const getPropertyImage = () => {
     if (property.propertyType === "Land") {
@@ -495,7 +526,7 @@ const PropertyDetailsDialog = ({ open, property, onClose, mode }) => {
       }
       return "/pictures/land.jpg";
     }
-    
+
     if (property.images && property.images.length > 0) {
       return `/pictures/${property.images[0]}`;
     }
@@ -503,14 +534,20 @@ const PropertyDetailsDialog = ({ open, property, onClose, mode }) => {
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       fullScreen={isMobile}
       maxWidth="md"
       fullWidth
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Typography variant="h6">{property.title}</Typography>
         <IconButton onClick={onClose}>
           <CloseIcon />
@@ -525,7 +562,7 @@ const PropertyDetailsDialog = ({ open, property, onClose, mode }) => {
             alt={property.title}
             sx={{ height: 300, mb: 2 }}
           />
-          
+
           {/* Property Details */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="h5" gutterBottom>
@@ -534,36 +571,46 @@ const PropertyDetailsDialog = ({ open, property, onClose, mode }) => {
             <Typography variant="body1" color="text.secondary" gutterBottom>
               {property.location}
             </Typography>
-            
-            <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              <Chip 
-                icon={property.propertyType === "Land" ? <LandscapeIcon /> : <ApartmentIcon />}
-                label={`${property.propertyType}: ${property.area.toLocaleString()} sqft`} 
-                variant="outlined" 
+
+            <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+              <Chip
+                icon={
+                  property.propertyType === "Land" ? (
+                    <LandscapeIcon />
+                  ) : (
+                    <ApartmentIcon />
+                  )
+                }
+                label={`${
+                  property.propertyType
+                }: ${property.area.toLocaleString()} sqft`}
+                variant="outlined"
               />
               {property.propertyType !== "Land" && (
                 <>
-                  <Chip 
-                    label={`${property.bedrooms} Bedrooms`} 
-                    variant="outlined" 
+                  <Chip
+                    label={`${property.bedrooms} Bedrooms`}
+                    variant="outlined"
                   />
-                  <Chip 
-                    label={`${property.bathrooms} Bathrooms`} 
-                    variant="outlined" 
+                  <Chip
+                    label={`${property.bathrooms} Bathrooms`}
+                    variant="outlined"
                   />
                 </>
               )}
             </Box>
           </Box>
-          
+
           <Divider sx={{ my: 2 }} />
-          
+
           {/* Description */}
-          <Typography variant="h6" gutterBottom>Description</Typography>
+          <Typography variant="h6" gutterBottom>
+            Description
+          </Typography>
           <Typography variant="body1" paragraph>
             {property.description}
           </Typography>
-          
+
           {property.propertyType === "Land" && (
             <Typography variant="body2" color="text.secondary">
               {property.pricePerUnit}
@@ -574,7 +621,11 @@ const PropertyDetailsDialog = ({ open, property, onClose, mode }) => {
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
         <Button variant="contained" color="primary">
-          {mode === "buy" ? "Contact Agent" : mode === "rent" ? "Schedule Viewing" : "See Similar Properties"}
+          {mode === "buy"
+            ? "Contact Agent"
+            : mode === "rent"
+            ? "Schedule Viewing"
+            : "See Similar Properties"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -588,16 +639,19 @@ function Properties() {
 
   // Read the URL param to see which mode we want: "rent", "buy", or "sold"
   const { mode: urlMode } = useParams();
-  
+
   // Set default mode if not provided
   const mode = urlMode || "buy";
-  
+
   // Log the current mode for debugging
   console.log("Current mode from URL:", urlMode);
   console.log("Using mode:", mode);
 
   // Get sample properties including both land and buildings
-  const sampleLandProperties = useMemo(() => getSampleLandProperties(mode), [mode]);
+  const sampleLandProperties = useMemo(
+    () => getSampleLandProperties(mode),
+    [mode]
+  );
 
   // State for all properties from the backend
   const [allProperties, setAllProperties] = useState([]);
@@ -624,7 +678,7 @@ function Properties() {
   const [notification, setNotification] = useState({
     open: false,
     message: "",
-    severity: "info"
+    severity: "info",
   });
 
   // Reset filters handler
@@ -636,13 +690,13 @@ function Properties() {
     setPriceRange(mode === "rent" ? [0, 100000] : [0, 300]);
     setSortBy("recommended");
   }, [mode]);
-  
+
   // Handler for opening property details dialog
   const handleViewPropertyDetails = useCallback((property) => {
     setSelectedProperty(property);
     setDetailsDialogOpen(true);
   }, []);
-  
+
   // Handler for closing property details dialog
   const handleClosePropertyDetails = useCallback(() => {
     setDetailsDialogOpen(false);
@@ -651,47 +705,30 @@ function Properties() {
   // Fetch all properties and add sample properties
   useEffect(() => {
     setLoading(true);
-    
-    // Ensure we have the sample data based on current mode
-    const sampleData = sampleLandProperties;
-    
-    try {
-      fetch(`${API_BASE_URL}/properties`)
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error("Failed to fetch properties");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          // Map API properties to ensure they have the mode set
-          const apiPropertiesWithMode = data.map(prop => ({
-            ...prop,
-            mode: mode // Set the mode explicitly on API properties
-          }));
-          
-          // Combine API properties with sample data
-          setAllProperties([...apiPropertiesWithMode, ...sampleData]);
-          setLoading(false);
-          
-          // Debug log
-          console.log("Mode:", mode);
-          console.log("Sample properties:", sampleData);
-          console.log("API properties:", apiPropertiesWithMode);
-        })
-        .catch((err) => {
-          console.error("Error fetching properties:", err);
-          setError("Failed to load properties. Using sample data instead.");
-          setAllProperties(sampleData);
-          setLoading(false);
-        });
-    } catch (error) {
-      console.error("Exception in property fetching:", error);
-      setError("Failed to load properties. Using sample data instead.");
-      setAllProperties(sampleData);
-      setLoading(false);
-    }
-  }, [mode, sampleLandProperties]);
+
+    axios
+      .get(`${API_BASE_URL}/properties`)
+      .then((response) => {
+        // Use API data directly without merging sample data.
+        const apiProperties = response.data;
+
+        // Filter the properties so only those with the current mode are shown.
+        const filteredProperties = apiProperties.filter(
+          (prop) => prop.mode === mode
+        );
+
+        setAllProperties(filteredProperties);
+        setLoading(false);
+
+        console.log("API properties count:", apiProperties.length);
+        console.log("Filtered properties count:", filteredProperties.length);
+      })
+      .catch((err) => {
+        console.error("Error fetching properties:", err);
+        setError("Failed to load properties.");
+        setLoading(false);
+      });
+  }, [mode]);
 
   // Fetch wishlist if user is logged in
   useEffect(() => {
@@ -706,7 +743,7 @@ function Properties() {
           setNotification({
             open: true,
             message: "Could not load your wishlist",
-            severity: "error"
+            severity: "error",
           });
         });
     } else {
@@ -715,61 +752,67 @@ function Properties() {
   }, [isLoggedIn, user]);
 
   // Helper: is a property already in wishlist?
-  const isPropertyWishlisted = useCallback((propertyId) => {
-    return wishlist.some((prop) => prop._id === propertyId);
-  }, [wishlist]);
+  const isPropertyWishlisted = useCallback(
+    (propertyId) => {
+      return wishlist.some((prop) => prop._id === propertyId);
+    },
+    [wishlist]
+  );
 
   // Toggle wishlist
-  const toggleWishlist = useCallback(async (propertyId) => {
-    if (!isLoggedIn || !user) {
-      setNotification({
-        open: true,
-        message: "Please log in to save properties",
-        severity: "info"
-      });
-      return;
-    }
-
-    const alreadyInWishlist = isPropertyWishlisted(propertyId);
-
-    try {
-      if (alreadyInWishlist) {
-        await axios.delete(`${API_BASE_URL}/users/${user}/wishlist`, {
-          data: { propertyId },
-        });
-        setWishlist((prev) => prev.filter((p) => p._id !== propertyId));
+  const toggleWishlist = useCallback(
+    async (propertyId) => {
+      if (!isLoggedIn || !user) {
         setNotification({
           open: true,
-          message: "Property removed from wishlist",
-          severity: "success"
+          message: "Please log in to save properties",
+          severity: "info",
         });
-      } else {
-        await axios.post(`${API_BASE_URL}/users/${user}/wishlist`, {
-          propertyId,
-        });
-        const addedProp = allProperties.find((p) => p._id === propertyId);
-        setWishlist((prev) => [...prev, addedProp]);
+        return;
+      }
+
+      const alreadyInWishlist = isPropertyWishlisted(propertyId);
+
+      try {
+        if (alreadyInWishlist) {
+          await axios.delete(`${API_BASE_URL}/users/${user}/wishlist`, {
+            data: { propertyId },
+          });
+          setWishlist((prev) => prev.filter((p) => p._id !== propertyId));
+          setNotification({
+            open: true,
+            message: "Property removed from wishlist",
+            severity: "success",
+          });
+        } else {
+          await axios.post(`${API_BASE_URL}/users/${user}/wishlist`, {
+            propertyId,
+          });
+          const addedProp = allProperties.find((p) => p._id === propertyId);
+          setWishlist((prev) => [...prev, addedProp]);
+          setNotification({
+            open: true,
+            message: "Property added to wishlist",
+            severity: "success",
+          });
+        }
+      } catch (error) {
+        console.error("Error updating wishlist:", error);
         setNotification({
           open: true,
-          message: "Property added to wishlist",
-          severity: "success"
+          message: "Failed to update wishlist",
+          severity: "error",
         });
       }
-    } catch (error) {
-      console.error("Error updating wishlist:", error);
-      setNotification({
-        open: true,
-        message: "Failed to update wishlist",
-        severity: "error"
-      });
-    }
-  }, [isLoggedIn, user, isPropertyWishlisted, allProperties]);
+    },
+    [isLoggedIn, user, isPropertyWishlisted, allProperties]
+  );
 
   // Close notification
   const handleCloseNotification = () => {
     setNotification({
       ...notification,
-      open: false
+      open: false,
     });
   };
 
@@ -778,39 +821,40 @@ function Properties() {
     // Log to help debug
     console.log("Filtering properties. Mode:", mode);
     console.log("Total properties count:", allProperties.length);
-    
+
     // Safely handle empty allProperties
     if (!allProperties || allProperties.length === 0) {
       return [];
     }
-    
+
     // Ensure all properties have correct properties
-    const safeProperties = allProperties.map(prop => ({
+    const safeProperties = allProperties.map((prop) => ({
       ...prop,
       propertyType: prop.propertyType || "Other",
       bedrooms: prop.bedrooms || 0,
       bathrooms: prop.bathrooms || 0,
       area: prop.area || 0,
-      mode: prop.mode || mode // Ensure mode is set
+      mode: prop.mode || mode, // Ensure mode is set
     }));
-    
+
     // 1) Filter by mode - check each property's mode
     const filteredByMode = safeProperties.filter((prop) => {
       const propMode = prop.mode || mode;
       return propMode === mode;
     });
-    
+
     console.log("Properties after mode filter:", filteredByMode.length);
-    
+
     // 2) Filter by property type
-    const filteredByType = propertyTypeFilter === "all" 
-      ? filteredByMode 
-      : filteredByMode.filter(property => 
-          propertyTypeFilter === "land" 
-            ? property.propertyType === "Land" 
-            : property.propertyType !== "Land"
-        );
-    
+    const filteredByType =
+      propertyTypeFilter === "all"
+        ? filteredByMode
+        : filteredByMode.filter((property) =>
+            propertyTypeFilter === "land"
+              ? property.propertyType === "Land"
+              : property.propertyType !== "Land"
+          );
+
     console.log("Properties after type filter:", filteredByType.length);
 
     // 3) Fuzzy search with Fuse.js
@@ -820,9 +864,9 @@ function Properties() {
         const fuse = new Fuse(filteredByType, {
           keys: ["title", "location"],
           threshold: 0.3,
-          ignoreLocation: true
+          ignoreLocation: true,
         });
-        fuzzyFiltered = fuse.search(searchTerm).map(result => result.item);
+        fuzzyFiltered = fuse.search(searchTerm).map((result) => result.item);
       } catch (error) {
         console.error("Error in fuzzy search:", error);
         fuzzyFiltered = filteredByType;
@@ -830,32 +874,38 @@ function Properties() {
     } else {
       fuzzyFiltered = filteredByType;
     }
-    
+
     console.log("Properties after fuzzy search:", fuzzyFiltered.length);
 
     // 4) Numeric filters (price, bedrooms, bathrooms)
     const numericFiltered = fuzzyFiltered
       .filter((property) => {
-        return property.price >= priceRange[0] && property.price <= priceRange[1];
+        return (
+          property.price >= priceRange[0] && property.price <= priceRange[1]
+        );
       })
       .filter((property) => {
         // Skip bedroom filter for Land properties
-        return property.propertyType === "Land" || 
-               bedroomFilter === 0 || 
-               (property.bedrooms && property.bedrooms === bedroomFilter);
+        return (
+          property.propertyType === "Land" ||
+          bedroomFilter === 0 ||
+          (property.bedrooms && property.bedrooms === bedroomFilter)
+        );
       })
       .filter((property) => {
         // Skip bathroom filter for Land properties
-        return property.propertyType === "Land" || 
-               bathroomFilter === 0 || 
-               (property.bathrooms && property.bathrooms === bathroomFilter);
+        return (
+          property.propertyType === "Land" ||
+          bathroomFilter === 0 ||
+          (property.bathrooms && property.bathrooms === bathroomFilter)
+        );
       });
-    
+
     console.log("Properties after numeric filters:", numericFiltered.length);
 
     // 5) Sorting
     let sortedProperties = [...numericFiltered];
-    
+
     try {
       if (sortBy === "priceAsc") {
         sortedProperties.sort((a, b) => a.price - b.price);
@@ -863,14 +913,18 @@ function Properties() {
         sortedProperties.sort((a, b) => b.price - a.price);
       } else if (sortBy === "bedroomsAsc") {
         sortedProperties.sort((a, b) => {
-          const bedroomsA = (a.propertyType === "Land" || !a.bedrooms) ? 0 : a.bedrooms;
-          const bedroomsB = (b.propertyType === "Land" || !b.bedrooms) ? 0 : b.bedrooms;
+          const bedroomsA =
+            a.propertyType === "Land" || !a.bedrooms ? 0 : a.bedrooms;
+          const bedroomsB =
+            b.propertyType === "Land" || !b.bedrooms ? 0 : b.bedrooms;
           return bedroomsA - bedroomsB;
         });
       } else if (sortBy === "bedroomsDesc") {
         sortedProperties.sort((a, b) => {
-          const bedroomsA = (a.propertyType === "Land" || !a.bedrooms) ? 0 : a.bedrooms;
-          const bedroomsB = (b.propertyType === "Land" || !b.bedrooms) ? 0 : b.bedrooms;
+          const bedroomsA =
+            a.propertyType === "Land" || !a.bedrooms ? 0 : a.bedrooms;
+          const bedroomsB =
+            b.propertyType === "Land" || !b.bedrooms ? 0 : b.bedrooms;
           return bedroomsB - bedroomsA;
         });
       } else if (sortBy === "areaAsc") {
@@ -887,97 +941,107 @@ function Properties() {
     } catch (error) {
       console.error("Error sorting properties:", error);
     }
-    
+
     console.log("Final filtered properties:", sortedProperties.length);
     return sortedProperties;
   }, [
-    allProperties, 
-    mode, 
-    propertyTypeFilter, 
-    searchTerm, 
-    priceRange, 
-    bedroomFilter, 
-    bathroomFilter, 
-    sortBy
+    allProperties,
+    mode,
+    propertyTypeFilter,
+    searchTerm,
+    priceRange,
+    bedroomFilter,
+    bathroomFilter,
+    sortBy,
   ]);
 
   return (
     <Container sx={{ py: 4 }}>
       {/* Navigation Bar - Custom styling for better appearance */}
-      <Box sx={{ 
-        mb: 5, 
-        py: 2, 
-        px: 3, 
-        display: 'flex', 
-        justifyContent: 'center',
-        backgroundColor: 'rgba(240, 247, 250, 0.7)',
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 3,
-          background: 'transparent'
-        }}>
+      <Box
+        sx={{
+          mb: 5,
+          py: 2,
+          px: 3,
+          display: "flex",
+          justifyContent: "center",
+          backgroundColor: "rgba(240, 247, 250, 0.7)",
+          borderRadius: "12px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            gap: 3,
+            background: "transparent",
+          }}
+        >
           <Button
-            variant={mode === 'rent' ? 'contained' : 'outlined'}
-            onClick={() => navigate('/properties/rent')}
+            variant={mode === "rent" ? "contained" : "outlined"}
+            onClick={() => navigate("/properties/rent")}
             startIcon={<HomeIcon />}
             sx={{
-              borderRadius: '8px',
-              padding: '8px 22px',
+              borderRadius: "8px",
+              padding: "8px 22px",
               fontWeight: 600,
-              boxShadow: mode === 'rent' ? '0 4px 8px rgba(43, 122, 140, 0.3)' : 'none',
-              backgroundColor: mode === 'rent' ? '#2B7A8C' : 'transparent',
-              borderColor: '#2B7A8C',
-              color: mode === 'rent' ? 'white' : '#2B7A8C',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                backgroundColor: mode === 'rent' ? '#1e5b68' : 'rgba(43, 122, 140, 0.1)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 12px rgba(43, 122, 140, 0.2)',
+              boxShadow:
+                mode === "rent" ? "0 4px 8px rgba(43, 122, 140, 0.3)" : "none",
+              backgroundColor: mode === "rent" ? "#2B7A8C" : "transparent",
+              borderColor: "#2B7A8C",
+              color: mode === "rent" ? "white" : "#2B7A8C",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor:
+                  mode === "rent" ? "#1e5b68" : "rgba(43, 122, 140, 0.1)",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 12px rgba(43, 122, 140, 0.2)",
               },
             }}
           >
             RENT
           </Button>
           <Button
-            variant={mode === 'buy' ? 'contained' : 'outlined'}
-            onClick={() => navigate('/properties/buy')}
+            variant={mode === "buy" ? "contained" : "outlined"}
+            onClick={() => navigate("/properties/buy")}
             sx={{
-              borderRadius: '8px',
-              padding: '8px 22px',
+              borderRadius: "8px",
+              padding: "8px 22px",
               fontWeight: 600,
-              boxShadow: mode === 'buy' ? '0 4px 8px rgba(43, 122, 140, 0.3)' : 'none',
-              backgroundColor: mode === 'buy' ? '#2B7A8C' : 'transparent',
-              borderColor: '#2B7A8C',
-              color: mode === 'buy' ? 'white' : '#2B7A8C',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                backgroundColor: mode === 'buy' ? '#1e5b68' : 'rgba(43, 122, 140, 0.1)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 12px rgba(43, 122, 140, 0.2)',
+              boxShadow:
+                mode === "buy" ? "0 4px 8px rgba(43, 122, 140, 0.3)" : "none",
+              backgroundColor: mode === "buy" ? "#2B7A8C" : "transparent",
+              borderColor: "#2B7A8C",
+              color: mode === "buy" ? "white" : "#2B7A8C",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor:
+                  mode === "buy" ? "#1e5b68" : "rgba(43, 122, 140, 0.1)",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 12px rgba(43, 122, 140, 0.2)",
               },
             }}
           >
             BUY
           </Button>
           <Button
-            variant={mode === 'sold' ? 'contained' : 'outlined'}
-            onClick={() => navigate('/properties/sold')}
+            variant={mode === "sold" ? "contained" : "outlined"}
+            onClick={() => navigate("/properties/sold")}
             sx={{
-              borderRadius: '8px',
-              padding: '8px 22px',
+              borderRadius: "8px",
+              padding: "8px 22px",
               fontWeight: 600,
-              boxShadow: mode === 'sold' ? '0 4px 8px rgba(43, 122, 140, 0.3)' : 'none',
-              backgroundColor: mode === 'sold' ? '#2B7A8C' : 'transparent',
-              borderColor: '#2B7A8C',
-              color: mode === 'sold' ? 'white' : '#2B7A8C',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                backgroundColor: mode === 'sold' ? '#1e5b68' : 'rgba(43, 122, 140, 0.1)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 12px rgba(43, 122, 140, 0.2)',
+              boxShadow:
+                mode === "sold" ? "0 4px 8px rgba(43, 122, 140, 0.3)" : "none",
+              backgroundColor: mode === "sold" ? "#2B7A8C" : "transparent",
+              borderColor: "#2B7A8C",
+              color: mode === "sold" ? "white" : "#2B7A8C",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor:
+                  mode === "sold" ? "#1e5b68" : "rgba(43, 122, 140, 0.1)",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 12px rgba(43, 122, 140, 0.2)",
               },
             }}
           >
@@ -985,9 +1049,18 @@ function Properties() {
           </Button>
         </Box>
       </Box>
-      
+
       {/* Page Title */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 2 : 0 }}>
+      <Box
+        sx={{
+          mb: 4,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 2 : 0,
+        }}
+      >
         <Typography variant="h4" sx={{ fontWeight: 600 }}>
           {mode === "rent" && "Properties for Rent"}
           {mode === "buy" && "Properties for Sale"}
@@ -997,7 +1070,7 @@ function Properties() {
       </Box>
 
       {/* ADVANCED SEARCH FORM */}
-      <PropertyFilters 
+      <PropertyFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         propertyTypeFilter={propertyTypeFilter}
@@ -1017,7 +1090,7 @@ function Properties() {
 
       {/* Loading and Error States */}
       {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       )}
@@ -1032,9 +1105,11 @@ function Properties() {
       {!loading && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="body1">
-            {filteredProperties.length === 0 
-              ? 'No properties match your search criteria' 
-              : `Showing ${filteredProperties.length} ${filteredProperties.length === 1 ? 'property' : 'properties'}`}
+            {filteredProperties.length === 0
+              ? "No properties match your search criteria"
+              : `Showing ${filteredProperties.length} ${
+                  filteredProperties.length === 1 ? "property" : "properties"
+                }`}
           </Typography>
         </Box>
       )}
@@ -1057,15 +1132,23 @@ function Properties() {
 
       {/* No results */}
       {!loading && filteredProperties.length === 0 && (
-        <Box sx={{ textAlign: 'center', mt: 4, p: 4, backgroundColor: '#f5f5f5', borderRadius: 2 }}>
+        <Box
+          sx={{
+            textAlign: "center",
+            mt: 4,
+            p: 4,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 2,
+          }}
+        >
           <Typography variant="h6" gutterBottom>
             No properties match your search criteria
           </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
             Try adjusting your filters or search terms
           </Typography>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             startIcon={<RefreshIcon />}
             onClick={resetFilters}
           >
@@ -1083,14 +1166,14 @@ function Properties() {
       />
 
       {/* Notifications */}
-      <Snackbar 
-        open={notification.open} 
-        autoHideDuration={4000} 
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
         onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert 
-          onClose={handleCloseNotification} 
+        <Alert
+          onClose={handleCloseNotification}
           severity={notification.severity}
         >
           {notification.message}

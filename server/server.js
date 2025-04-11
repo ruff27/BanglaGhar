@@ -13,7 +13,7 @@ app.use(express.json()); // parse incoming JSON data
 // 3) CONNECT TO MONGODB ATLAS
 mongoose
   .connect(
-    "mongodb+srv://103531273:forctpA2025@cluster1.wmpcxe1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1"
+    "mongodb+srv://103531273:forctpA2025@cluster1.wmpcxe1.mongodb.net/BanglaGhar?retryWrites=true&w=majority&appName=Cluster1"
   )
   .then(() => {
     console.log("Connected to MongoDB Atlas successfully!");
@@ -41,46 +41,19 @@ app.get("/", (req, res) => {
 // CREATE property
 app.post("/api/properties", async (req, res) => {
   try {
-    console.log("Received property data:", req.body); // Debug line
+    const { createdBy, ...propertyData } = req.body;
 
-    const {
-      title,
-      price,
-      location,
-      mode,
-      bedrooms,
-      bathrooms,
-      area,
-      description,
-      images,
-      createdBy, // Expect this to be provided from Cognito (e.g., a username)
-    } = req.body;
     if (!createdBy) {
       return res
         .status(401)
         .json({ error: "Unauthorized: user must be logged in" });
     }
 
-    const parsedPrice = Number(price);
-    if (isNaN(parsedPrice)) {
-      return res.status(400).json({ error: "Price must be a number" });
-    }
-    const propertyImages =
-      images && images.length > 0 ? images : ["house1.png"];
-
-    // Instead of looking up a user in MongoDB, directly store createdBy as passed
     const newProperty = new Property({
-      title,
-      price: parsedPrice,
-      location,
-      mode,
-      bedrooms,
-      bathrooms,
-      area,
-      description,
-      images: propertyImages,
-      createdBy, // Directly use the provided user identifier
+      ...propertyData,
+      createdBy,
     });
+
     await newProperty.save();
     res.json({
       message: "Property created successfully",
