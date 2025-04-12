@@ -42,6 +42,11 @@ const ProfilePaper = styled(Paper)(({ theme }) => ({
   flexDirection: "column",
   alignItems: "center",
   marginTop: theme.spacing(8),
+  width: "100%",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(4),
+  },
 }));
 
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
@@ -63,6 +68,10 @@ const StyledButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main,
   "&:hover": {
     backgroundColor: "#236C7D",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(1),
+    fontSize: "0.95rem",
+  },
   },
 }));
 
@@ -290,7 +299,7 @@ const UserProfile = () => {
   }
 
   return (
-    <Container component="main" maxWidth="sm">
+    <Container component="main" maxWidth="sm" sx={{ px: 2}}>
       <ProfilePaper elevation={3}>
         <Box sx={{ position: "relative" }}>
           <StyledAvatar src={profilePic}>
@@ -328,7 +337,7 @@ const UserProfile = () => {
                 primary="Name"
                 secondary={userData.name}
                 primaryTypographyProps={{ fontWeight: 600, color: "#2B7B8C" }}
-                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000" }}
+                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000", sx: {wordBreak: "break-word", overflowWrap: "break-word"}, }}
               />
             </ListItem>
 
@@ -340,7 +349,7 @@ const UserProfile = () => {
                 primary="Email"
                 secondary={userData.email}
                 primaryTypographyProps={{ fontWeight: 600, color: "#2B7B8C" }}
-                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000" }}
+                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000", sx: {wordBreak: "break-word", overflowWrap: "break-word"}, }}
               />
             </ListItem>
 
@@ -352,7 +361,7 @@ const UserProfile = () => {
                 primary="User ID"
                 secondary={userData.sub}
                 primaryTypographyProps={{ fontWeight: 600, color: "#2B7B8C" }}
-                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000" }}
+                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000", sx: { wordBreak: "break-word" } }}
               />
             </ListItem>
 
