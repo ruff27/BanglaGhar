@@ -480,6 +480,7 @@ const PropertyFilters = ({
               valueLabelDisplay="auto"
               min={0}
               max={mode === "rent" ? 100000 : 300}
+              defaultValue={9000}
             />
           </Box>
 
