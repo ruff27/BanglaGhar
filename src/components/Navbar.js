@@ -666,8 +666,7 @@ const Navbar = () => {
                 >
                   <MenuItem
                     component={Link}
-                    to="/user-
-                      profile"
+                    to="/user-profile"
                     onClick={handleProfileClose}
                     sx={{ borderRadius: "8px" }}
                   >
