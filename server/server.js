@@ -1,12 +1,13 @@
 // server/server.js
 const path = require("path");
 
-const aiRoutes = require("./routes/aiRoutes");
-
 // 1) load exactly the .env you intend
 require("dotenv").config({
   path: path.resolve(__dirname, "./.env"),
 });
+
+const aiRoutes = require("./routes/aiRoutes");
+const propertyRoutes = require("./routes/propertyRoutes");
 
 // 2) imports
 const express = require("express");
@@ -17,6 +18,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api", aiRoutes);
+app.use("/api/properties", propertyRoutes);
 
 // 3) connect
 const uri = process.env.MONGO_URI;
@@ -52,97 +54,6 @@ app.get("/", (req, res) => {
 // Removed the signup and login routes since the project now uses Cognito
 
 // 7) PROPERTY ROUTES
-
-// CREATE property
-app.post("/api/properties", async (req, res) => {
-  try {
-    const { createdBy, ...propertyData } = req.body;
-
-    if (!createdBy) {
-      return res
-        .status(401)
-        .json({ error: "Unauthorized: user must be logged in" });
-    }
-
-    const newProperty = new Property({
-      ...propertyData,
-      createdBy,
-    });
-
-    await newProperty.save();
-    res.json({
-      message: "Property created successfully",
-      property: newProperty,
-    });
-  } catch (err) {
-    console.error("Create property error:", err);
-    res.status(500).json({ error: "Server error creating property" });
-  }
-});
-
-// READ all properties
-app.get("/api/properties", async (req, res) => {
-  try {
-    const properties = await Property.find();
-    res.json(properties);
-  } catch (err) {
-    console.error("Get properties error:", err);
-    res.status(500).json({ error: "Server error fetching properties" });
-  }
-});
-
-// READ single property
-app.get("/api/properties/:id", async (req, res) => {
-  try {
-    const propertyId = req.params.id;
-    const property = await Property.findById(propertyId);
-    if (!property) {
-      return res.status(404).json({ error: "Property not found" });
-    }
-    res.json(property);
-  } catch (err) {
-    console.error("Get property error:", err);
-    res.status(500).json({ error: "Server error fetching property" });
-  }
-});
-
-// UPDATE property
-app.put("/api/properties/:id", async (req, res) => {
-  try {
-    const propertyId = req.params.id;
-    const updates = req.body;
-    const updatedProperty = await Property.findByIdAndUpdate(
-      propertyId,
-      updates,
-      { new: true }
-    );
-    if (!updatedProperty) {
-      return res.status(404).json({ error: "Property not found" });
-    }
-    res.json({
-      message: "Property updated successfully",
-      property: updatedProperty,
-    });
-  } catch (err) {
-    console.error("Update property error:", err);
-    res.status(500).json({ error: "Server error updating property" });
-  }
-});
-
-// DELETE property
-app.delete("/api/properties/:id", async (req, res) => {
-  try {
-    const propertyId = req.params.id;
-    const deletedProperty = await Property.findByIdAndDelete(propertyId);
-    if (!deletedProperty) {
-      return res.status(404).json({ error: "Property not found" });
-    }
-    res.json({ message: "Property deleted successfully" });
-  } catch (err) {
-    console.error("Delete property error:", err);
-    res.status(500).json({ error: "Server error deleting property" });
-  }
-});
 
 // 8) WISHLIST ROUTES
 
