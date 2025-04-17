@@ -19,7 +19,6 @@ import {
   DialogActions,
   IconButton,
   Input,
-  
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import PersonIcon from "@mui/icons-material/Person";
@@ -29,9 +28,9 @@ import LockIcon from "@mui/icons-material/Lock";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
-import {  CognitoUserAttribute } from "amazon-cognito-identity-js";
+import { CognitoUserAttribute } from "amazon-cognito-identity-js";
 import { userPool } from "../aws/CognitoConfig";
-import { useAuth } from "../pages/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 
 const ProfilePaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -68,10 +67,10 @@ const StyledButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main,
   "&:hover": {
     backgroundColor: "#236C7D",
-  [theme.breakpoints.down("sm")]: {
-    padding: theme.spacing(1),
-    fontSize: "0.95rem",
-  },
+    [theme.breakpoints.down("sm")]: {
+      padding: theme.spacing(1),
+      fontSize: "0.95rem",
+    },
   },
 }));
 
@@ -299,14 +298,19 @@ const UserProfile = () => {
   }
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ px: 2}}>
+    <Container component="main" maxWidth="sm" sx={{ px: 2 }}>
       <ProfilePaper elevation={3}>
         <Box sx={{ position: "relative" }}>
           <StyledAvatar src={profilePic}>
             {!profilePic && <PersonIcon fontSize="large" />}
           </StyledAvatar>
           <IconButton
-            sx={{ position: "absolute", bottom: 0, right: 0, backgroundColor: "#fff" }}
+            sx={{
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+              backgroundColor: "#fff",
+            }}
             component="label"
           >
             <PhotoCamera />
@@ -337,7 +341,11 @@ const UserProfile = () => {
                 primary="Name"
                 secondary={userData.name}
                 primaryTypographyProps={{ fontWeight: 600, color: "#2B7B8C" }}
-                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000", sx: {wordBreak: "break-word", overflowWrap: "break-word"}, }}
+                secondaryTypographyProps={{
+                  fontSize: "1.1rem",
+                  color: "#000000",
+                  sx: { wordBreak: "break-word", overflowWrap: "break-word" },
+                }}
               />
             </ListItem>
 
@@ -349,7 +357,11 @@ const UserProfile = () => {
                 primary="Email"
                 secondary={userData.email}
                 primaryTypographyProps={{ fontWeight: 600, color: "#2B7B8C" }}
-                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000", sx: {wordBreak: "break-word", overflowWrap: "break-word"}, }}
+                secondaryTypographyProps={{
+                  fontSize: "1.1rem",
+                  color: "#000000",
+                  sx: { wordBreak: "break-word", overflowWrap: "break-word" },
+                }}
               />
             </ListItem>
 
@@ -361,7 +373,11 @@ const UserProfile = () => {
                 primary="User ID"
                 secondary={userData.sub}
                 primaryTypographyProps={{ fontWeight: 600, color: "#2B7B8C" }}
-                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000", sx: { wordBreak: "break-word" } }}
+                secondaryTypographyProps={{
+                  fontSize: "1.1rem",
+                  color: "#000000",
+                  sx: { wordBreak: "break-word" },
+                }}
               />
             </ListItem>
 
@@ -373,7 +389,10 @@ const UserProfile = () => {
                 primary="Email Verified"
                 secondary={userData.email_verified === "true" ? "Yes" : "No"}
                 primaryTypographyProps={{ fontWeight: 600, color: "#2B7B8C" }}
-                secondaryTypographyProps={{ fontSize: "1.1rem", color: "#000000" }}
+                secondaryTypographyProps={{
+                  fontSize: "1.1rem",
+                  color: "#000000",
+                }}
               />
             </ListItem>
           </List>
@@ -478,12 +497,17 @@ const UserProfile = () => {
         <DialogTitle>Delete Account</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete your account? This action cannot be undone.
+            Are you sure you want to delete your account? This action cannot be
+            undone.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteClose}>Cancel</Button>
-          <Button onClick={handleDeleteAccount} variant="contained" color="error">
+          <Button
+            onClick={handleDeleteAccount}
+            variant="contained"
+            color="error"
+          >
             Delete
           </Button>
         </DialogActions>

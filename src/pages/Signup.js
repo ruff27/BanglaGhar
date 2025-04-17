@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "../pages/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 
 const SignupPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -76,12 +76,11 @@ const Signup = () => {
   const handlePasswordChange = (e) => {
     const newPassword = e.target.value;
     setPassword(newPassword);
-    validatePassword(newPassword); 
+    validatePassword(newPassword);
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
-
 
     try {
       await signup(useremail, username, password); // Call centralized signup
@@ -99,7 +98,8 @@ const Signup = () => {
   };
 
   // Check if password meets all requirements
-  const isPasswordValid = hasNumber && hasSpecial && hasUppercase && hasLowercase && hasMinLength;
+  const isPasswordValid =
+    hasNumber && hasSpecial && hasUppercase && hasLowercase && hasMinLength;
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
@@ -160,14 +160,14 @@ const Signup = () => {
             helperText={
               <Typography
                 variant="caption"
-                sx={{ 
+                sx={{
                   color: hasMinLength ? "green" : "#2B7B8C",
-                  lineHeight: 1.2
+                  lineHeight: 1.2,
                 }}
               >
-                  Must be 8 characters with number, special character, uppercase, and lowercase  
+                Must be 8 characters with number, special character, uppercase,
+                and lowercase
               </Typography>
-              
             }
           />
           <TextField

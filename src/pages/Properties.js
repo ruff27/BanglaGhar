@@ -33,7 +33,7 @@ import {
 } from "@mui/material";
 import Fuse from "fuse.js";
 import axios from "axios";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../context/AuthContext";
 import {
   Favorite as FavoriteIcon,
   FavoriteBorder as FavoriteBorderIcon,

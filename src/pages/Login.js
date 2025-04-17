@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "./AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 
 const LoginPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",

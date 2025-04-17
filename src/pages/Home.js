@@ -38,7 +38,7 @@ import house3 from "../pictures/house3.png";
 import land from "../pictures/land.jpg";
 import BangladeshMap from "./BangladeshMap"; // Import the BangladeshMap component
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthContext"; // Import the AuthContext
+import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
 // Styled components with modern design

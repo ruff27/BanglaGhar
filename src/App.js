@@ -1,7 +1,8 @@
 import React from "react";
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/layout/Navbar";
+
 import Footer from "./components/layout/Footer";
 
 import Home from "./pages/Home";
@@ -20,7 +21,7 @@ import Saved from "./pages/Saved";
 
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { AuthProvider } from "./pages/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import UserProfile from "./pages/UserProfile";
 
 function App() {

@@ -34,7 +34,7 @@ import BathtubIcon from "@mui/icons-material/Bathtub";
 import SellIcon from "@mui/icons-material/Sell";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 
 // Styled components
