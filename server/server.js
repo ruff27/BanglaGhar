@@ -1,25 +1,40 @@
-// server.js
+// server/server.js
+const path = require("path");
 
-// 1) IMPORTS
+const aiRoutes = require("./routes/aiRoutes");
+
+// 1) load exactly the .env you intend
+require("dotenv").config({
+  path: path.resolve(__dirname, "./.env"),
+});
+
+// 2) imports
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-// 2) APP SETUP
 const app = express();
 app.use(cors());
-app.use(express.json()); // parse incoming JSON data
+app.use(express.json());
+app.use("/api", aiRoutes);
 
-// 3) CONNECT TO MONGODB ATLAS
+// 3) connect
+const uri = process.env.MONGO_URI;
+if (!uri) {
+  console.error("No Mongo URI found in ENV! Check your .env name.");
+  process.exit(1);
+}
+
 mongoose
-  .connect(
-    "mongodb+srv://103531273:forctpA2025@cluster1.wmpcxe1.mongodb.net/BanglaGhar?retryWrites=true&w=majority&appName=Cluster1"
-  )
+  .connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
-    console.log("Connected to MongoDB Atlas successfully!");
+    console.log("✅ Connected to MongoDB Atlas successfully!");
   })
   .catch((err) => {
-    console.error("Error connecting to MongoDB Atlas:", err);
+    console.error("❌ Error connecting to MongoDB Atlas:", err);
   });
 
 // 4) MODELS
