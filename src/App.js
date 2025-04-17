@@ -2,7 +2,8 @@ import React from "react";
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import Footer from "./components/layout/Footer";
+
 import Home from "./pages/Home";
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
@@ -11,38 +12,16 @@ import ListProperty from "./pages/ListProperty";
 import Signup from "./pages/Signup";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
+import { theme } from "./styles/theme";
 
 // Import the new single-page component:
 import Properties from "./pages/Properties";
 import Saved from "./pages/Saved";
 
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider } from "./pages/AuthContext";
 import UserProfile from "./pages/UserProfile";
-
-// theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#2B7B8C",
-    },
-    secondary: {
-      main: "#8FBFBF",
-    },
-    background: {
-      default: "#EFF9FE",
-      paper: "#EFF9FE",
-    },
-    text: {
-      primary: "#0B1F23",
-      secondary: "#BFBBB8",
-    },
-  },
-  typography: {
-    fontFamily: ["Roboto", "Arial", "sans-serif"].join(","),
-  },
-});
 
 function App() {
   return (

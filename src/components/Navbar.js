@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import LanguageToggle from "./LanguageToggle"; // correct path from components
+import LanguageToggle from "./common/LanguageToggle";
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
