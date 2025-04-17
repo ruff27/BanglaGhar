@@ -17,7 +17,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import { theme } from "./styles/theme";
 
 // Import the new single-page component:
-import Properties from "./pages/Properties";
+import Properties from "./features/properties/PropertiesPage"; // Update path
 import Saved from "./pages/Saved";
 
 import { ThemeProvider } from "@mui/material/styles";
