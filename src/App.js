@@ -10,7 +10,7 @@ import Home from "./features/home/HomePage";
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
-import ListProperty from "./pages/ListProperty";
+import ListProperty from "./features/listing/ListPropertyPage"; // Update path
 import Signup from "./pages/Signup";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
