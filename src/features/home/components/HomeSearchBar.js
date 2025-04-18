@@ -20,9 +20,9 @@ import { useTranslation } from "react-i18next";
 import axios from "axios";
 import Fuse from "fuse.js";
 
-// Import BangladeshMap component (adjust path after it's refactored)
-// !! IMPORTANT: Update this path when BangladeshMap is refactored !!
-import BangladeshMap from "../../../pages/BangladeshMap";
+// Import the NEW MapComponent from its correct refactored location
+// Used for the location selection dialog
+import MapComponent from "../../map/components/MapComponent"; // Corrected path
 
 // Import the STANDALONE PropertyCardSuggestion component
 import PropertyCardSuggestion from "./PropertyCardSuggestion";
@@ -31,9 +31,7 @@ const API_BASE_URL = "http://localhost:5001/api"; // Or use env var
 
 /**
  * HomeSearchBar Component
- *
- * Displays the main search bar for properties and location.
- * Includes logic for fetching/displaying property suggestions and opening the map dialog.
+ * Displays the main search bar, suggestions, and map dialog for location selection.
  */
 const HomeSearchBar = () => {
   const navigate = useNavigate();
@@ -135,7 +133,6 @@ const HomeSearchBar = () => {
           alignItems: "stretch",
           gap: 1.5,
           borderRadius: "12px",
-          // Using the adjusted margin from previous step
           mt: { xs: 4, md: -4 },
           mb: { xs: 4, md: 6 },
           zIndex: 10,
@@ -195,7 +192,7 @@ const HomeSearchBar = () => {
               {!loadingSuggestions && filteredProperties.length > 0 ? (
                 <>
                   {filteredProperties.map((property) => (
-                    <PropertyCardSuggestion // Using the imported component
+                    <PropertyCardSuggestion
                       key={property._id || property.id}
                       property={property}
                       onSelect={() => handlePropertySelect(property)}
@@ -299,16 +296,22 @@ const HomeSearchBar = () => {
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ p: 0, height: { xs: "60vh", md: "70vh" } }}>
-          {/* !! IMPORTANT: Update this path when BangladeshMap is refactored !! */}
-          <BangladeshMap onLocationSelected={handleLocationSelected} />
+          {/* Render MapComponent inside the dialog */}
+          {/* Pass necessary props for interaction within the dialog */}
+          <MapComponent
+            properties={allProperties} // Pass properties to show markers maybe?
+            mapCenter={[23.8103, 90.4125]} // Initial center for dialog map
+            mapZoom={7}
+            onMarkerClick={(prop) => handleLocationSelected(prop.location)} // Example: Select location on marker click
+            // Consider if user location is needed here
+          />
         </DialogContent>
       </Dialog>
     </>
   );
 };
 
-// --- Removed the duplicate local definition of PropertyCardSuggestion ---
-// const PropertyCardSuggestion = ({ property, onSelect }) => { ... };
-// --- Removed ---
+// PropertyCardSuggestion definition should be in its own file and imported above
+// Removed duplicate definition from here
 
 export default HomeSearchBar;

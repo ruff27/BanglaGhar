@@ -1,12 +1,10 @@
 import React from "react";
-import { Box, Typography, Button, Container } from "@mui/material";
+import { Box, Typography, Button, Container, Paper } from "@mui/material"; // Moved Paper import here
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-// Import the BangladeshMap component
-// !! IMPORTANT: This path might need adjustment after BangladeshMap itself is refactored !!
-// Assuming it might end up in 'src/features/map/components/MapComponent.js' or similar
-import BangladeshMap from "../../../pages/BangladeshMap"; // Current path based on original structure
+// Import the NEW MapComponent from its correct refactored location
+import MapComponent from "../../map/components/MapComponent"; // Corrected path
 
 /**
  * HomeMapPreview Component
@@ -53,19 +51,22 @@ const HomeMapPreview = () => {
             mb: 3,
           }}
         >
-          {/* Render the map component */}
-          {/* Props passed here might need adjustment based on BangladeshMap's final implementation */}
-          <BangladeshMap
-          // readOnly={true} // Example prop to disable interactions in preview
-          // initialCenter={[23.8103, 90.4125]} // Example center
-          // initialZoom={7} // Example zoom
+          {/* Render the new MapComponent */}
+          {/* Pass minimal props needed for a preview, or none if it defaults okay */}
+          <MapComponent
+            properties={[]} // Pass empty array or fetched featured properties if needed
+            mapCenter={[23.8103, 90.4125]} // Default center
+            mapZoom={7} // Default zoom
+            // readOnly={true} // Maybe disable interactions
+            // userLocation={null} // Don't show user location in preview
+            // onMarkerClick={() => {}} // Disable marker clicks
           />
         </Paper>
         <Box sx={{ textAlign: "center" }}>
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate("/map")} // Navigate to the full map page
+            onClick={() => navigate("/map")} // Navigate to the full map page route
             sx={{ borderRadius: "8px", textTransform: "none", px: 3, py: 1 }}
           >
             {t("open_full_map", "Open Full Map")} {/* Example key */}
@@ -76,7 +77,6 @@ const HomeMapPreview = () => {
   );
 };
 
-// Need to import Paper if used
-import { Paper } from "@mui/material";
+// Removed Paper import from here
 
 export default HomeMapPreview;

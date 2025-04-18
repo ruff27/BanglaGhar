@@ -9,6 +9,7 @@ import Home from "./features/home/HomePage";
 
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
+import BangladeshMap from "./features/map/MapPage"; // Update path
 import Login from "./pages/Login";
 import ListProperty from "./features/listing/ListPropertyPage"; // Update path
 import Signup from "./pages/Signup";
