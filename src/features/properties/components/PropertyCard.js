@@ -1,11 +1,11 @@
+// src/features/Properties/components/PropertyCard.js
 import React from "react";
-import { Link as RouterLink } from "react-router-dom"; // Import RouterLink
+import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Card,
   CardMedia,
   CardContent,
-  // CardActionArea removed - we'll use Link now
   Typography,
   Chip,
   Divider,
@@ -17,60 +17,71 @@ import BedIcon from "@mui/icons-material/Bed";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
-import WishlistButton from "./WishlistButton"; // Keep WishlistButton
+import WishlistButton from "./WishlistButton";
 
 /**
- * PropertyCard Component
- * Displays a single property listing card that links to the detail page.
+ * PropertyCard Component - Updated for new address structure
  */
-const PropertyCard = ({
-  property,
-  isWishlisted,
-  onWishlistToggle,
-  // onViewDetails prop is removed
-}) => {
+const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
   const theme = useTheme();
 
-  if (!property || !property._id) {
+  // Add more robust checking
+  if (!property || typeof property !== "object" || !property._id) {
     console.warn("PropertyCard received invalid property data:", property);
     return null;
   }
 
-  const placeholderImg = `/pictures/placeholder.png`;
-  const imgSrc = property.images?.[0]
-    ? `/pictures/${property.images[0]}`
-    : placeholderImg;
+  const placeholderImg = `/pictures/placeholder.png`; // Ensure this path is correct relative to your public folder
+  // Check if images array exists and has content
+  const imgSrc =
+    Array.isArray(property.images) && property.images.length > 0
+      ? `/pictures/${property.images[0]}` // Assuming image names are stored directly
+      : placeholderImg;
+
   const handleImageError = (e) => {
-    e.target.onerror = null;
+    e.target.onerror = null; // Prevent infinite loop if placeholder fails
     e.target.src = placeholderImg;
   };
 
-  const displayPrice = property.price
-    ? `৳ ${property.price.toLocaleString()}${
-        property.mode === "rent" ? "/mo" : ""
-      }`
-    : "Price N/A";
+  const displayPrice =
+    property.price !== null && property.price !== undefined
+      ? `৳ ${Number(property.price).toLocaleString()}${
+          property.listingType === "rent" ? "/mo" : ""
+        }` // Use listingType
+      : "Price N/A";
 
+  // Use listingType for chip logic
   const chipBgColor =
-    property.mode === "sold"
+    property.listingType === "sold"
       ? theme.palette.grey[700]
       : theme.palette.primary.main;
 
-  // *** Define the detail page URL ***
+  // Construct location string from new fields
+  const locationString =
+    [
+      property.addressLine1,
+      property.upazila,
+      property.cityTown, // Or district? Choose the most relevant parts for a short display
+      property.district,
+    ]
+      .filter(Boolean) // Remove empty/null parts
+      .join(", ") || "Location N/A"; // Fallback
+
   const detailUrl = `/properties/details/${property._id}`;
+  const isLandOrCommercial =
+    property.propertyType === "land" || property.propertyType === "commercial";
 
   return (
-    // *** Wrap the entire Card in RouterLink ***
     <RouterLink
       to={detailUrl}
       style={{ textDecoration: "none", height: "100%" }}
     >
       <Card
         sx={{
-          borderRadius: "12px",
+          /* Existing styles... */ borderRadius: "12px",
           overflow: "hidden",
           boxShadow: "0 5px 15px rgba(0, 0, 0, 0.06)",
-          height: "100%", // Ensure card takes full height of link wrapper
+          height: "100%",
           display: "flex",
           flexDirection: "column",
           transition: "all 0.3s ease",
@@ -81,9 +92,7 @@ const PropertyCard = ({
           },
         }}
       >
-        {/* Removed CardActionArea */}
         <Box sx={{ position: "relative", width: "100%" }}>
-          {/* Keep WishlistButton - its onClick stops propagation */}
           <WishlistButton
             isWishlisted={isWishlisted}
             onClick={onWishlistToggle}
@@ -97,14 +106,16 @@ const PropertyCard = ({
             onError={handleImageError}
             sx={{ objectFit: "cover" }}
           />
-          {property.mode && (
+          {/* Use listingType */}
+          {property.listingType && (
             <Chip
               label={
-                property.mode.charAt(0).toUpperCase() + property.mode.slice(1)
+                property.listingType.charAt(0).toUpperCase() +
+                property.listingType.slice(1)
               }
               size="small"
               sx={{
-                position: "absolute",
+                /* Existing styles... */ position: "absolute",
                 top: 8,
                 left: 8,
                 zIndex: 1,
@@ -120,7 +131,7 @@ const PropertyCard = ({
 
         <CardContent
           sx={{
-            flexGrow: 1,
+            /* Existing styles... */ flexGrow: 1,
             display: "flex",
             flexDirection: "column",
             width: "100%",
@@ -145,45 +156,70 @@ const PropertyCard = ({
             <LocationOnIcon
               sx={{ fontSize: "1rem", mr: 0.5, color: "primary.main" }}
             />
-            <Typography variant="body2" noWrap>
-              {property.location || "Location N/A"}
+            {/* Use constructed locationString */}
+            <Typography variant="body2" noWrap title={locationString}>
+              {locationString}
             </Typography>
           </Box>
-          {/* Features */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 1,
-              mb: 2,
-              color: "text.secondary",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <BedIcon sx={{ fontSize: "1.1rem", color: "primary.light" }} />
-              <Typography variant="body2">
-                {property.bedrooms ?? "?"} Beds
-              </Typography>
+
+          {/* Features - Conditionally render based on type */}
+          {!isLandOrCommercial ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1,
+                mb: 2,
+                color: "text.secondary",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <BedIcon sx={{ fontSize: "1.1rem", color: "primary.light" }} />
+                <Typography variant="body2">
+                  {property.bedrooms ?? "?"} Beds
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <BathtubIcon
+                  sx={{ fontSize: "1.1rem", color: "primary.light" }}
+                />
+                <Typography variant="body2">
+                  {property.bathrooms ?? "?"} Baths
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <SquareFootIcon
+                  sx={{ fontSize: "1.1rem", color: "primary.light" }}
+                />
+                <Typography variant="body2">
+                  {property.area ?? "?"} sqft
+                </Typography>
+              </Box>
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <BathtubIcon
-                sx={{ fontSize: "1.1rem", color: "primary.light" }}
-              />
-              <Typography variant="body2">
-                {property.bathrooms ?? "?"} Baths
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          ) : (
+            // Display Area prominently for Land/Commercial
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                mb: 2,
+                color: "text.secondary",
+              }}
+            >
               <SquareFootIcon
                 sx={{ fontSize: "1.1rem", color: "primary.light" }}
               />
               <Typography variant="body2">
-                {property.area ?? "?"} sqft
+                Area: {property.area ?? "?"} sqft
               </Typography>
+              {/* Add other relevant info for Land/Commercial if available */}
             </Box>
-          </Box>
+          )}
+
           <Divider sx={{ my: 1 }} />
+
           {/* Price and Type */}
           <Box
             sx={{
@@ -214,7 +250,6 @@ const PropertyCard = ({
             )}
           </Box>
         </CardContent>
-        {/* Removed CardActionArea */}
       </Card>
     </RouterLink>
   );

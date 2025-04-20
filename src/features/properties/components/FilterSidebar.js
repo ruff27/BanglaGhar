@@ -1,9 +1,10 @@
+// src/features/Properties/components/FilterSidebar.js
+
 import React from "react";
 import {
-  Paper,
-  Typography,
   Box,
   Slider,
+  Typography,
   FormControl,
   InputLabel,
   Select,
@@ -15,57 +16,77 @@ import {
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CloseIcon from "@mui/icons-material/Close";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
 
-// Define Min/Max Price for slider consistency
-const MIN_PRICE = 0;
-const MAX_PRICE = 50000000; // 5 Cr - Adjust if your data max is different
-
-// Simplified price marks - only values, no labels to prevent overlap
-const priceMarks = [
-  { value: MIN_PRICE },
-  { value: 10000000 }, // 1 Cr
-  { value: 25000000 }, // 2.5 Cr
-  { value: MAX_PRICE },
-];
-
-// Formatting function for slider tooltip and labels below
+// Helper to format numbers into Bangladeshi units
 function formatPriceLabel(value) {
-  if (value === MAX_PRICE) return `৳${(MAX_PRICE / 10000000).toFixed(0)}Cr+`;
-  if (value >= 10000000) return `৳${(value / 10000000).toFixed(1)}Cr`;
-  if (value >= 100000) return `৳${(value / 100000).toFixed(0)}L`;
+  if (value >= 10_000_000) {
+    const cr = value / 10_000_000;
+    return `৳${cr % 1 === 0 ? cr : cr.toFixed(1)} Cr`;
+  }
+  if (value >= 100_000) {
+    const lk = value / 100_000;
+    return `৳${lk % 1 === 0 ? lk : lk.toFixed(1)} L`;
+  }
   return `৳${value.toLocaleString()}`;
 }
 
-/**
- * FilterSidebar Component
- */
+const BASELINE = 1; // for log scaling (avoid log(0))
+const MAX_PRICE = 50_000_000; // 5 Crore (end of scale)
+
+// Map actual price → slider percent (0–100)
+const toPercent = (price) =>
+  price <= BASELINE
+    ? 0
+    : ((Math.log(price) - Math.log(BASELINE)) /
+        (Math.log(MAX_PRICE) - Math.log(BASELINE))) *
+      100;
+
+// Map slider percent → actual price
+const fromPercent = (pct) =>
+  pct <= 0
+    ? 0
+    : Math.round(
+        Math.exp(
+          Math.log(BASELINE) +
+            (pct / 100) * (Math.log(MAX_PRICE) - Math.log(BASELINE))
+        )
+      );
+
+// Only show 0% and 100% marks
+const priceMarks = [
+  { value: 0, label: "৳0" },
+  { value: 100, label: formatPriceLabel(MAX_PRICE) },
+];
+
 const FilterSidebar = ({
-  filters,
+  filters = {},
   onFilterChange,
   onResetFilters,
   isMobile,
   onClose,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation();
 
-  const priceRange =
-    Array.isArray(filters?.priceRange) && filters.priceRange.length === 2
-      ? filters.priceRange
-      : [MIN_PRICE, MAX_PRICE];
+  // Derive slider positions from current filter values
+  const percentRange =
+    Array.isArray(filters.priceRange) && filters.priceRange.length === 2
+      ? [toPercent(filters.priceRange[0]), toPercent(filters.priceRange[1])]
+      : [0, 100];
 
-  const handleSliderChange = (event, newValue) => {
-    if (newValue[0] > newValue[1] || newValue[1] < newValue[0]) return;
-    onFilterChange({ priceRange: newValue });
+  const handleSliderChange = (_evt, newPctRange) => {
+    const newPrices = newPctRange.map(fromPercent);
+    onFilterChange({ priceRange: newPrices });
   };
 
-  const handleSelectChange = (event) => {
-    const { name, value } = event.target;
+  const handleSelectChange = (evt) => {
+    const { name, value } = evt.target;
     onFilterChange({ [name]: value });
   };
 
   return (
     <Box sx={{ p: 2, height: "100%", overflowY: "auto" }}>
+      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -74,94 +95,83 @@ const FilterSidebar = ({
           mb: 1,
         }}
       >
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-        >
-          <FilterAltIcon color="primary" /> Filters{" "}
-          {/* <-- Kept as is, no key */}
+        <Typography variant="h6" sx={{ display: "flex", gap: 1 }}>
+          <FilterAltIcon color="primary" /> {t("filters")}
         </Typography>
         {isMobile && (
           <IconButton onClick={onClose} size="small" aria-label={t("close")}>
-            {" "}
-            {/* Using close key for aria-label */}
             <CloseIcon />
           </IconButton>
         )}
       </Box>
       <Divider sx={{ mb: 2 }} />
 
-      {/* Price Range */}
+      {/* Price Range (log scale) */}
       <Box sx={{ mb: 3, px: 1 }}>
         <Typography
           id="price-range-label"
           gutterBottom
           sx={{ mb: 1, fontWeight: "medium" }}
         >
-          Price Range {/* <-- Kept as is, no key */}
+          {t("price")}
         </Typography>
         <Slider
-          value={priceRange}
+          value={percentRange}
           onChange={handleSliderChange}
-          valueLabelDisplay="auto"
-          getAriaLabelledBy="price-range-label"
-          min={MIN_PRICE}
-          max={MAX_PRICE}
-          step={500000}
+          min={0}
+          max={100}
           marks={priceMarks}
-          valueLabelFormat={formatPriceLabel}
-          disableSwap
+          valueLabelDisplay="auto"
+          valueLabelFormat={(pct) => formatPriceLabel(fromPercent(pct))}
+          aria-labelledby="price-range-label"
+          sx={{
+            "& .MuiSlider-markLabel": {
+              top: 28,
+              transform: "translateX(-50%)",
+              whiteSpace: "nowrap",
+              fontSize: "0.75rem",
+            },
+          }}
         />
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.5 }}>
-          <Typography variant="caption">
-            {formatPriceLabel(priceRange[0])}
-          </Typography>
-          <Typography variant="caption">
-            {formatPriceLabel(priceRange[1])}
-          </Typography>
-        </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
 
       {/* Bedrooms */}
       <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
-        <InputLabel id="bedrooms-label">{t("bedrooms")}</InputLabel>{" "}
-        {/* Applied */}
+        <InputLabel id="bedrooms-label">{t("bedrooms")}</InputLabel>
         <Select
           labelId="bedrooms-label"
-          id="bedrooms-select"
           name="bedrooms"
           value={filters.bedrooms || "any"}
-          label={t("bedrooms")} // Applied
+          label={t("bedrooms")}
           onChange={handleSelectChange}
         >
-          {/* Applied */}
           <MenuItem value="any">{t("any")}</MenuItem>
-          <MenuItem value={1}>1</MenuItem>
-          <MenuItem value={2}>2</MenuItem>
-          <MenuItem value={3}>3</MenuItem>
-          <MenuItem value={4}>4</MenuItem>
+          {[1, 2, 3, 4].map((n) => (
+            <MenuItem key={n} value={n}>
+              {n}
+            </MenuItem>
+          ))}
           <MenuItem value={5}>5+</MenuItem>
         </Select>
       </FormControl>
 
       {/* Bathrooms */}
       <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
-        <InputLabel id="bathrooms-label">{t("bathrooms")}</InputLabel>{" "}
-        {/* Applied */}
+        <InputLabel id="bathrooms-label">{t("bathrooms")}</InputLabel>
         <Select
           labelId="bathrooms-label"
-          id="bathrooms-select"
           name="bathrooms"
           value={filters.bathrooms || "any"}
-          label={t("bathrooms")} // Applied
+          label={t("bathrooms")}
           onChange={handleSelectChange}
         >
-          {/* Applied */}
           <MenuItem value="any">{t("any")}</MenuItem>
-          <MenuItem value={1}>1</MenuItem>
-          <MenuItem value={2}>2</MenuItem>
+          {[1, 2].map((n) => (
+            <MenuItem key={n} value={n}>
+              {n}
+            </MenuItem>
+          ))}
           <MenuItem value={3}>3+</MenuItem>
         </Select>
       </FormControl>
@@ -169,27 +179,25 @@ const FilterSidebar = ({
 
       {/* Property Type */}
       <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 3 }}>
-        <InputLabel id="propertyType-label">{t("property_type")}</InputLabel>{" "}
-        {/* Applied */}
+        <InputLabel id="propertyType-label">{t("property_type")}</InputLabel>
         <Select
           labelId="propertyType-label"
-          id="propertyType-select"
           name="propertyType"
           value={filters.propertyType || "any"}
-          label={t("property_type")} // Applied
+          label={t("property_type")}
           onChange={handleSelectChange}
         >
-          {/* Applied */}
-          <MenuItem value="any">{t("any")}</MenuItem>
-          <MenuItem value="apartment">{t("apartment")}</MenuItem>
-          <MenuItem value="house">{t("house")}</MenuItem>
-          <MenuItem value="condo">{t("condo")}</MenuItem>
-          <MenuItem value="land">{t("land")}</MenuItem>
-          {/* Add other types if keys exist */}
+          {["any", "apartment", "house", "condo", "land", "commercial"].map(
+            (opt) => (
+              <MenuItem key={opt} value={opt}>
+                {opt === "any" ? t("any") : t(opt)}
+              </MenuItem>
+            )
+          )}
         </Select>
       </FormControl>
 
-      {/* Reset Button */}
+      {/* Reset */}
       <Button
         fullWidth
         variant="outlined"
@@ -197,7 +205,7 @@ const FilterSidebar = ({
         onClick={onResetFilters}
         sx={{ borderRadius: "8px", textTransform: "none" }}
       >
-        {t("reset_filters")} {/* Applied */}
+        {t("reset_filters")}
       </Button>
     </Box>
   );

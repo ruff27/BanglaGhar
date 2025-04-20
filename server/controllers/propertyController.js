@@ -46,8 +46,8 @@ exports.getAllProperties = async (req, res) => {
       // Standard find query (add filters/pagination later if needed)
       // Example: Add filtering based on query params like mode, location etc.
       const queryFilters = {};
-      if (req.query.mode) {
-        queryFilters.mode = req.query.mode;
+      if (req.query.listingType) {
+        queryFilters.listingType = req.query.listingType;
       }
       // Add more filters as needed...
 

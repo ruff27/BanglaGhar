@@ -50,6 +50,14 @@ const PropertiesPage = () => {
     handleSortChange,
     resetFilters,
   } = usePropertyFilters(mode);
+
+  useEffect(() => {
+    console.log(
+      "PropertiesPage: handleSearchChange defined?",
+      typeof handleSearchChange
+    );
+  }, [handleSearchChange]);
+
   const { wishlistIds, toggleWishlist, loadingWishlist, wishlistError } =
     useWishlist();
 

@@ -7,36 +7,87 @@ import {
   Select,
   MenuItem,
   FormHelperText,
-  Button,
-  CircularProgress,
+  // Removed Button, CircularProgress, AutoFixHighIcon
   Box,
   Typography,
   InputAdornment,
 } from "@mui/material";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh"; // AI Icon
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
 
-const Step1_Details = ({
-  formData,
-  errors,
-  handleChange,
-  generateDescription,
-  loadingAI,
-}) => {
-  const { t } = useTranslation(); // Initialize translation
+const Step1_Details = ({ formData, errors, handleChange }) => {
+  const { t } = useTranslation();
+
+  // Determine if Bedrooms/Bathrooms should be shown
+  const showBedBath =
+    formData.propertyType !== "land" && formData.propertyType !== "commercial";
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Basic Information {/* <-- Kept as is, no key found */}
+        {t("step_basic_info", "Basic Information")}
       </Typography>
       <Grid container spacing={3}>
+        {/* Property Type */}
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth required error={!!errors.propertyType}>
+            <InputLabel id="propertyType-label">
+              {t("property_type")}
+            </InputLabel>
+            <Select
+              labelId="propertyType-label"
+              id="propertyType"
+              name="propertyType"
+              value={formData.propertyType}
+              label={t("property_type")}
+              onChange={handleChange}
+            >
+              <MenuItem value="apartment">
+                {t("apartment", "Apartment")}
+              </MenuItem>
+              <MenuItem value="house">{t("house", "House")}</MenuItem>
+              <MenuItem value="condo">{t("condo", "Condo")}</MenuItem>
+              <MenuItem value="land">{t("land", "Land")}</MenuItem>
+              <MenuItem value="commercial">
+                {t("commercial", "Commercial")}
+              </MenuItem>{" "}
+              {/* Added */}
+              {/* Add other types if needed */}
+            </Select>
+            {errors.propertyType && (
+              <FormHelperText>{errors.propertyType}</FormHelperText>
+            )}
+          </FormControl>
+        </Grid>
+
+        {/* Listing Type */}
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth required error={!!errors.listingType}>
+            <InputLabel id="listingType-label">{t("listing_type")}</InputLabel>
+            <Select
+              labelId="listingType-label"
+              id="listingType"
+              name="listingType"
+              value={formData.listingType}
+              label={t("listing_type")}
+              onChange={handleChange}
+            >
+              <MenuItem value="rent">{t("rent", "For Rent")}</MenuItem>
+              <MenuItem value="buy">{t("buy", "For Sale")}</MenuItem>
+              {/* Add 'sold' if applicable and managed differently */}
+            </Select>
+            {errors.listingType && (
+              <FormHelperText>{errors.listingType}</FormHelperText>
+            )}
+          </FormControl>
+        </Grid>
+
+        {/* Title */}
         <Grid item xs={12}>
           <TextField
             required
             id="title"
             name="title"
-            label={t("property_title")} // Applied translation
+            label={t("property_title")}
             fullWidth
             variant="outlined"
             value={formData.title}
@@ -45,60 +96,14 @@ const Step1_Details = ({
             helperText={errors.title}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth required error={!!errors.propertyType}>
-            <InputLabel id="propertyType-label">
-              {t("property_type")}
-            </InputLabel>{" "}
-            {/* Applied translation */}
-            <Select
-              labelId="propertyType-label"
-              id="propertyType"
-              name="propertyType"
-              value={formData.propertyType}
-              label={t("property_type")} // Applied translation
-              onChange={handleChange}
-            >
-              {/* Applied translation */}
-              <MenuItem value="apartment">{t("apartment")}</MenuItem>
-              <MenuItem value="house">{t("house")}</MenuItem>
-              <MenuItem value="condo">{t("condo")}</MenuItem>
-              <MenuItem value="land">{t("land")}</MenuItem>
-              {/* Add other types if keys exist */}
-            </Select>
-            {errors.propertyType && (
-              <FormHelperText>{errors.propertyType}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth required error={!!errors.listingType}>
-            <InputLabel id="listingType-label">{t("listing_type")}</InputLabel>{" "}
-            {/* Applied translation */}
-            <Select
-              labelId="listingType-label"
-              id="listingType"
-              name="listingType"
-              value={formData.listingType}
-              label={t("listing_type")} // Applied translation
-              onChange={handleChange}
-            >
-              {/* Applied translation */}
-              <MenuItem value="rent">{t("rent")}</MenuItem>
-              <MenuItem value="buy">{t("buy")}</MenuItem>
-              {/* Add 'sold' if applicable and key exists */}
-            </Select>
-            {errors.listingType && (
-              <FormHelperText>{errors.listingType}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
+
+        {/* Price */}
         <Grid item xs={12} sm={6}>
           <TextField
             required
             id="price"
             name="price"
-            label={t("price")} // Applied translation
+            label={t("price")}
             type="number"
             fullWidth
             variant="outlined"
@@ -110,85 +115,72 @@ const Step1_Details = ({
               startAdornment: (
                 <InputAdornment position="start">৳</InputAdornment>
               ),
+              // Ensure non-negative input if needed via inputProps
+              inputProps: { min: 0 },
             }}
           />
         </Grid>
+
+        {/* Area - Optional */}
         <Grid item xs={12} sm={6}>
           <TextField
-            required
+            // required // Removed required
             id="area"
             name="area"
-            label={t("area")} // Applied translation
+            label={t("area_sqft", "Area (sqft)")} // Specify unit
             type="number"
             fullWidth
             variant="outlined"
             value={formData.area}
             onChange={handleChange}
             error={!!errors.area}
-            helperText={errors.area}
+            helperText={errors.area || t("optional", "Optional")} // Indicate optional
+            InputProps={{ inputProps: { min: 0 } }} // Allow only non-negative
           />
+          {/* Consider adding a unit selector if area can be in Katha etc. for Land type */}
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            required
-            id="bedrooms"
-            name="bedrooms"
-            label={t("bedrooms")} // Applied translation
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={formData.bedrooms}
-            onChange={handleChange}
-            error={!!errors.bedrooms}
-            helperText={errors.bedrooms}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            required
-            id="bathrooms"
-            name="bathrooms"
-            label={t("bathrooms")} // Applied translation
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={formData.bathrooms}
-            onChange={handleChange}
-            error={!!errors.bathrooms}
-            helperText={errors.bathrooms}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            id="description"
-            name="description"
-            label={t("property_description")} // Applied translation
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
-            value={formData.description}
-            onChange={handleChange}
-            error={!!errors.description}
-            helperText={
-              errors.description ||
-              "Describe the property or use the AI generator." // <-- Kept fallback as is, no key found
-            }
-          />
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={generateDescription}
-            disabled={loadingAI}
-            startIcon={
-              loadingAI ? <CircularProgress size={16} /> : <AutoFixHighIcon />
-            }
-            sx={{ mt: 1, textTransform: "none", float: "right" }}
-          >
-            {/* Applied translation */}
-            {loadingAI ? t("sending") : t("generate_ai")}
-          </Button>
-        </Grid>
+
+        {/* Bedrooms - Conditional */}
+        {showBedBath && (
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required // Required only when shown
+              id="bedrooms"
+              name="bedrooms"
+              label={t("bedrooms")}
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={formData.bedrooms}
+              onChange={handleChange}
+              error={!!errors.bedrooms}
+              helperText={errors.bedrooms}
+              InputProps={{ inputProps: { min: 0 } }} // Allow 0 or more
+            />
+          </Grid>
+        )}
+
+        {/* Bathrooms - Conditional */}
+        {showBedBath && (
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required // Required only when shown
+              id="bathrooms"
+              name="bathrooms"
+              label={t("bathrooms")}
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={formData.bathrooms}
+              onChange={handleChange}
+              error={!!errors.bathrooms}
+              helperText={errors.bathrooms}
+              InputProps={{ inputProps: { min: 0 } }} // Allow 0 or more
+            />
+          </Grid>
+        )}
+
+        {/* Description and AI Button Removed from here */}
       </Grid>
     </Box>
   );

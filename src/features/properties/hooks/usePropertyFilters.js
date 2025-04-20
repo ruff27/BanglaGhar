@@ -1,55 +1,72 @@
+// src/features/Properties/hooks/usePropertyFilters.js
 import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
-import Fuse from "fuse.js"; // Keep Fuse.js
-import _debounce from "lodash/debounce"; // Import debounce utility
+import Fuse from "fuse.js";
+import _debounce from "lodash/debounce";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
-// Default filter state - Adjust price range if needed based on your data
+// Default filter state remains the same for now
 const initialFilters = {
-  priceRange: [0, 50000000], // Example: 0 to 5 Cr
+  priceRange: [0, 50000000],
   bedrooms: "any",
   bathrooms: "any",
   propertyType: "any",
 };
 
-// Fuse.js options (adjust keys and threshold as needed)
+// --- Updated Fuse.js options ---
+// Search in new relevant fields. Adjust weights as needed.
 const fuseOptions = {
-  keys: ["title", "location", "description", "propertyType"],
-  threshold: 0.1, // Lower value means stricter matching
-  // includeScore: true, // Include score if needed for relevance sorting later
+  keys: [
+    { name: "title", weight: 0.3 },
+    // Use new address fields instead of 'location'
+    { name: "addressLine1", weight: 0.2 }, // Search primary address line
+    { name: "cityTown", weight: 0.15 }, // Search city/town
+    { name: "upazila", weight: 0.1 }, // Search upazila
+    { name: "district", weight: 0.15 }, // Search district
+    { name: "description", weight: 0.05 },
+    { name: "propertyType", weight: 0.05 },
+    // Optionally add more searchable fields
+  ],
+  threshold: 0.3,
+  ignoreLocation: true,
 };
+// --- End of Fuse.js options update ---
 
-/**
- * Custom Hook to manage fetching, filtering, searching, and sorting of properties.
- */
 const usePropertyFilters = (mode) => {
-  const [allProperties, setAllProperties] = useState([]); // Store the original fetched list
+  const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(""); // State for debounced search term
-  const [sortBy, setSortBy] = useState("price_asc"); // Default sort
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc"); // Default sort to newest first
 
-  // --- Fetching ---
+  // Fetching logic remains largely the same
   useEffect(() => {
     const fetchProperties = async () => {
-      // Fetch based on mode only if mode is provided (e.g., 'rent', 'buy', 'sold')
-      // If mode is undefined/null, you might fetch all or handle differently
+      // *** IMPORTANT: Ensure backend GET /api/properties returns the *new* fields ***
+      // (addressLine1, cityTown, district, upazila, postalCode, features object, bangladeshDetails object etc.)
       const fetchUrl = mode
-        ? `${API_BASE_URL}/properties?mode=${mode}`
-        : `${API_BASE_URL}/properties`; // Example: fetch all if no mode
+        ? `${API_BASE_URL}/properties?listingType=${mode}`
+        : `${API_BASE_URL}/properties`;
 
-      console.log(`Fetching properties from: ${fetchUrl}`); // Debug log
+      console.log(`Fetching properties from: ${fetchUrl}`);
 
       setLoading(true);
       setError(null);
       try {
         const response = await axios.get(fetchUrl);
-        setAllProperties(response.data || []);
-        console.log(`Fetched ${response.data?.length || 0} properties.`); // Debug log
+        // Add validation: ensure response.data is an array
+        if (Array.isArray(response.data)) {
+          setAllProperties(response.data);
+          console.log(`Fetched ${response.data.length} properties.`);
+        } else {
+          console.error("API did not return an array:", response.data);
+          setError("Received invalid data from server.");
+          setAllProperties([]);
+        }
       } catch (err) {
         console.error(`Error fetching properties:`, err);
         setError(`Failed to load properties. ${err.message}`);
@@ -59,130 +76,143 @@ const usePropertyFilters = (mode) => {
       }
     };
     fetchProperties();
-  }, [mode]); // Re-fetch only when mode changes
+  }, [mode]);
 
-  // --- Debounce Search Term ---
-  // Debounce function - updates the actual search term used for filtering after a delay
+  // Debounce Search Term logic remains the same
   const debouncedSetSearch = useCallback(
     _debounce((term) => {
       setDebouncedSearchTerm(term);
-    }, 300), // 300ms delay - adjust as needed
-    [] // Empty dependency array means debounce function is created once
+    }, 300),
+    []
   );
 
-  // Update search term immediately for input field, but debounce the filtering trigger
   const handleSearchChange = useCallback(
     (term) => {
-      setSearchTerm(term); // Update input field value immediately
-      debouncedSetSearch(term); // Trigger debounced update for filtering
+      setSearchTerm(term);
+      debouncedSetSearch(term);
     },
     [debouncedSetSearch]
   );
 
-  // --- Filtering, Searching, Sorting ---
+  // Filtering, Searching, Sorting logic
   const fuse = useMemo(() => {
-    if (!allProperties || allProperties.length === 0) return null;
-    // Initialize Fuse with the original full list
+    // Ensure allProperties is an array before initializing Fuse
+    if (!Array.isArray(allProperties) || allProperties.length === 0)
+      return null;
     return new Fuse(allProperties, fuseOptions);
-  }, [allProperties]); // Re-initialize only when the original list changes
+  }, [allProperties]);
 
   const filteredAndSortedProperties = useMemo(() => {
-    let result = allProperties;
+    // Ensure allProperties is an array
+    let result = Array.isArray(allProperties) ? [...allProperties] : [];
 
-    // 1. Apply Standard Filters first
+    // 1. Apply Standard Filters
     result = result.filter((p) => {
-      // Ensure property and price exist
-      if (p?.price === null || p?.price === undefined) return false;
+      // Basic check for valid property structure
+      if (!p || typeof p !== "object") return false;
 
-      const [minPrice, maxPrice] = filters.priceRange;
-      // Handle edge case where maxPrice might be the absolute max
+      // Price Filter (check price exists)
       const priceMatch =
-        p.price >= minPrice &&
-        (maxPrice === 50000000 ? p.price >= minPrice : p.price <= maxPrice); // Adjust max value if needed
+        p.price !== null && p.price !== undefined
+          ? (() => {
+              const [minPrice, maxPrice] = filters.priceRange;
+              return (
+                p.price >= minPrice &&
+                (maxPrice === 50000000
+                  ? p.price >= minPrice
+                  : p.price <= maxPrice)
+              );
+            })()
+          : true; // Include if price is missing? Or exclude (return false)? Decide based on requirements. Let's exclude for now.
+      // if (p.price === null || p.price === undefined) return false;
 
-      // --- Robust Bed/Bath/Type Matching ---
+      // Bed/Bath Filter (handle 'any' and 'X+')
       let bedMatch = true;
-      if (filters.bedrooms !== "any") {
-        const requiredBeds = parseInt(filters.bedrooms); // e.g., 3 or 5 for '5+'
-        if (filters.bedrooms === "5") {
-          // Handle '5+' specifically
-          bedMatch = p.bedrooms >= requiredBeds;
-        } else {
-          bedMatch = p.bedrooms === requiredBeds;
-        }
+      if (
+        filters.bedrooms !== "any" &&
+        p.bedrooms !== null &&
+        p.bedrooms !== undefined
+      ) {
+        const requiredBeds = parseInt(filters.bedrooms);
+        bedMatch =
+          filters.bedrooms === "5"
+            ? p.bedrooms >= requiredBeds
+            : p.bedrooms === requiredBeds;
+      } else if (filters.bedrooms !== "any") {
+        bedMatch = false; // Exclude if filter is set but property field is missing
       }
 
       let bathMatch = true;
-      if (filters.bathrooms !== "any") {
-        const requiredBaths = parseInt(filters.bathrooms); // e.g., 3 for '3+'
-        if (filters.bathrooms === "3") {
-          // Handle '3+' specifically
-          bathMatch = p.bathrooms >= requiredBaths;
-        } else {
-          bathMatch = p.bathrooms === requiredBaths;
-        }
+      if (
+        filters.bathrooms !== "any" &&
+        p.bathrooms !== null &&
+        p.bathrooms !== undefined
+      ) {
+        const requiredBaths = parseInt(filters.bathrooms);
+        bathMatch =
+          filters.bathrooms === "3"
+            ? p.bathrooms >= requiredBaths
+            : p.bathrooms === requiredBaths;
+      } else if (filters.bathrooms !== "any") {
+        bathMatch = false; // Exclude if filter is set but property field is missing
       }
 
+      // Type Filter (handle 'any' and case-insensitivity)
       const typeMatch =
         filters.propertyType === "any" ||
-        p.propertyType?.toLowerCase() === filters.propertyType.toLowerCase(); // Case-insensitive match
+        (p.propertyType &&
+          p.propertyType.toLowerCase() === filters.propertyType.toLowerCase());
 
       return priceMatch && bedMatch && bathMatch && typeMatch;
     });
 
-    // 2. Apply Fuzzy Search (Fuse.js) on the *filtered* results if debouncedSearchTerm exists
+    // 2. Apply Fuzzy Search if term exists
     if (debouncedSearchTerm.trim() && fuse) {
-      console.log(
-        `Searching within ${result.length} properties for: ${debouncedSearchTerm}`
-      ); // Debug log
-      // Re-initialize Fuse with the currently filtered subset for searching *within* it
-      const tempFuse = new Fuse(result, fuseOptions);
+      // Important: Fuse needs to be initialized with the *original* list to find matches
+      // Then we filter the *original* list based on the IDs found by Fuse
+      // OR re-initialize fuse with the filtered subset as before (simpler for now)
+      const tempFuse = new Fuse(result, fuseOptions); // Search within the filtered results
       result = tempFuse
         .search(debouncedSearchTerm.trim())
         .map((fuseResult) => fuseResult.item);
-      console.log(`Found ${result.length} properties after search.`); // Debug log
     }
-    // else { // No search term, result remains the filtered list
-    //     console.log(`No search term, using ${result.length} filtered properties.`); // Debug log
-    // }
 
-    // 3. Apply Sorting to the final list
-    const sortedResult = [...result]; // Create a new array for sorting
+    // 3. Apply Sorting
+    const sortedResult = [...result]; // Sort the final list
     sortedResult.sort((a, b) => {
+      // Add null/undefined checks for robustness
+      const priceA = a?.price ?? 0;
+      const priceB = b?.price ?? 0;
+      const dateA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const areaA = a?.area ?? 0;
+      const areaB = b?.area ?? 0;
+
       switch (sortBy) {
         case "price_asc":
-          return (a.price ?? 0) - (b.price ?? 0);
+          return priceA - priceB;
         case "price_desc":
-          return (b.price ?? 0) - (a.price ?? 0);
-        // Ensure createdAt exists and handle potential nulls/invalid dates
+          return priceB - priceA;
         case "date_asc":
-          return (
-            (a.createdAt ? new Date(a.createdAt) : 0) -
-            (b.createdAt ? new Date(b.createdAt) : 0)
-          );
+          return dateA - dateB;
         case "date_desc":
-          return (
-            (b.createdAt ? new Date(b.createdAt) : 0) -
-            (a.createdAt ? new Date(a.createdAt) : 0)
-          );
+          return dateB - dateA;
         case "area_asc":
-          return (a.area ?? 0) - (b.area ?? 0);
+          return areaA - areaB;
         case "area_desc":
-          return (b.area ?? 0) - (a.area ?? 0);
+          return areaB - areaA;
         default:
           return 0;
       }
     });
 
     return sortedResult;
-  }, [allProperties, filters, debouncedSearchTerm, sortBy, fuse]); // Use debouncedSearchTerm here
+  }, [allProperties, filters, debouncedSearchTerm, sortBy, fuse]); // Use debouncedSearchTerm
 
-  // --- Handlers ---
+  // Handlers remain the same
   const handleFilterChange = useCallback((newFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   }, []);
-
-  // handleSearchChange is already defined above with debounce
 
   const handleSortChange = useCallback((sortValue) => {
     setSortBy(sortValue);
@@ -190,20 +220,20 @@ const usePropertyFilters = (mode) => {
 
   const resetFilters = useCallback(() => {
     setFilters(initialFilters);
-    setSearchTerm(""); // Reset immediate search term
-    setDebouncedSearchTerm(""); // Reset debounced search term
-    setSortBy("price_asc");
+    setSearchTerm("");
+    setDebouncedSearchTerm("");
+    setSortBy("date_desc"); // Reset to default sort
   }, []);
 
   return {
-    properties: filteredAndSortedProperties, // Return the final processed list
+    properties: filteredAndSortedProperties,
     loading,
     error,
     filters,
-    searchTerm, // Still return immediate term for input field binding
+    searchTerm,
     sortBy,
     handleFilterChange,
-    handleSearchChange, // Return the non-debounced handler for the input field
+    handleSearchChange,
     handleSortChange,
     resetFilters,
   };
