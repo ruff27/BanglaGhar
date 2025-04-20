@@ -12,29 +12,29 @@ import BedIcon from "@mui/icons-material/Bed";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import DirectionsIcon from "@mui/icons-material/Directions";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew"; // Icon for View Details
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Helper to format price
 const formatDisplayPrice = (price, mode) => {
   if (price === null || price === undefined) return "N/A";
   const numericPrice = Number(price);
   if (isNaN(numericPrice)) return "Invalid Price";
-  return `৳ ${numericPrice.toLocaleString()}${mode === "rent" ? "/mo" : ""}`;
+  return `৳ ${numericPrice.toLocaleString()}${mode === "rent" ? "/mo" : ""}`; // Keep suffix
 };
 
 /**
  * PropertyInfoPanel Component
- * Displays details of the selected property at the bottom of the map view.
  */
 const PropertyInfoPanel = ({ selectedProperty }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation(); // Initialize translation
 
   if (!selectedProperty) {
-    return null; // Render nothing if no property is selected
+    return null;
   }
 
-  // Construct image path
   const placeholderImg = `${process.env.PUBLIC_URL}/pictures/placeholder.png`;
   const imgSrc = selectedProperty.images?.[0]
     ? `${process.env.PUBLIC_URL}/pictures/${selectedProperty.images[0]}`
@@ -45,16 +45,11 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
     e.target.src = placeholderImg;
   };
 
-  // Navigate to the property details page or relevant properties page
   const navigateToPropertyPage = () => {
     const mode = selectedProperty.mode || "rent";
-    // Option 1: Navigate to properties page and trigger dialog
     navigate(`/properties/${mode}?open=${selectedProperty._id}`);
-    // Option 2: Navigate to dedicated details page
-    // navigate(`/property/${selectedProperty._id}`);
   };
 
-  // Function to open Google Maps directions
   const getDirections = () => {
     if (selectedProperty?.position?.lat && selectedProperty?.position?.lng) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedProperty.position.lat},${selectedProperty.position.lng}`;
@@ -70,11 +65,11 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 1000, // Ensure it's above map tiles
+        zIndex: 1000,
         p: 2,
         borderTopLeftRadius: "12px",
         borderTopRightRadius: "12px",
-        backgroundColor: "rgba(255, 255, 255, 0.95)", // Slightly transparent background
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
         backdropFilter: "blur(5px)",
         borderTop: "1px solid rgba(0,0,0,0.1)",
       }}
@@ -112,18 +107,21 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
           >
             <Chip
               icon={<BedIcon fontSize="small" />}
-              label={`${selectedProperty.bedrooms} Beds`}
+              // Applied translation
+              label={`${selectedProperty.bedrooms} ${t("beds")}`}
               size="small"
               variant="outlined"
             />
             <Chip
               icon={<BathtubIcon fontSize="small" />}
-              label={`${selectedProperty.bathrooms} Baths`}
+              // Applied translation
+              label={`${selectedProperty.bathrooms} ${t("baths")}`}
               size="small"
               variant="outlined"
             />
             <Chip
               icon={<SquareFootIcon fontSize="small" />}
+              // Keep suffix, only translate if 'area' key exists (it does)
               label={`${selectedProperty.area} ft²`}
               size="small"
               variant="outlined"
@@ -139,7 +137,7 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
             fullWidth
             sx={{ borderRadius: "8px", textTransform: "none", py: 1 }}
           >
-            Directions
+            Directions {/* <-- Kept as is, no key found */}
           </Button>
         </Grid>
         <Grid item xs={6} md={2.5}>
@@ -151,7 +149,7 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
             fullWidth
             sx={{ borderRadius: "8px", textTransform: "none", py: 1 }}
           >
-            View Details
+            {t("view_details")} {/* Applied translation */}
           </Button>
         </Grid>
       </Grid>

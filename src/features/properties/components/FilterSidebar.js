@@ -15,6 +15,7 @@ import {
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CloseIcon from "@mui/icons-material/Close";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Define Min/Max Price for slider consistency
 const MIN_PRICE = 0;
@@ -30,16 +31,14 @@ const priceMarks = [
 
 // Formatting function for slider tooltip and labels below
 function formatPriceLabel(value) {
-  if (value === MAX_PRICE) return `৳${(MAX_PRICE / 10000000).toFixed(0)}Cr+`; // Show '+' for max value
-  if (value >= 10000000) return `৳${(value / 10000000).toFixed(1)}Cr`; // 1.0Cr, 2.5Cr etc.
-  if (value >= 100000) return `৳${(value / 100000).toFixed(0)}L`; // 10L, 25L etc.
-  // if (value >= 1000) return `৳${(value / 1000).toFixed(0)}k`; // Optional: Add 'k' for thousands
-  return `৳${value.toLocaleString()}`; // Default format for smaller numbers
+  if (value === MAX_PRICE) return `৳${(MAX_PRICE / 10000000).toFixed(0)}Cr+`;
+  if (value >= 10000000) return `৳${(value / 10000000).toFixed(1)}Cr`;
+  if (value >= 100000) return `৳${(value / 100000).toFixed(0)}L`;
+  return `৳${value.toLocaleString()}`;
 }
 
 /**
  * FilterSidebar Component
- * Renders controls for filtering properties.
  */
 const FilterSidebar = ({
   filters,
@@ -48,14 +47,14 @@ const FilterSidebar = ({
   isMobile,
   onClose,
 }) => {
-  // Ensure filters.priceRange is always an array of two numbers
+  const { t } = useTranslation(); // Initialize translation
+
   const priceRange =
     Array.isArray(filters?.priceRange) && filters.priceRange.length === 2
       ? filters.priceRange
-      : [MIN_PRICE, MAX_PRICE]; // Default range if invalid
+      : [MIN_PRICE, MAX_PRICE];
 
   const handleSliderChange = (event, newValue) => {
-    // Prevent slider handles from crossing
     if (newValue[0] > newValue[1] || newValue[1] < newValue[0]) return;
     onFilterChange({ priceRange: newValue });
   };
@@ -66,20 +65,13 @@ const FilterSidebar = ({
   };
 
   return (
-    // Use Box instead of Paper if no elevation/border needed in mobile drawer
-    <Box
-      sx={{
-        p: 2, // Consistent padding
-        height: "100%",
-        overflowY: "auto", // Allow scrolling if content overflows
-      }}
-    >
+    <Box sx={{ p: 2, height: "100%", overflowY: "auto" }}>
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 1, // Reduced margin
+          mb: 1,
         }}
       >
         <Typography
@@ -87,47 +79,40 @@ const FilterSidebar = ({
           component="div"
           sx={{ display: "flex", alignItems: "center", gap: 1 }}
         >
-          <FilterAltIcon color="primary" /> Filters
+          <FilterAltIcon color="primary" /> Filters{" "}
+          {/* <-- Kept as is, no key */}
         </Typography>
         {isMobile && (
-          <IconButton onClick={onClose} size="small" aria-label="Close filters">
+          <IconButton onClick={onClose} size="small" aria-label={t("close")}>
+            {" "}
+            {/* Using close key for aria-label */}
             <CloseIcon />
           </IconButton>
         )}
       </Box>
-      <Divider sx={{ mb: 2 }} /> {/* Reduced margin */}
+      <Divider sx={{ mb: 2 }} />
+
       {/* Price Range */}
       <Box sx={{ mb: 3, px: 1 }}>
-        {" "}
-        {/* Add slight horizontal padding */}
         <Typography
           id="price-range-label"
           gutterBottom
           sx={{ mb: 1, fontWeight: "medium" }}
         >
-          {" "}
-          {/* Add ID for aria */}
-          Price Range
+          Price Range {/* <-- Kept as is, no key */}
         </Typography>
         <Slider
           value={priceRange}
           onChange={handleSliderChange}
-          valueLabelDisplay="auto" // Tooltip on hover/drag
-          getAriaLabelledBy="price-range-label" // Accessibility
+          valueLabelDisplay="auto"
+          getAriaLabelledBy="price-range-label"
           min={MIN_PRICE}
           max={MAX_PRICE}
-          step={500000} // Example step: 5 Lakh - Adjust as needed
-          marks={priceMarks} // Use simplified marks (or set to `true` for just dots)
-          valueLabelFormat={formatPriceLabel} // Format tooltip value
-          disableSwap // Prevent handles from swapping places
-          sx={
-            {
-              // Removed mt: 4 - handled by Typography margin now
-              // Add specific styling if needed
-            }
-          }
+          step={500000}
+          marks={priceMarks}
+          valueLabelFormat={formatPriceLabel}
+          disableSwap
         />
-        {/* Labels below slider */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.5 }}>
           <Typography variant="caption">
             {formatPriceLabel(priceRange[0])}
@@ -138,66 +123,72 @@ const FilterSidebar = ({
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
+
       {/* Bedrooms */}
       <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
-        {" "}
-        {/* Use outlined variant, smaller size */}
-        <InputLabel id="bedrooms-label">Bedrooms</InputLabel>
+        <InputLabel id="bedrooms-label">{t("bedrooms")}</InputLabel>{" "}
+        {/* Applied */}
         <Select
           labelId="bedrooms-label"
           id="bedrooms-select"
           name="bedrooms"
-          value={filters.bedrooms || "any"} // Default to 'any' if undefined
-          label="Bedrooms"
+          value={filters.bedrooms || "any"}
+          label={t("bedrooms")} // Applied
           onChange={handleSelectChange}
         >
-          <MenuItem value="any">Any</MenuItem>
+          {/* Applied */}
+          <MenuItem value="any">{t("any")}</MenuItem>
           <MenuItem value={1}>1</MenuItem>
           <MenuItem value={2}>2</MenuItem>
           <MenuItem value={3}>3</MenuItem>
           <MenuItem value={4}>4</MenuItem>
-          <MenuItem value={5}>5+</MenuItem>{" "}
-          {/* Value '5' will be parsed in hook */}
+          <MenuItem value={5}>5+</MenuItem>
         </Select>
       </FormControl>
+
       {/* Bathrooms */}
       <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
-        <InputLabel id="bathrooms-label">Bathrooms</InputLabel>
+        <InputLabel id="bathrooms-label">{t("bathrooms")}</InputLabel>{" "}
+        {/* Applied */}
         <Select
           labelId="bathrooms-label"
           id="bathrooms-select"
           name="bathrooms"
           value={filters.bathrooms || "any"}
-          label="Bathrooms"
+          label={t("bathrooms")} // Applied
           onChange={handleSelectChange}
         >
-          <MenuItem value="any">Any</MenuItem>
+          {/* Applied */}
+          <MenuItem value="any">{t("any")}</MenuItem>
           <MenuItem value={1}>1</MenuItem>
           <MenuItem value={2}>2</MenuItem>
-          <MenuItem value={3}>3+</MenuItem>{" "}
-          {/* Value '3' will be parsed in hook */}
+          <MenuItem value={3}>3+</MenuItem>
         </Select>
       </FormControl>
       <Divider sx={{ my: 2 }} />
+
       {/* Property Type */}
       <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 3 }}>
-        <InputLabel id="propertyType-label">Property Type</InputLabel>
+        <InputLabel id="propertyType-label">{t("property_type")}</InputLabel>{" "}
+        {/* Applied */}
         <Select
           labelId="propertyType-label"
           id="propertyType-select"
           name="propertyType"
           value={filters.propertyType || "any"}
-          label="Property Type"
+          label={t("property_type")} // Applied
           onChange={handleSelectChange}
         >
-          <MenuItem value="any">Any</MenuItem>
-          <MenuItem value="apartment">Apartment</MenuItem>
-          <MenuItem value="house">House</MenuItem>
-          <MenuItem value="condo">Condo</MenuItem>
-          <MenuItem value="land">Land</MenuItem>
-          {/* Add other types based on your actual data */}
+          {/* Applied */}
+          <MenuItem value="any">{t("any")}</MenuItem>
+          <MenuItem value="apartment">{t("apartment")}</MenuItem>
+          <MenuItem value="house">{t("house")}</MenuItem>
+          <MenuItem value="condo">{t("condo")}</MenuItem>
+          <MenuItem value="land">{t("land")}</MenuItem>
+          {/* Add other types if keys exist */}
         </Select>
       </FormControl>
+
       {/* Reset Button */}
       <Button
         fullWidth
@@ -206,7 +197,7 @@ const FilterSidebar = ({
         onClick={onResetFilters}
         sx={{ borderRadius: "8px", textTransform: "none" }}
       >
-        Reset Filters
+        {t("reset_filters")} {/* Applied */}
       </Button>
     </Box>
   );

@@ -2,11 +2,12 @@ import React from "react";
 import { Box, Typography, Grid, Paper } from "@mui/material";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import ApartmentIcon from "@mui/icons-material/Apartment"; // Or other relevant icons
+import ApartmentIcon from "@mui/icons-material/Apartment";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
-// Styled component (can be shared if needed)
 const ValueCard = styled(Paper)(({ theme }) => ({
+  // ... (styling kept as is)
   padding: theme.spacing(3),
   textAlign: "center",
   height: "100%",
@@ -19,6 +20,7 @@ const ValueCard = styled(Paper)(({ theme }) => ({
 }));
 
 const coreValues = [
+  // Kept titles and descriptions as is, no keys found
   {
     icon: <VerifiedIcon fontSize="large" color="primary" />,
     title: "Trust & Transparency",
@@ -40,13 +42,12 @@ const coreValues = [
 
 /**
  * ValuesSection Component
- * Displays the company's core values.
  */
 const ValuesSection = () => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box sx={{ py: 6, backgroundColor: "rgba(43, 123, 140, 0.03)" }}>
-      {" "}
-      {/* Light background */}
       <Typography
         variant="h4"
         component="h2"
@@ -54,7 +55,7 @@ const ValuesSection = () => {
         align="center"
         gutterBottom
       >
-        Our Core Values
+        Our Core Values {/* <-- Kept as is, no key found */}
       </Typography>
       <Grid container spacing={4} justifyContent="center" sx={{ mt: 3 }}>
         {coreValues.map((value, index) => (

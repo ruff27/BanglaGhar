@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Box, Button, Menu, MenuItem } from "@mui/material";
-import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom"; // Removed useLocation as activeLink is passed
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { styled } from "@mui/material/styles"; // Import styled
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Re-introduce StyledButton definition (consider moving to shared location later)
 const StyledButton = styled(Button)(({ theme, variant }) => ({
@@ -28,7 +29,7 @@ const StyledButton = styled(Button)(({ theme, variant }) => ({
 
 const DesktopNav = ({ navLinks, activeLink, handleNavigate }) => {
   const navigate = useNavigate();
-  // const location = useLocation(); // activeLink prop is now used
+  const { t } = useTranslation(); // Initialize translation
   const [anchorElProperties, setAnchorElProperties] = useState(null);
   const openProperties = Boolean(anchorElProperties);
 
@@ -63,7 +64,7 @@ const DesktopNav = ({ navLinks, activeLink, handleNavigate }) => {
                 "&:hover": { bgcolor: "action.hover" },
               }}
             >
-              {link.label}
+              {link.label} {/* Label is already translated in Navbar.js */}
             </Button>
             <Menu
               id="properties-menu"
@@ -77,19 +78,19 @@ const DesktopNav = ({ navLinks, activeLink, handleNavigate }) => {
                 onClick={() => handlePropertyLink("buy")}
                 sx={{ fontSize: "0.95rem" }}
               >
-                Buy
+                {t("nav_buy")} {/* Applied translation */}
               </MenuItem>
               <MenuItem
                 onClick={() => handlePropertyLink("rent")}
                 sx={{ fontSize: "0.95rem" }}
               >
-                Rent
+                {t("nav_rent")} {/* Applied translation */}
               </MenuItem>
               <MenuItem
                 onClick={() => handlePropertyLink("sold")}
                 sx={{ fontSize: "0.95rem" }}
               >
-                Sold
+                {t("nav_sold")} {/* Applied translation */}
               </MenuItem>
             </Menu>
           </Box>
@@ -108,7 +109,7 @@ const DesktopNav = ({ navLinks, activeLink, handleNavigate }) => {
               "&:hover": { bgcolor: "action.hover" },
             }}
           >
-            {link.label}
+            {link.label} {/* Label is already translated in Navbar.js */}
           </Button>
         )
       )}
@@ -119,7 +120,7 @@ const DesktopNav = ({ navLinks, activeLink, handleNavigate }) => {
         onClick={() => navigate("/list-property")}
         sx={{ ml: 2 }} // Margin left
       >
-        List Property
+        {t("list_property")} {/* Applied translation */}
       </StyledButton>
     </Box>
   );

@@ -8,14 +8,15 @@ import {
   Avatar,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
-// Import team member images (adjust paths as needed)
+// Import team member images
 const person1 = `${process.env.PUBLIC_URL}/pictures/Person1.jpg`;
 const person2 = `${process.env.PUBLIC_URL}/pictures/Person2.jpg`;
 const person3 = `${process.env.PUBLIC_URL}/pictures/Person3.jpg`;
 
-// Styled component (can be shared if needed)
 const TeamMemberCard = styled(Card)(({ theme }) => ({
+  // ... (styling kept as is)
   textAlign: "center",
   padding: theme.spacing(3, 2),
   borderRadius: "12px",
@@ -29,17 +30,18 @@ const TeamMemberCard = styled(Card)(({ theme }) => ({
 }));
 
 const teamMembers = [
+  // Kept names and roles as is (specific data)
   { name: "Ankit Malik", role: "Founder & CEO", img: person2 },
   { name: "Nur e Siam", role: "Lead Developer", img: person3 },
   { name: "Aaradhya Lamsal", role: "Marketing Head", img: person1 },
-  // Add more team members
 ];
 
 /**
  * TeamSection Component
- * Displays profiles of key team members.
  */
 const TeamSection = () => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box sx={{ py: 6 }}>
       <Typography
@@ -49,7 +51,7 @@ const TeamSection = () => {
         align="center"
         gutterBottom
       >
-        Meet Our Team
+        Meet Our Team {/* <-- Kept as is, no key found */}
       </Typography>
       <Grid container spacing={4} justifyContent="center" sx={{ mt: 3 }}>
         {teamMembers.map((member, index) => (

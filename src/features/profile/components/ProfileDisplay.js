@@ -13,9 +13,11 @@ import {
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import FingerprintIcon from "@mui/icons-material/Fingerprint"; // Changed icon for SUB
+import FingerprintIcon from "@mui/icons-material/Fingerprint";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 const ProfileDisplay = ({ profileData }) => {
+  const { t } = useTranslation(); // Initialize translation
   if (!profileData) return null;
 
   const isVerified = profileData.email_verified === "true";
@@ -33,21 +35,29 @@ const ProfileDisplay = ({ profileData }) => {
       }}
     >
       <Typography variant="h6" sx={{ mb: 1.5, pl: 1 }}>
-        Account Information
+        Account Information {/* <-- Kept as is, no key found */}
       </Typography>
       <List dense disablePadding>
         <ListItem>
           <ListItemIcon sx={{ minWidth: 40 }}>
             <PersonIcon color="action" />
           </ListItemIcon>
-          <ListItemText primary="Name" secondary={profileData.name || "-"} />
+          {/* Applied translation */}
+          <ListItemText
+            primary={t("name")}
+            secondary={profileData.name || "-"}
+          />
         </ListItem>
         <Divider component="li" />
         <ListItem>
           <ListItemIcon sx={{ minWidth: 40 }}>
             <EmailIcon color="action" />
           </ListItemIcon>
-          <ListItemText primary="Email" secondary={profileData.email || "-"} />
+          {/* Applied translation */}
+          <ListItemText
+            primary={t("email")}
+            secondary={profileData.email || "-"}
+          />
         </ListItem>
         <Divider component="li" />
         <ListItem>
@@ -55,7 +65,8 @@ const ProfileDisplay = ({ profileData }) => {
             <FingerprintIcon color="action" />
           </ListItemIcon>
           <ListItemText
-            primary="User ID"
+            // Applied translation
+            primary={t("user_id")}
             secondary={profileData.sub || "-"}
             secondaryTypographyProps={{
               sx: { wordBreak: "break-all", fontSize: "0.8rem" },
@@ -67,9 +78,11 @@ const ProfileDisplay = ({ profileData }) => {
           <ListItemIcon sx={{ minWidth: 40 }}>
             <VerifiedUserIcon color={isVerified ? "success" : "action"} />
           </ListItemIcon>
-          <ListItemText primary="Email Verified" />
+          {/* Applied translation */}
+          <ListItemText primary={t("email_verified")} />
           <Chip
-            label={isVerified ? "Verified" : "Not Verified"}
+            // Applied translation
+            label={isVerified ? t("yes") : t("no")}
             color={isVerified ? "success" : "warning"}
             size="small"
             variant="outlined"

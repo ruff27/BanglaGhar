@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"; // Removed useCallback as handleViewDetails is gone
-import { useParams, useLocation, useNavigate } from "react-router-dom"; // Keep navigate if needed for other things
+import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Container,
   Grid,
@@ -20,27 +20,24 @@ import {
 import FilterListIcon from "@mui/icons-material/FilterList";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Import Hooks and Components
 import usePropertyFilters from "./hooks/usePropertyFilters";
 import useWishlist from "./hooks/useWishlist";
 import FilterSidebar from "./components/FilterSidebar";
 import SortDropdown from "./components/SortDropdown";
-import PropertyCard from "./components/PropertyCard";
-// PropertyDetailsDialog import is removed
+import PropertyCard from "./components/PropertyCard"; // No translations needed here
 
 /**
  * PropertiesPage Component
- * Displays filterable/sortable property listings.
  */
 const PropertiesPage = () => {
-  const { mode } = useParams();
-  // const navigate = useNavigate(); // Keep if needed elsewhere
-  // const location = useLocation(); // Keep if needed elsewhere
+  const { mode } = useParams(); // mode = 'rent', 'buy', 'sold' or undefined
   const theme = useTheme();
+  const { t } = useTranslation(); // Initialize translation
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  // --- State from Hooks ---
   const {
     properties,
     loading,
@@ -56,8 +53,6 @@ const PropertiesPage = () => {
   const { wishlistIds, toggleWishlist, loadingWishlist, wishlistError } =
     useWishlist();
 
-  // --- Local State ---
-  // Removed state related to dialog: detailsDialogOpen, selectedProperty
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -65,8 +60,6 @@ const PropertiesPage = () => {
   });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // --- Handlers ---
-  // Removed handleViewDetails and handleClosePropertyDetails
   const handleCloseNotification = (event, reason) => {
     if (reason === "clickaway") return;
     setNotification((prev) => ({ ...prev, open: false }));
@@ -82,14 +75,21 @@ const PropertiesPage = () => {
     setMobileFiltersOpen(!mobileFiltersOpen);
   };
 
-  // --- Effects ---
-  // Removed useEffect related to opening dialog via query params
+  // Determine page title based on mode and translate
+  const getPageTitle = () => {
+    switch (mode) {
+      case "rent":
+        return t("properties_rent");
+      case "buy":
+        return t("properties_sale"); // Assuming 'properties_sale' is the key for 'Properties for Sale'
+      case "sold":
+        return t("properties_sold");
+      default:
+        return t("properties_all"); // Key for 'All Properties'
+    }
+  };
+  const pageTitle = getPageTitle();
 
-  const pageTitle = mode
-    ? `${mode.charAt(0).toUpperCase() + mode.slice(1)} Properties`
-    : "All Properties";
-
-  // Sidebar content component
   const sidebarContent = (
     <FilterSidebar
       filters={filters}
@@ -103,17 +103,16 @@ const PropertiesPage = () => {
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom fontWeight={700}>
-        {pageTitle}
+        {pageTitle} {/* Applied translation */}
       </Typography>
 
       {wishlistError && (
         <Alert severity="warning" sx={{ mb: 2 }}>
-          Could not load wishlist status: {wishlistError}
+          Could not load wishlist status: {wishlistError} {/* <-- Kept as is */}
         </Alert>
       )}
 
       <Grid container spacing={3}>
-        {/* Sidebar Grid Item (Hidden on Mobile) */}
         {!isMobile && (
           <Grid item md={3} lg={2.5}>
             <Paper
@@ -130,9 +129,7 @@ const PropertiesPage = () => {
           </Grid>
         )}
 
-        {/* Main Content Grid Item */}
         <Grid item xs={12} md={9} lg={9.5}>
-          {/* Top Controls: Search, Sort, Mobile Filter Button */}
           <Paper
             elevation={1}
             sx={{
@@ -146,7 +143,7 @@ const PropertiesPage = () => {
             }}
           >
             <TextField
-              label="Search Properties..."
+              label={t("search_placeholder")} // Applied translation
               variant="outlined"
               size="small"
               value={searchTerm}
@@ -168,12 +165,13 @@ const PropertiesPage = () => {
                 color="primary"
                 aria-label="Open filters"
               >
+                {" "}
+                {/* <-- Kept aria-label */}
                 <FilterListIcon />
               </IconButton>
             )}
           </Paper>
 
-          {/* Property Listing */}
           {loading ? (
             <Box
               sx={{
@@ -194,20 +192,19 @@ const PropertiesPage = () => {
               {properties.map((property) =>
                 property && property._id ? (
                   <Grid item xs={12} sm={6} lg={4} key={property._id}>
+                    {/* PropertyCard is intentionally not translated */}
                     <PropertyCard
                       property={property}
                       isWishlisted={wishlistIds.has(property._id)}
                       onWishlistToggle={() =>
                         handleWishlistToggle(property._id)
                       }
-                      // onViewDetails prop is removed
                     />
                   </Grid>
                 ) : null
               )}
             </Grid>
           ) : (
-            // No results message
             <Box
               sx={{
                 textAlign: "center",
@@ -218,25 +215,23 @@ const PropertiesPage = () => {
               }}
             >
               <Typography variant="h6" gutterBottom>
-                No properties match your criteria
+                {t("no_properties_found")} {/* Applied translation */}
               </Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Try adjusting your filters or search terms.
+                {t("adjust_filters")} {/* Applied translation */}
               </Typography>
               <Button
                 variant="contained"
                 startIcon={<RefreshIcon />}
                 onClick={resetFilters}
               >
-                Reset Filters
+                {t("reset_filters")} {/* Applied translation */}
               </Button>
             </Box>
           )}
-          {/* TODO: Add Pagination component here */}
         </Grid>
       </Grid>
 
-      {/* Mobile Filter Drawer */}
       {isMobile && (
         <Drawer
           anchor="left"
@@ -246,22 +241,20 @@ const PropertiesPage = () => {
         >
           <Box sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Filters
+              Filters {/* <-- Kept as is */}
             </Typography>
             {sidebarContent}
           </Box>
         </Drawer>
       )}
 
-      {/* Property Details Dialog is removed */}
-
-      {/* Notification Snackbar */}
       <Snackbar
         open={notification.open}
         autoHideDuration={4000}
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
+        {/* Assume notification message is simple or translated in hook */}
         <Alert
           onClose={handleCloseNotification}
           severity={notification.severity}

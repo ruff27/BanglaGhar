@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Container, Typography, Divider } from "@mui/material";
-import { styled } from "@mui/material/styles"; // Import styled if needed for intro section
+import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Import Section Components
 import MissionSection from "./components/MissionSection";
@@ -11,26 +12,26 @@ import AboutCTASection from "./components/AboutCTASection";
 // Example: Styled component for the intro section background if needed
 const IntroBackground = styled(Box)(({ theme }) => ({
   padding: theme.spacing(8, 2),
-  backgroundColor: theme.palette.grey[100], // Example background
+  backgroundColor: theme.palette.grey[100],
   textAlign: "center",
 }));
 
 /**
  * AboutUsPage Component
- *
- * Container for the About Us page content.
- * Renders different sections imported from components.
  */
 const AboutUsPage = () => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box>
-      {/* Optional: Intro Section */}
       <IntroBackground>
         <Container maxWidth="md">
           <Typography variant="h2" component="h1" fontWeight={700} gutterBottom>
-            About BanglaGhor
+            {/* Applied translation using nav_about key, consider a more specific key if needed */}
+            {t("nav_about")} BanglaGhor
           </Typography>
           <Typography variant="h5" color="text.secondary" paragraph>
+            {/* Kept intro text as is, no specific key found */}
             Connecting you with your perfect property in Bangladesh. Learn more
             about our journey, values, and the team dedicated to simplifying
             your real estate experience.
@@ -38,18 +39,13 @@ const AboutUsPage = () => {
         </Container>
       </IntroBackground>
 
-      {/* Render Section Components */}
       <Container maxWidth="lg">
-        {" "}
-        {/* Use lg for wider content sections */}
         <MissionSection />
         <Divider sx={{ my: 4 }} />
         <ValuesSection />
-        {/* No divider needed if ValuesSection has its own background */}
         <TeamSection />
       </Container>
 
-      {/* Final CTA Section */}
       <AboutCTASection />
     </Box>
   );

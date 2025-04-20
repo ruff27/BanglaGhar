@@ -21,7 +21,6 @@ import axios from "axios";
 import Fuse from "fuse.js";
 
 // Import the NEW MapComponent from its correct refactored location
-// Used for the location selection dialog
 import MapComponent from "../../map/components/MapComponent"; // Corrected path
 
 // Import the STANDALONE PropertyCardSuggestion component
@@ -35,15 +34,23 @@ const API_BASE_URL = "http://localhost:5001/api"; // Or use env var
  */
 const HomeSearchBar = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation(); // Initialize translation
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("Any location");
+  // Initialize with translated 'Any location'
+  const [selectedLocation, setSelectedLocation] = useState(() =>
+    t("search_location")
+  );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const searchContainerRef = useRef(null);
+
+  // Effect to update selectedLocation if language changes
+  useEffect(() => {
+    setSelectedLocation(t("search_location"));
+  }, [t]);
 
   useEffect(() => {
     const fetchAllProperties = async () => {
@@ -94,7 +101,8 @@ const HomeSearchBar = () => {
   const handleSearch = () => {
     const queryParams = new URLSearchParams();
     if (searchQuery) queryParams.set("search", searchQuery);
-    // if (selectedLocation !== "Any location") queryParams.set('location', selectedLocation);
+    // When adding location filter, compare against translated 'Any location'
+    // if (selectedLocation !== t('search_location')) queryParams.set('location', selectedLocation);
     navigate(`/properties/rent?${queryParams.toString()}`);
     setShowSuggestions(false);
   };
@@ -102,7 +110,8 @@ const HomeSearchBar = () => {
   const handleOpenMap = () => setMapOpen(true);
   const handleCloseMap = () => setMapOpen(false);
   const handleLocationSelected = (locationName) => {
-    setSelectedLocation(locationName || "Any location");
+    // Use translated 'Any location' as default/fallback
+    setSelectedLocation(locationName || t("search_location"));
     handleCloseMap();
   };
 
@@ -154,7 +163,7 @@ const HomeSearchBar = () => {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder={t("search_placeholder")}
+            placeholder={t("search_placeholder")} // Already translated
             value={searchQuery}
             onChange={handleSearchInputChange}
             onFocus={() => setShowSuggestions(searchQuery.length > 1)}
@@ -186,7 +195,7 @@ const HomeSearchBar = () => {
             >
               {loadingSuggestions && (
                 <Typography sx={{ p: 2, color: "text.secondary" }}>
-                  Loading...
+                  {t("sending")} {/* Applied translation */}
                 </Typography>
               )}
               {!loadingSuggestions && filteredProperties.length > 0 ? (
@@ -210,7 +219,7 @@ const HomeSearchBar = () => {
                       onClick={handleSearch}
                       sx={{ textTransform: "none" }}
                     >
-                      View all results
+                      View all results {/* <-- Kept as is, no key */}
                     </Button>
                   </Box>
                 </>
@@ -218,7 +227,7 @@ const HomeSearchBar = () => {
                 !loadingSuggestions &&
                 searchQuery.length > 1 && (
                   <Typography sx={{ p: 2, color: "text.secondary" }}>
-                    No specific matches found.
+                    No specific matches found. {/* <-- Kept as is, no key */}
                   </Typography>
                 )
               )}
@@ -230,7 +239,7 @@ const HomeSearchBar = () => {
         <TextField
           variant="outlined"
           fullWidth
-          value={selectedLocation}
+          value={selectedLocation} // Now uses state initialized with t()
           onClick={handleOpenMap}
           InputProps={{
             startAdornment: (
@@ -268,7 +277,7 @@ const HomeSearchBar = () => {
             },
           }}
         >
-          {t("search_button")}
+          {t("search_button")} {/* Already translated */}
         </Button>
       </Paper>
 
@@ -290,28 +299,22 @@ const HomeSearchBar = () => {
             p: 2,
           }}
         >
-          Select Location
+          Select Location {/* <-- Kept as is, no key */}
           <IconButton onClick={handleCloseMap} sx={{ color: "white" }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ p: 0, height: { xs: "60vh", md: "70vh" } }}>
-          {/* Render MapComponent inside the dialog */}
-          {/* Pass necessary props for interaction within the dialog */}
           <MapComponent
-            properties={allProperties} // Pass properties to show markers maybe?
-            mapCenter={[23.8103, 90.4125]} // Initial center for dialog map
+            properties={allProperties}
+            mapCenter={[23.8103, 90.4125]}
             mapZoom={7}
-            onMarkerClick={(prop) => handleLocationSelected(prop.location)} // Example: Select location on marker click
-            // Consider if user location is needed here
+            onMarkerClick={(prop) => handleLocationSelected(prop.location)}
           />
         </DialogContent>
       </Dialog>
     </>
   );
 };
-
-// PropertyCardSuggestion definition should be in its own file and imported above
-// Removed duplicate definition from here
 
 export default HomeSearchBar;

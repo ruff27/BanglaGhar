@@ -4,19 +4,22 @@ import EditIcon from "@mui/icons-material/Edit";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 const ActionButton = styled(Button)(({ theme }) => ({
-  padding: theme.spacing(1, 2), // Adjusted padding
+  padding: theme.spacing(1, 2),
   borderRadius: theme.shape.borderRadius,
   textTransform: "none",
-  fontWeight: 500, // Normal weight
+  fontWeight: 500,
 }));
 
 const ProfileActions = ({ onEditName, onChangePassword, onDeleteAccount }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box sx={{ width: "100%", mt: 3 }}>
       <Typography variant="h6" sx={{ mb: 1.5 }}>
-        Manage Account
+        Manage Account {/* <-- Kept as is, no key found */}
       </Typography>
       <Divider sx={{ mb: 2 }} />
       <Grid container spacing={2}>
@@ -27,7 +30,7 @@ const ProfileActions = ({ onEditName, onChangePassword, onDeleteAccount }) => {
             onClick={onEditName}
             fullWidth
           >
-            Edit Name
+            {t("edit_name")} {/* Applied translation */}
           </ActionButton>
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -37,7 +40,7 @@ const ProfileActions = ({ onEditName, onChangePassword, onDeleteAccount }) => {
             onClick={onChangePassword}
             fullWidth
           >
-            Change Password
+            {t("change_password")} {/* Applied translation */}
           </ActionButton>
         </Grid>
         <Grid item xs={12}>
@@ -49,7 +52,7 @@ const ProfileActions = ({ onEditName, onChangePassword, onDeleteAccount }) => {
             onClick={onDeleteAccount}
             fullWidth
           >
-            Delete Account
+            {t("delete_account")} {/* Applied translation */}
           </ActionButton>
         </Grid>
       </Grid>

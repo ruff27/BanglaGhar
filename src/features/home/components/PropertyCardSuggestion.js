@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material"; // Removed unused Button import
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 /**
  * PropertyCardSuggestion Component
@@ -10,6 +11,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
  * Includes image error handling.
  */
 const PropertyCardSuggestion = ({ property, onSelect }) => {
+  const { t } = useTranslation(); // Initialize translation
   // Construct image source using PUBLIC_URL for assets in the public folder
   const placeholderImg = `${process.env.PUBLIC_URL}/pictures/placeholder.png`;
   const imgSrc = property?.images?.[0] // Optional chaining for safety
@@ -70,8 +72,8 @@ const PropertyCardSuggestion = ({ property, onSelect }) => {
           noWrap
         >
           <LocationOnIcon sx={{ fontSize: "0.8rem", mr: 0.5, flexShrink: 0 }} />
-          {property.location || "Location not specified"}{" "}
-          {/* Handle missing location */}
+          {/* Kept fallback text as is, no key found */}
+          {property.location || "Location not specified"}
         </Typography>
       </Box>
     </Box>

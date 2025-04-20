@@ -11,6 +11,7 @@ import {
   Button,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Import Hook and Components
 import useProfileManagement from "./hooks/useProfileManagement";
@@ -37,15 +38,15 @@ const ProfilePaper = styled(Paper)(({ theme }) => ({
 
 /**
  * UserProfilePage
- * Container component for the user profile feature.
  */
 const UserProfilePage = () => {
+  const { t } = useTranslation(); // Initialize translation
   const {
     profileData,
     loading,
-    error, // Main page loading/update error
-    isUpdating, // General updating state
-    dialogError, // Specific dialog error
+    error,
+    isUpdating,
+    dialogError,
     editNameOpen,
     passwordOpen,
     deleteOpen,
@@ -67,7 +68,6 @@ const UserProfilePage = () => {
     handleUpdatePicture,
   } = useProfileManagement();
 
-  // State for general success/error snackbar feedback
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -83,8 +83,6 @@ const UserProfilePage = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  // --- Render Logic ---
-
   if (loading) {
     return (
       <Container sx={{ display: "flex", justifyContent: "center", py: 5 }}>
@@ -93,9 +91,7 @@ const UserProfilePage = () => {
     );
   }
 
-  // Show main page error (e.g., failed to fetch initial data)
   if (error && !profileData) {
-    // Only show full page error if data never loaded
     return (
       <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
         <Alert severity="error">{error}</Alert>
@@ -104,18 +100,17 @@ const UserProfilePage = () => {
           onClick={() => window.history.back()}
           sx={{ mt: 2 }}
         >
-          Go Back
+          Go Back {/* <-- Kept as is, no key found */}
         </Button>
       </Container>
     );
   }
 
-  // Ensure profileData exists before rendering main content
   if (!profileData) {
     return (
       <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
-        {/* Avoid showing error if it was just a dialog error */}
         <Alert severity="warning">
+          {/* Kept as is, no key found */}
           {error || "User profile data could not be loaded."}
         </Alert>
         <Button
@@ -123,7 +118,7 @@ const UserProfilePage = () => {
           onClick={() => window.history.back()}
           sx={{ mt: 2 }}
         >
-          Go Back
+          Go Back {/* <-- Kept as is, no key found */}
         </Button>
       </Container>
     );
@@ -137,29 +132,25 @@ const UserProfilePage = () => {
           variant="h4"
           sx={{ mb: 2, fontWeight: 700, color: "text.primary" }}
         >
-          My Profile
+          {t("nav_profile")} {/* Applied translation */}
         </Typography>
 
-        {/* Profile Picture Component */}
         <ProfilePicture
           picture={profileData.picture}
           name={profileData.name}
           onPictureChange={handleUpdatePicture}
           isUpdating={isUpdating}
-          onError={(msg) => handleShowSnackbar(msg, "error")} // Show picture errors in snackbar
+          onError={(msg) => handleShowSnackbar(msg, "error")}
         />
 
-        {/* Display general update errors here (e.g., picture upload failure from hook) */}
         {error && (
           <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
             {error}
           </Alert>
         )}
 
-        {/* Profile Details Component */}
         <ProfileDisplay profileData={profileData} />
 
-        {/* Profile Actions Component */}
         <ProfileActions
           onEditName={openEditNameDialog}
           onChangePassword={openPasswordDialog}
@@ -168,8 +159,6 @@ const UserProfilePage = () => {
       </ProfilePaper>
 
       {/* --- Dialogs --- */}
-      {/* Render dialogs and pass necessary props */}
-
       <EditNameDialog
         open={editNameOpen}
         onClose={closeEditNameDialog}
@@ -177,7 +166,7 @@ const UserProfilePage = () => {
         onNameChange={setEditNameValue}
         onSave={handleUpdateName}
         isLoading={isUpdating}
-        error={dialogError} // Pass dialog-specific error
+        error={dialogError}
       />
 
       <ChangePasswordDialog
@@ -200,7 +189,6 @@ const UserProfilePage = () => {
         error={dialogError}
       />
 
-      {/* General Snackbar for feedback */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -213,7 +201,8 @@ const UserProfilePage = () => {
           variant="filled"
           sx={{ width: "100%" }}
         >
-          {snackbar.message}
+          {snackbar.message}{" "}
+          {/* Assume message is simple or translated in hook */}
         </Alert>
       </Snackbar>
     </Container>

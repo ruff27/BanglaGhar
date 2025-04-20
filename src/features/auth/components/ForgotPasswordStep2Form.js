@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // --- Styled Components (Copied from original - specific to form button) ---
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -37,18 +38,18 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-// Helper component for displaying password validation criteria (can be shared with SignupForm)
-// If sharing, move this to a common components directory
+// Helper component for displaying password validation criteria
+// Note: Criteria labels are kept hardcoded as no direct individual keys were found in en.json
 const PasswordCriteria = ({ validation }) => {
   const criteria = [
-    { label: "At least 8 characters", valid: validation.hasMinLength },
-    { label: "Contains a number", valid: validation.hasNumber },
+    { label: "At least 8 characters", valid: validation.hasMinLength }, // Kept hardcoded
+    { label: "Contains a number", valid: validation.hasNumber }, // Kept hardcoded
     {
-      label: "Contains a special character (!@#$...etc)",
+      label: "Contains a special character (!@#$...etc)", // Kept hardcoded
       valid: validation.hasSpecial,
     },
-    { label: "Contains an uppercase letter", valid: validation.hasUppercase },
-    { label: "Contains a lowercase letter", valid: validation.hasLowercase },
+    { label: "Contains an uppercase letter", valid: validation.hasUppercase }, // Kept hardcoded
+    { label: "Contains a lowercase letter", valid: validation.hasLowercase }, // Kept hardcoded
   ];
 
   return (
@@ -92,6 +93,8 @@ const ForgotPasswordStep2Form = ({
   onSubmit,
   isSubmitting,
 }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
       {/* OTP Field */}
@@ -100,7 +103,7 @@ const ForgotPasswordStep2Form = ({
         required
         fullWidth
         id="otp-reset" // Unique id
-        label="Verification Code"
+        label={t("verification_code")} // Applied translation
         name="otp"
         variant="outlined"
         value={otp}
@@ -120,7 +123,7 @@ const ForgotPasswordStep2Form = ({
         required
         fullWidth
         id="newPassword-reset" // Unique id
-        label="New Password"
+        label={t("new_password")} // Applied translation
         name="newPassword"
         type="password"
         autoComplete="new-password"
@@ -142,7 +145,7 @@ const ForgotPasswordStep2Form = ({
         required
         fullWidth
         id="confirmPassword-reset" // Unique id
-        label="Confirm New Password"
+        label={t("confirm_password")} // Applied translation
         name="confirmPassword"
         type="password"
         autoComplete="new-password"
@@ -163,7 +166,8 @@ const ForgotPasswordStep2Form = ({
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
         }
       >
-        {isSubmitting ? "Resetting..." : "Reset Password"}
+        {/* Applied translation */}
+        {isSubmitting ? t("sending") : t("reset_password")}
       </StyledButton>
     </Box>
   );

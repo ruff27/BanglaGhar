@@ -6,7 +6,7 @@ import {
   Card,
   CardContent,
   IconButton,
-  Link, // Use Link for clickable elements
+  Link,
   styled,
 } from "@mui/material";
 import {
@@ -18,11 +18,11 @@ import {
   Instagram,
   LinkedIn,
 } from "@mui/icons-material";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
-// --- Styled Components (Copied from original contact.js) ---
-
-// Card styling for consistent look
+// --- Styled Components ---
 const ContactCard = styled(Card)(({ theme }) => ({
+  // ... (styling kept as is)
   height: "100%",
   transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
   "&:hover": {
@@ -37,8 +37,8 @@ const ContactCard = styled(Card)(({ theme }) => ({
   borderRadius: "12px", // Consistent border radius
 }));
 
-// Icon button styling for social links
 const AnimatedIconButton = styled(IconButton)(({ theme }) => ({
+  // ... (styling kept as is)
   backgroundColor: theme.palette.primary.main,
   color: "white",
   margin: theme.spacing(0.5), // Adjusted margin for better spacing
@@ -54,9 +54,7 @@ const AnimatedIconButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
-// --- Data (Copied from original contact.js) ---
-
-// Social media links with proper aria labels
+// --- Data ---
 const socialLinks = [
   {
     icon: <Facebook />,
@@ -73,18 +71,16 @@ const socialLinks = [
     label: "LinkedIn",
     url: "https://linkedin.com/company/banglaghor",
   },
-  { icon: <WhatsApp />, label: "WhatsApp", url: "https://wa.me/8801234567890" }, // Example number
+  { icon: <WhatsApp />, label: "WhatsApp", url: "https://wa.me/8801234567890" },
 ];
-
-// --- Component ---
 
 /**
  * ContactInfo Component
- * Displays contact details (phone, email, address) and social media links.
  */
 const ContactInfo = () => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
-    // Use a Grid container to manage the layout of cards
     <Grid container spacing={3} direction="column">
       {/* Phone Card */}
       <Grid item>
@@ -93,9 +89,10 @@ const ContactInfo = () => {
             <Box display="flex" alignItems="center" mb={1.5}>
               <Phone color="primary" sx={{ mr: 1.5 }} />
               <Typography variant="h6" component="h3">
-                Call Us
+                {t("call_us")} {/* Applied */}
               </Typography>
             </Box>
+            {/* Phone numbers kept as is */}
             <Link
               href="tel:+8801234567890"
               sx={{
@@ -130,9 +127,10 @@ const ContactInfo = () => {
             <Box display="flex" alignItems="center" mb={1.5}>
               <Email color="primary" sx={{ mr: 1.5 }} />
               <Typography variant="h6" component="h3">
-                Email Us
+                {t("email_us")} {/* Applied */}
               </Typography>
             </Box>
+            {/* Emails kept as is */}
             <Link
               href="mailto:info@banglaghor.com"
               sx={{
@@ -167,9 +165,10 @@ const ContactInfo = () => {
             <Box display="flex" alignItems="center" mb={1.5}>
               <LocationOn color="primary" sx={{ mr: 1.5 }} />
               <Typography variant="h6" component="h3">
-                Visit Us
+                {t("visit_us")} {/* Applied */}
               </Typography>
             </Box>
+            {/* Address kept as is */}
             <Typography variant="body1" color="text.secondary" sx={{ mb: 0.5 }}>
               House #42, Road #11, Banani
             </Typography>
@@ -186,21 +185,19 @@ const ContactInfo = () => {
           <CardContent sx={{ p: 3 }}>
             <Box display="flex" alignItems="center" mb={1.5}>
               <Typography variant="h6" component="h3">
-                Connect With Us
+                {t("connect_with_us")} {/* Applied */}
               </Typography>
             </Box>
             <Box display="flex" justifyContent="center" flexWrap="wrap">
-              {" "}
-              {/* Added flexWrap */}
               {socialLinks.map((social) => (
                 <AnimatedIconButton
                   key={social.label}
-                  aria-label={social.label}
+                  aria-label={social.label} // Kept label as is for aria
                   component="a"
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title={social.label} // Added title attribute
+                  title={social.label} // Kept label as is for title
                 >
                   {social.icon}
                 </AnimatedIconButton>

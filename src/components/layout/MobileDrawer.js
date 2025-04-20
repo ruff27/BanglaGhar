@@ -23,6 +23,7 @@ import AddBusinessIcon from "@mui/icons-material/AddBusiness"; // Example for Li
 import SellIcon from "@mui/icons-material/Sell"; // Example for Buy/Rent/Sold
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // --- Re-introduce styling from original Navbar.js ---
 const DrawerItem = styled(ListItemButton)(({ theme, selected }) => ({
@@ -61,6 +62,7 @@ const MobileDrawer = ({
 }) => {
   const drawerWidth = 260;
   const location = useLocation(); // Get location object using the hook
+  const { t } = useTranslation(); // Initialize translation
 
   const handleLinkClick = (path) => {
     handleNavigate(path);
@@ -103,7 +105,7 @@ const MobileDrawer = ({
               fontWeight: "bold",
             }}
           >
-            BanglaGhor
+            BanglaGhor {/* <-- Kept as is, brand name */}
           </Typography>
           <IconButton onClick={handleDrawerToggle}>
             <CloseIcon />
@@ -127,6 +129,7 @@ const MobileDrawer = ({
                   onClick={handleDrawerToggle} // Close drawer on link click
                 >
                   <ListItemIcon>{link.icon}</ListItemIcon>
+                  {/* Label is already translated in Navbar.js */}
                   <ListItemText primary={link.label} />
                 </DrawerItem>
               </ListItem>
@@ -138,7 +141,7 @@ const MobileDrawer = ({
           variant="caption"
           sx={{ pl: 3, color: "text.secondary", textTransform: "uppercase" }}
         >
-          Properties
+          {t("nav_properties")} {/* Applied translation */}
         </Typography>
         <ListItem disablePadding>
           {/* Use location object from the hook */}
@@ -149,7 +152,7 @@ const MobileDrawer = ({
             <ListItemIcon>
               <StorefrontIcon />
             </ListItemIcon>
-            <ListItemText primary="Buy" />
+            <ListItemText primary={t("nav_buy")} /> {/* Applied translation */}
           </DrawerItem>
         </ListItem>
         <ListItem disablePadding>
@@ -161,7 +164,7 @@ const MobileDrawer = ({
             <ListItemIcon>
               <SellIcon />
             </ListItemIcon>
-            <ListItemText primary="Rent" />
+            <ListItemText primary={t("nav_rent")} /> {/* Applied translation */}
           </DrawerItem>
         </ListItem>
         <ListItem disablePadding>
@@ -173,7 +176,7 @@ const MobileDrawer = ({
             <ListItemIcon>
               <CheckCircleOutlineIcon />
             </ListItemIcon>
-            <ListItemText primary="Sold" />
+            <ListItemText primary={t("nav_sold")} /> {/* Applied translation */}
           </DrawerItem>
         </ListItem>
         {/* List Property Button */}
@@ -183,7 +186,8 @@ const MobileDrawer = ({
             <ListItemIcon>
               <AddBusinessIcon />
             </ListItemIcon>
-            <ListItemText primary="List Your Property" />
+            {/* Applied translation */}
+            <ListItemText primary={t("list_property")} />
           </DrawerItem>
         </ListItem>
       </List>

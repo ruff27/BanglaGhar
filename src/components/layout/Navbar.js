@@ -25,12 +25,14 @@ import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import ContactsIcon from "@mui/icons-material/Contacts";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // --- Re-introduce styling from original Navbar.js ---
 
 // 1. HideOnScroll component (if used in original)
 function HideOnScroll(props) {
   const { children } = props;
+  // Reverted to original HideOnScroll logic if it was different
   const trigger = useScrollTrigger();
   return (
     <Slide appear={false} direction="down" in={!trigger}>
@@ -53,23 +55,25 @@ const Navbar = () => {
   const { isLoggedIn, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation(); // Initialize translation
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("home");
   const [logoutSnackbar, setLogoutSnackbar] = useState(false); // State for logout notification
 
   // Define nav links data (add icons as used in original MobileDrawer)
+  // Apply translation to labels
   const navLinks = [
-    { id: "home", label: "Home", path: "/", icon: <HomeIcon /> },
+    { id: "home", label: t("nav_home"), path: "/", icon: <HomeIcon /> },
     {
       id: "properties",
-      label: "Properties",
-      path: "/properties/rent",
+      label: t("nav_properties"),
+      path: "/properties/rent", // Path is placeholder for dropdown trigger
       icon: <HomeWorkIcon />,
-    }, // Path is placeholder for dropdown trigger
-    { id: "about", label: "About Us", path: "/about", icon: <InfoIcon /> },
+    },
+    { id: "about", label: t("nav_about"), path: "/about", icon: <InfoIcon /> },
     {
       id: "contact",
-      label: "Contact",
+      label: t("nav_contact"),
       path: "/contact",
       icon: <ContactsIcon />,
     },
@@ -82,7 +86,10 @@ const Navbar = () => {
     else if (currentPath.startsWith("/properties")) setActiveLink("properties");
     else if (currentPath.startsWith("/about")) setActiveLink("about");
     else if (currentPath.startsWith("/contact")) setActiveLink("contact");
-    else setActiveLink(""); // No active link
+    // Handle /list-property route - could set 'properties' or none
+    else if (currentPath.startsWith("/list-property"))
+      setActiveLink(""); // Or 'properties' if desired
+    else setActiveLink(""); // No active link for others like /login, /user-profile etc.
   }, [location.pathname]);
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
@@ -123,7 +130,7 @@ const Navbar = () => {
                   cursor: "pointer",
                 }}
               >
-                BanglaGhor
+                BanglaGhor {/* <-- Kept as is, brand name */}
               </Typography>
 
               {/* Desktop Navigation & Actions */}
@@ -155,7 +162,7 @@ const Navbar = () => {
                       "&:hover": { bgcolor: "action.hover" },
                     }}
                   >
-                    Login
+                    {t("nav_login")} {/* Applied translation */}
                   </Button>
                 )}
               </Box>
@@ -188,7 +195,7 @@ const Navbar = () => {
       <MobileDrawer
         mobileOpen={mobileOpen}
         handleDrawerToggle={handleDrawerToggle}
-        navLinks={navLinks}
+        navLinks={navLinks} // Pass translated links
         activeLink={activeLink}
         handleNavigate={handleNavigate}
         // Pass other necessary props like isLoggedIn for conditional rendering inside drawer
@@ -207,7 +214,7 @@ const Navbar = () => {
           variant="filled" // Make it stand out more
           sx={{ width: "100%", borderRadius: "8px" }}
         >
-          Successfully logged out!
+          Successfully logged out! {/* <-- Kept as is, no key found */}
         </Alert>
       </Snackbar>
     </>

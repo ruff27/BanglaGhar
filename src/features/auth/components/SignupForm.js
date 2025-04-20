@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle"; // Icon for valid criteria
 import CancelIcon from "@mui/icons-material/Cancel"; // Icon for invalid criteria
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // --- Styled Components (Copied from original Signup.js - specific to form button) ---
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -39,16 +40,17 @@ const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 // Helper component for displaying password validation criteria
+// Note: Criteria labels are kept hardcoded as no direct individual keys were found in en.json
 const PasswordCriteria = ({ validation }) => {
   const criteria = [
-    { label: "At least 8 characters", valid: validation.hasMinLength },
-    { label: "Contains a number", valid: validation.hasNumber },
+    { label: "At least 8 characters", valid: validation.hasMinLength }, // Kept hardcoded
+    { label: "Contains a number", valid: validation.hasNumber }, // Kept hardcoded
     {
-      label: "Contains a special character (!@#$...etc)",
+      label: "Contains a special character (!@#$...etc)", // Kept hardcoded
       valid: validation.hasSpecial,
     },
-    { label: "Contains an uppercase letter", valid: validation.hasUppercase },
-    { label: "Contains a lowercase letter", valid: validation.hasLowercase },
+    { label: "Contains an uppercase letter", valid: validation.hasUppercase }, // Kept hardcoded
+    { label: "Contains a lowercase letter", valid: validation.hasLowercase }, // Kept hardcoded
   ];
 
   return (
@@ -94,6 +96,8 @@ const SignupForm = ({
   onSubmit,
   isSubmitting,
 }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
       {/* Email Field */}
@@ -102,7 +106,7 @@ const SignupForm = ({
         required
         fullWidth
         id="email"
-        label="Email"
+        label={t("email")} // Applied translation
         name="email"
         autoComplete="email"
         autoFocus
@@ -118,7 +122,7 @@ const SignupForm = ({
         required
         fullWidth
         id="username"
-        label="Name" // Changed label to 'Name' as per original UI
+        label={t("name")} // Applied translation (using 'name' key)
         name="username"
         autoComplete="name"
         variant="outlined"
@@ -133,7 +137,7 @@ const SignupForm = ({
         required
         fullWidth
         id="password"
-        label="Password"
+        label={t("password")} // Applied translation
         name="password"
         type="password"
         autoComplete="new-password" // Hint for password managers
@@ -142,12 +146,7 @@ const SignupForm = ({
         onChange={onPasswordChange}
         disabled={isSubmitting}
         sx={{ mb: 0 }} // Reduced bottom margin as criteria list follows
-        // Use FormHelperText component for better structure if needed, or keep simple helperText
-        // helperText={
-        //      <PasswordCriteria validation={passwordValidation} />
-        // }
         InputProps={{
-          // Use InputProps to render criteria below field
           "aria-describedby": "password-criteria", // Accessibility link
         }}
       />
@@ -162,7 +161,7 @@ const SignupForm = ({
         required
         fullWidth
         id="confirmPassword"
-        label="Confirm Password"
+        label={t("confirm_password")} // Applied translation
         name="confirmPassword"
         type="password"
         autoComplete="new-password"
@@ -183,7 +182,8 @@ const SignupForm = ({
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
         }
       >
-        {isSubmitting ? "Signing Up..." : "Sign Up"}
+        {/* Applied translation */}
+        {isSubmitting ? t("sending") : t("sign_up")}
       </StyledButton>
     </Box>
   );

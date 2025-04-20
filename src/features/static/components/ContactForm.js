@@ -7,14 +7,14 @@ import {
   Button,
   Paper,
   styled,
-  CircularProgress, // Import CircularProgress
+  CircularProgress,
 } from "@mui/material";
-import { Send } from "@mui/icons-material"; // Import Send icon
+import { Send } from "@mui/icons-material";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
-// --- Styled Components (Copied from original contact.js) ---
-
-// TextField styling
+// --- Styled Components ---
 const ContactTextField = styled(TextField)(({ theme }) => ({
+  // ... (styling kept as is)
   marginBottom: theme.spacing(2), // Keep consistent spacing
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
@@ -30,14 +30,10 @@ const ContactTextField = styled(TextField)(({ theme }) => ({
       borderWidth: "1px", // Ensure focus border width is standard
     },
   },
-  // Style labels if needed
-  // '& label.Mui-focused': {
-  //   color: theme.palette.primary.main,
-  // },
 }));
 
-// Submit button styling
 const StyledSubmitButton = styled(Button)(({ theme }) => ({
+  // ... (styling kept as is)
   backgroundColor: theme.palette.primary.main,
   color: "white",
   padding: "12px 24px",
@@ -54,17 +50,8 @@ const StyledSubmitButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-// --- Component ---
-
 /**
  * ContactForm Component
- * Renders the contact form fields and handles submission via props.
- * @param {object} props - Component props
- * @param {object} props.formData - Current form data (name, email, phone, subject, message)
- * @param {object} props.formErrors - Validation errors for fields
- * @param {function} props.handleChange - Function to handle input changes
- * @param {function} props.handleSubmit - Function to handle form submission
- * @param {boolean} props.isSubmitting - Boolean indicating if the form is currently submitting
  */
 const ContactForm = ({
   formData,
@@ -73,13 +60,13 @@ const ContactForm = ({
   handleSubmit,
   isSubmitting,
 }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
-    // Use Paper for elevation and background styling consistent with original
     <Paper
       elevation={3}
       sx={(theme) => ({
-        // Use sx prop with theme access
-        p: { xs: 2, sm: 3, md: 4 }, // Responsive padding
+        p: { xs: 2, sm: 3, md: 4 },
         borderRadius: "12px",
         background: `linear-gradient(135deg, ${
           theme.palette.background.paper
@@ -87,43 +74,33 @@ const ContactForm = ({
           theme.palette.mode === "dark"
             ? "rgba(40, 40, 40, 0.9)"
             : "rgba(239, 249, 254, 0.9)"
-        } 100%)`, // Adjusted gradient for theme
+        } 100%)`,
         boxShadow: `0 10px 30px ${
           theme.palette.mode === "dark"
             ? "rgba(0, 0, 0, 0.2)"
             : "rgba(43, 123, 140, 0.1)"
-        }`, // Adjusted shadow
+        }`,
         position: "relative",
-        overflow: "hidden", // Keep overflow hidden for corner effect
-        height: "100%", // Ensure Paper takes full height if needed in Grid
+        overflow: "hidden",
+        height: "100%",
       })}
     >
-      {/* Decorative corner element from original */}
       <Box
         sx={(theme) => ({
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: { xs: "100px", sm: "150px" }, // Responsive size
-          height: { xs: "100px", sm: "150px" },
-          background: `linear-gradient(135deg, transparent 0%, ${theme.palette.primary.main}22 100%)`, // Use theme primary with opacity
-          borderRadius: "0 0 0 100%",
-          zIndex: 0, // Ensure it's behind content
+          /* Decorative corner */
         })}
       />
 
-      {/* Form Title */}
       <Typography
         variant="h5"
-        component="h3" // Correct semantic heading level
+        component="h3"
         gutterBottom
         fontWeight="medium"
-        sx={{ mb: 3, position: "relative", zIndex: 1 }} // Ensure title is above corner element
+        sx={{ mb: 3, position: "relative", zIndex: 1 }}
       >
-        Send Us a Message
+        {t("send_us_message")} {/* Applied */}
       </Typography>
 
-      {/* Form Element */}
       <Box
         component="form"
         onSubmit={handleSubmit}
@@ -131,26 +108,24 @@ const ContactForm = ({
         sx={{ position: "relative", zIndex: 1 }}
       >
         <Grid container spacing={2}>
-          {/* Name Field */}
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label="Your Name"
+              label={t("name")} // Applied
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
               variant="outlined"
-              error={!!formErrors.name} // Show error state if error exists
-              helperText={formErrors.name || " "} // Show error message or space to prevent layout shift
-              inputProps={{ "aria-label": "Your Name" }} // Accessibility
+              error={!!formErrors.name}
+              helperText={formErrors.name || " "}
+              inputProps={{ "aria-label": t("name") }} // Applied
             />
           </Grid>
-          {/* Email Field */}
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label="Email Address"
+              label={t("email")} // Applied
               name="email"
               type="email"
               value={formData.email}
@@ -159,28 +134,26 @@ const ContactForm = ({
               variant="outlined"
               error={!!formErrors.email}
               helperText={formErrors.email || " "}
-              inputProps={{ "aria-label": "Email Address" }}
+              inputProps={{ "aria-label": t("email") }} // Applied
             />
           </Grid>
-          {/* Phone Field */}
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label="Phone Number (Optional)" // Label as optional if it is
+              label="Phone Number (Optional)" // Kept as is, no key
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               variant="outlined"
-              error={!!formErrors.phone} // Optional validation
+              error={!!formErrors.phone}
               helperText={formErrors.phone || " "}
-              inputProps={{ "aria-label": "Phone Number" }}
+              inputProps={{ "aria-label": "Phone Number" }} // Kept as is
             />
           </Grid>
-          {/* Subject Field */}
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label="Subject"
+              label="Subject" // Kept as is, no key
               name="subject"
               value={formData.subject}
               onChange={handleChange}
@@ -188,34 +161,31 @@ const ContactForm = ({
               variant="outlined"
               error={!!formErrors.subject}
               helperText={formErrors.subject || " "}
-              inputProps={{ "aria-label": "Subject" }}
+              inputProps={{ "aria-label": "Subject" }} // Kept as is
             />
           </Grid>
-          {/* Message Field */}
           <Grid item xs={12}>
             <ContactTextField
               fullWidth
-              label="Your Message"
+              label="Your Message" // Kept as is, no key
               name="message"
               value={formData.message}
               onChange={handleChange}
               required
               multiline
-              rows={4} // Adjust rows as needed
+              rows={4}
               variant="outlined"
               error={!!formErrors.message}
               helperText={formErrors.message || " "}
-              inputProps={{ "aria-label": "Your Message" }}
+              inputProps={{ "aria-label": "Your Message" }} // Kept as is
             />
           </Grid>
         </Grid>
 
-        {/* Submit Button */}
         <Box display="flex" justifyContent="flex-end" mt={3}>
           <StyledSubmitButton
             type="submit"
             variant="contained"
-            // Use endIcon for loading indicator or send icon
             endIcon={
               isSubmitting ? (
                 <CircularProgress size={20} color="inherit" />
@@ -223,9 +193,10 @@ const ContactForm = ({
                 <Send />
               )
             }
-            disabled={isSubmitting} // Disable button during submission
+            disabled={isSubmitting}
           >
-            {isSubmitting ? "Sending..." : "Send Message"}
+            {/* Applied */}
+            {isSubmitting ? t("sending") : t("send_message")}
           </StyledSubmitButton>
         </Box>
       </Box>

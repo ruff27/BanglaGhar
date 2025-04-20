@@ -6,6 +6,7 @@ import {
   styled,
   CircularProgress,
 } from "@mui/material";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // --- Styled Components (Copied from original VerifyOtp.js - specific to form button) ---
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -41,6 +42,8 @@ const StyledButton = styled(Button)(({ theme }) => ({
  * @param {boolean} props.isSubmitting - Indicates if the form is currently submitting
  */
 const VerifyOtpForm = ({ otp, onOtpChange, onSubmit, isSubmitting }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
       <TextField
@@ -48,7 +51,7 @@ const VerifyOtpForm = ({ otp, onOtpChange, onSubmit, isSubmitting }) => {
         required
         fullWidth
         id="otp" // Add id
-        label="Enter 6-Digit OTP" // More specific label
+        label={t("enter_otp")} // Applied translation
         name="otp" // Add name
         variant="outlined"
         value={otp}
@@ -72,7 +75,8 @@ const VerifyOtpForm = ({ otp, onOtpChange, onSubmit, isSubmitting }) => {
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
         }
       >
-        {isSubmitting ? "Verifying..." : "Verify OTP"}
+        {/* Applied translation */}
+        {isSubmitting ? t("sending") : t("verify_otp")}
       </StyledButton>
     </Box>
   );

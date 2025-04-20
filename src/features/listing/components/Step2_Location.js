@@ -1,11 +1,14 @@
 import React from "react";
 import { Grid, TextField, Typography, Box } from "@mui/material";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 const Step2_Location = ({ formData, errors, handleChange }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Location Details
+        Location Details {/* <-- Kept as is, no key found */}
       </Typography>
       <Grid container spacing={3}>
         <Grid item xs={12}>
@@ -13,7 +16,7 @@ const Step2_Location = ({ formData, errors, handleChange }) => {
             required
             id="address"
             name="address"
-            label="Street Address"
+            label={t("address")} // Applied translation
             fullWidth
             variant="outlined"
             value={formData.address}
@@ -27,7 +30,7 @@ const Step2_Location = ({ formData, errors, handleChange }) => {
             required
             id="city"
             name="city"
-            label="City"
+            label={t("city")} // Applied translation
             fullWidth
             variant="outlined"
             value={formData.city}
@@ -41,7 +44,7 @@ const Step2_Location = ({ formData, errors, handleChange }) => {
             required
             id="state"
             name="state"
-            label="State / Division" // Or just 'District' / 'Area'
+            label={t("state")} // Applied translation
             fullWidth
             variant="outlined"
             value={formData.state}

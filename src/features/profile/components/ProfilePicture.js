@@ -12,16 +12,17 @@ import {
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import PersonIcon from "@mui/icons-material/Person";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 const Input = styled("input")({
   display: "none",
 });
 
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
-  width: 120, // Larger size
+  width: 120,
   height: 120,
   fontSize: "3.5rem",
-  backgroundColor: theme.palette.secondary.light, // Use theme color
+  backgroundColor: theme.palette.secondary.light,
   color: theme.palette.secondary.contrastText,
   border: `3px solid ${theme.palette.background.paper}`,
   boxShadow: theme.shadows[2],
@@ -40,7 +41,6 @@ const UploadIconButton = styled(IconButton)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
 }));
 
-// Helper function to limit file size
 const MAX_FILE_SIZE_MB = 1;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -51,27 +51,31 @@ const ProfilePicture = ({
   isUpdating,
   onError,
 }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("image/")) {
       if (file.size > MAX_FILE_SIZE_BYTES) {
+        // Error message kept as is, no key found
         if (onError) onError(`Image size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
-        event.target.value = null; // Reset input
+        event.target.value = null;
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        onPictureChange(reader.result); // Pass base64 string up
+        onPictureChange(reader.result);
       };
       reader.onerror = () => {
+        // Error message kept as is, no key found
         if (onError) onError("Failed to read image file.");
       };
       reader.readAsDataURL(file);
     } else if (file) {
+      // Error message kept as is, no key found
       if (onError)
         onError("Please select a valid image file (JPEG, PNG, GIF, etc.).");
     }
-    // Reset input value so the same file can be selected again if needed
     event.target.value = null;
   };
 
@@ -84,8 +88,8 @@ const ProfilePicture = ({
       <StyledAvatar src={picture || undefined}>
         {!picture && fallbackInitial}
       </StyledAvatar>
+      {/* Tooltip kept as is, no key found */}
       <Tooltip title="Change profile picture" arrow>
-        {/* Wrap IconButton in span to allow Tooltip when disabled */}
         <span style={{ position: "absolute", bottom: 5, right: 5 }}>
           <UploadIconButton
             color="primary"

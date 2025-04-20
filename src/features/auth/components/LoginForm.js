@@ -6,9 +6,9 @@ import {
   styled,
   CircularProgress, // Import CircularProgress for loading indicator
 } from "@mui/material";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // --- Styled Components (Copied from original Login.js - specific to form button) ---
-// You might move this to a shared button component later if used elsewhere
 const StyledButton = styled(Button)(({ theme }) => ({
   margin: theme.spacing(3, 0, 2), // Keep original spacing
   padding: theme.spacing(1.5),
@@ -42,7 +42,6 @@ const StyledButton = styled(Button)(({ theme }) => ({
  * @param {function} props.onPasswordChange - Handler for password input changes
  * @param {function} props.onSubmit - Handler for form submission
  * @param {boolean} props.isSubmitting - Indicates if the form is currently submitting
- * @param {string} [props.error] - Optional: Error message specifically for fields (not used here, page handles general error)
  */
 const LoginForm = ({
   email,
@@ -51,8 +50,9 @@ const LoginForm = ({
   onPasswordChange,
   onSubmit,
   isSubmitting,
-  // error // Not passing field-specific errors currently
 }) => {
+  const { t } = useTranslation(); // Initialize translation
+
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
       {/* Email Field */}
@@ -61,7 +61,7 @@ const LoginForm = ({
         required
         fullWidth
         id="email" // Add id for accessibility
-        label="Email"
+        label={t("email")} // Applied translation
         name="email" // Add name attribute
         autoComplete="email" // Enable browser autofill
         autoFocus // Keep autofocus on email
@@ -78,7 +78,7 @@ const LoginForm = ({
         required
         fullWidth
         id="password" // Add id
-        label="Password"
+        label={t("password")} // Applied translation
         name="password" // Add name attribute
         type="password"
         autoComplete="current-password" // Enable browser autofill
@@ -100,7 +100,8 @@ const LoginForm = ({
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
         } // Show loader
       >
-        {isSubmitting ? "Signing In..." : "Sign In"}
+        {/* Applied translation */}
+        {isSubmitting ? t("sending") : t("sign_in")}
       </StyledButton>
     </Box>
   );

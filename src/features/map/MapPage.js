@@ -15,6 +15,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { useNavigate } from "react-router-dom"; // Import if needed for navigation
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Import Hook and Components
 import useMapData from "./hooks/useMapData";
@@ -23,13 +24,10 @@ import PropertyInfoPanel from "./components/PropertyInfoPanel";
 
 /**
  * MapPage Component
- *
- * Container for the interactive map view. Uses useMapData hook for state
- * and renders MapComponent and PropertyInfoPanel. Includes controls for
- * search, filtering, and locating the user.
  */
 const MapPage = () => {
   const navigate = useNavigate(); // If needed for navigation actions
+  const { t } = useTranslation(); // Initialize translation
 
   // --- State from Hook ---
   const {
@@ -48,10 +46,9 @@ const MapPage = () => {
 
   // --- Local State for Page Controls ---
   const [searchQuery, setSearchQuery] = useState("");
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all"); // e.g., 'all', 'rent', 'buy'
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all"); // Values 'all', 'rent', 'buy', 'sold' used internally
 
   // --- Filtered Properties based on local controls ---
-  // Note: This filtering could also be moved into the useMapData hook
   const filteredMapProperties = React.useMemo(() => {
     return properties.filter((p) => {
       const typeMatch =
@@ -71,13 +68,11 @@ const MapPage = () => {
 
   const handlePropertyTypeChange = (event, newType) => {
     if (newType !== null) {
-      // Prevent unselecting all toggles
       setPropertyTypeFilter(newType);
-      clearSelectedProperty(); // Clear selection when filter changes
+      clearSelectedProperty();
     }
   };
 
-  // Clear search and filters
   const clearSearchAndFilters = () => {
     setSearchQuery("");
     setPropertyTypeFilter("all");
@@ -89,29 +84,27 @@ const MapPage = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 64px)",
+        height: "calc(100vh - 64px)", // Adjust height based on Navbar
       }}
     >
-      {" "}
-      {/* Adjust height based on Navbar */}
       {/* Top Control Bar */}
       <Paper
         elevation={2}
         sx={{
           p: 1.5,
-          m: 2, // Margin around the control bar
-          mb: 0, // No bottom margin
+          m: 2,
+          mb: 0,
           display: "flex",
           gap: 1.5,
           alignItems: "center",
-          flexWrap: "wrap", // Allow controls to wrap on small screens
+          flexWrap: "wrap",
           borderRadius: "12px",
-          position: "relative", // Position relative for potential absolute elements inside
-          zIndex: 1100, // Ensure controls are above map elements
+          position: "relative",
+          zIndex: 1100,
         }}
       >
         <TextField
-          placeholder="Search title or location..."
+          placeholder={t("label")} // Applied translation (Search title or location...)
           variant="outlined"
           size="small"
           value={searchQuery}
@@ -133,20 +126,23 @@ const MapPage = () => {
           aria-label="property type filter"
           size="small"
         >
+          {/* Translate labels, keep values */}
           <ToggleButton value="all" aria-label="all types">
-            All
+            {t("all_types")}
           </ToggleButton>
           <ToggleButton value="rent" aria-label="for rent">
-            Rent
+            {t("nav_rent")}
           </ToggleButton>
           <ToggleButton value="buy" aria-label="for sale">
-            Buy
+            {t("nav_buy")}
           </ToggleButton>
           <ToggleButton value="sold" aria-label="sold">
-            Sold
+            {t("nav_sold")}
           </ToggleButton>
         </ToggleButtonGroup>
         <Tooltip title="Locate Me">
+          {" "}
+          {/* <-- Kept as is, no key found */}
           <IconButton onClick={locateUser} color="primary">
             <MyLocationIcon />
           </IconButton>
@@ -156,7 +152,7 @@ const MapPage = () => {
           size="small"
           sx={{ textTransform: "none" }}
         >
-          Clear
+          Clear {/* <-- Kept as is, no key found */}
         </Button>
       </Paper>
       {/* Map Container */}
@@ -193,6 +189,7 @@ const MapPage = () => {
               p: 2,
             }}
           >
+            {/* Assuming error message is simple or translated in the hook */}
             <Alert severity="error" sx={{ width: "100%" }}>
               {error}
             </Alert>
@@ -200,12 +197,12 @@ const MapPage = () => {
         )}
         {!loading && !error && (
           <MapComponent
-            properties={filteredMapProperties} // Pass filtered properties
+            properties={filteredMapProperties}
             mapCenter={mapCenter}
             mapZoom={mapZoom}
             userLocation={userLocation}
             selectedProperty={selectedProperty}
-            onMarkerClick={handleSelectProperty} // Pass handler from hook
+            onMarkerClick={handleSelectProperty}
             // onMapMove={handleMapMove} // Pass if needed
           />
         )}

@@ -11,29 +11,40 @@ import {
   Card,
   CardMedia,
 } from "@mui/material";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Helper to format price
 const formatDisplayPrice = (price, mode) => {
   if (price === null || price === undefined) return "N/A";
   const numericPrice = Number(price);
   if (isNaN(numericPrice)) return "Invalid Price";
+  // Keep suffix hardcoded for now as it's not in translation files
   return `৳ ${numericPrice.toLocaleString()}${mode === "rent" ? "/mo" : ""}`;
+};
+
+// Mapping from feature state keys to translation keys
+const featureTranslationMap = {
+  parking: "parking",
+  garden: "garden",
+  airConditioning: "air_conditioning",
+  furnished: "furnished",
+  pool: "swimming_pool",
+  // Add other features if needed
 };
 
 /**
  * Step5_Review Component
- * Displays a summary of the entered property details for final review.
  */
 const Step5_Review = ({ formData, features, images }) => {
-  // Generate image previews (similar logic to Step4, but maybe just show filenames or count)
+  const { t } = useTranslation(); // Initialize translation
   const imageNames = images.map(
-    (img) => img.name || (typeof img === "string" ? img : "Uploaded Image")
+    (img) => img.name || (typeof img === "string" ? img : "Uploaded Image") // <-- Kept as is
   );
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Review Your Listing
+        {t("preview")} {/* Applied translation */}
       </Typography>
       <Paper
         elevation={0}
@@ -43,30 +54,36 @@ const Step5_Review = ({ formData, features, images }) => {
           {/* Basic Info */}
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              Basic Info
+              Basic Info {/* <-- Kept as is */}
             </Typography>
             <List dense disablePadding>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Title"
+                  primary={t("property_title")} // Applied translation
                   secondary={formData.title || "-"}
                 />
               </ListItem>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Property Type"
-                  secondary={formData.propertyType || "-"}
+                  primary={t("property_type")} // Applied translation
+                  secondary={
+                    formData.propertyType ? t(formData.propertyType) : "-"
+                  } // Translate type value
                 />
               </ListItem>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Listing Type"
-                  secondary={formData.listingType || "-"}
+                  primary={t("listing_type")} // Applied translation
+                  secondary={
+                    formData.listingType
+                      ? t(formData.listingType === "buy" ? "buy" : "rent")
+                      : "-"
+                  } // Translate type value
                 />
               </ListItem>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Price"
+                  primary={t("price")} // Applied translation
                   secondary={formatDisplayPrice(
                     formData.price,
                     formData.listingType
@@ -75,19 +92,19 @@ const Step5_Review = ({ formData, features, images }) => {
               </ListItem>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Area (sqft)"
-                  secondary={formData.area || "-"}
+                  primary={t("area")} // Applied translation
+                  secondary={formData.area ? `${formData.area} sqft` : "-"} // Keep sqft suffix
                 />
               </ListItem>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Bedrooms"
+                  primary={t("bedrooms")} // Applied translation
                   secondary={formData.bedrooms || "-"}
                 />
               </ListItem>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Bathrooms"
+                  primary={t("bathrooms")} // Applied translation
                   secondary={formData.bathrooms || "-"}
                 />
               </ListItem>
@@ -97,21 +114,25 @@ const Step5_Review = ({ formData, features, images }) => {
           {/* Location */}
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              Location
+              Location {/* <-- Kept as is */}
             </Typography>
             <List dense disablePadding>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Address"
+                  primary={t("address")} // Applied translation
                   secondary={formData.address || "-"}
                 />
               </ListItem>
               <ListItem disableGutters>
-                <ListItemText primary="City" secondary={formData.city || "-"} />
+                <ListItemText
+                  primary={t("city")}
+                  secondary={formData.city || "-"}
+                />{" "}
+                {/* Applied translation */}
               </ListItem>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="State/Division"
+                  primary={t("state")} // Applied translation
                   secondary={formData.state || "-"}
                 />
               </ListItem>
@@ -125,13 +146,14 @@ const Step5_Review = ({ formData, features, images }) => {
           {/* Description */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
-              Description
+              {t("description")} {/* Applied translation */}
             </Typography>
             <Typography
               variant="body2"
               sx={{ whiteSpace: "pre-wrap", color: "text.secondary" }}
             >
-              {formData.description || "No description provided."}
+              {formData.description || "No description provided."}{" "}
+              {/* <-- Kept as is */}
             </Typography>
           </Grid>
 
@@ -142,23 +164,21 @@ const Step5_Review = ({ formData, features, images }) => {
           {/* Features */}
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              Features
+              {t("features")} {/* Applied translation */}
             </Typography>
             <List dense disablePadding>
-              {Object.entries(features).map(
-                ([key, value]) =>
-                  value && (
-                    <ListItem key={key} disableGutters>
-                      <ListItemText
-                        primary={key.replace(/([A-Z])/g, " $1").trim()}
-                      />{" "}
-                      {/* Format key */}
-                    </ListItem>
-                  )
-              )}
+              {Object.entries(features)
+                .filter(([key, value]) => value && featureTranslationMap[key]) // Filter for true and translatable features
+                .map(([key, value]) => (
+                  <ListItem key={key} disableGutters>
+                    {/* Use mapping to get correct translation key */}
+                    <ListItemText primary={t(featureTranslationMap[key])} />
+                  </ListItem>
+                ))}
               {!Object.values(features).some((v) => v) && (
                 <ListItem disableGutters>
-                  <ListItemText secondary="No features selected." />
+                  <ListItemText secondary="No features selected." />{" "}
+                  {/* <-- Kept as is */}
                 </ListItem>
               )}
             </List>
@@ -167,7 +187,7 @@ const Step5_Review = ({ formData, features, images }) => {
           {/* Images Preview/List */}
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              Images ({imageNames.length})
+              Images ({imageNames.length}) {/* <-- Kept as is */}
             </Typography>
             {imageNames.length > 0 ? (
               <List dense disablePadding>
@@ -179,10 +199,9 @@ const Step5_Review = ({ formData, features, images }) => {
               </List>
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No images uploaded.
+                No images uploaded. {/* <-- Kept as is */}
               </Typography>
             )}
-            {/* Optionally show small image thumbnails here instead of names */}
           </Grid>
         </Grid>
       </Paper>
@@ -191,7 +210,8 @@ const Step5_Review = ({ formData, features, images }) => {
         display="block"
         sx={{ mt: 2, textAlign: "center", color: "text.secondary" }}
       >
-        Please review all details carefully before submitting.
+        Please review all details carefully before submitting.{" "}
+        {/* <-- Kept as is */}
       </Typography>
     </Box>
   );

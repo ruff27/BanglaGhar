@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"; // Added useRef
+import React, { useEffect, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -10,6 +10,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Fix for default Leaflet marker icon issue with webpack
 delete L.Icon.Default.prototype._getIconUrl;
@@ -23,7 +24,6 @@ L.Icon.Default.mergeOptions({
 function ChangeView({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
-    // Check if center and zoom are valid numbers before setting view
     if (
       Array.isArray(center) &&
       center.length === 2 &&
@@ -39,24 +39,24 @@ function ChangeView({ center, zoom }) {
 
 /**
  * MapComponent
- * Renders the Leaflet map, markers, popups, and user location.
  */
 const MapComponent = ({
   properties,
   mapCenter,
   mapZoom,
   userLocation,
-  selectedProperty, // To potentially highlight selected marker
-  onMarkerClick, // Callback when a marker is clicked
-  onMapMove, // Optional: Callback when map moves/zooms
+  selectedProperty,
+  onMarkerClick,
+  onMapMove,
 }) => {
-  const mapRef = useRef(); // Use ref for map instance if needed elsewhere
+  const { t } = useTranslation(); // Initialize translation
+  const mapRef = useRef();
 
   // Handler for map move/zoom events
   const MapEvents = () => {
     const map = useMap();
     useEffect(() => {
-      if (!onMapMove) return; // Only attach if handler provided
+      if (!onMapMove) return;
 
       const handleMoveEnd = () => {
         const center = map.getCenter();
@@ -65,30 +65,28 @@ const MapComponent = ({
       };
 
       map.on("moveend", handleMoveEnd);
-      map.on("zoomend", handleMoveEnd); // Also trigger on zoom end
+      map.on("zoomend", handleMoveEnd);
 
       return () => {
         map.off("moveend", handleMoveEnd);
         map.off("zoomend", handleMoveEnd);
       };
-      // Removed onMapMove from dependency array to address exhaustive-deps warning
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [map]);
     return null;
   };
 
   return (
-    // Ensure MapContainer receives valid center/zoom initially
     <MapContainer
       ref={mapRef}
       center={
         Array.isArray(mapCenter) && mapCenter.length === 2
           ? mapCenter
           : [23.8103, 90.4125]
-      } // Default center if invalid
-      zoom={typeof mapZoom === "number" ? mapZoom : 7} // Default zoom if invalid
-      scrollWheelZoom={true} // Enable scroll wheel zoom
-      style={{ height: "100%", width: "100%", borderRadius: "inherit" }} // Inherit border radius
+      }
+      zoom={typeof mapZoom === "number" ? mapZoom : 7}
+      scrollWheelZoom={true}
+      style={{ height: "100%", width: "100%", borderRadius: "inherit" }}
     >
       <ChangeView center={mapCenter} zoom={mapZoom} />
       <TileLayer
@@ -102,17 +100,17 @@ const MapComponent = ({
         userLocation.length === 2 && (
           <CircleMarker
             center={userLocation}
-            radius={8} // Adjust size
+            radius={8}
             pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.6 }}
           >
-            <Tooltip>Your Location</Tooltip>
+            <Tooltip>Your Location</Tooltip>{" "}
+            {/* <-- Kept as is, no key found */}
           </CircleMarker>
         )}
 
       {/* Render Property Markers */}
       {properties &&
         properties.map((property) => {
-          // Ensure position exists and has valid lat/lng
           if (
             !property?.position ||
             typeof property.position.lat !== "number" ||
@@ -128,28 +126,25 @@ const MapComponent = ({
             <Marker
               key={property._id}
               position={[property.position.lat, property.position.lng]}
-              // Optionally change icon style for selected marker
-              // icon={selectedProperty?._id === property._id ? customSelectedIcon : defaultIcon}
               eventHandlers={{
                 click: () => {
-                  if (onMarkerClick) onMarkerClick(property); // Call handler passed from parent
+                  if (onMarkerClick) onMarkerClick(property);
                 },
               }}
             >
               <Popup>
-                {/* Basic Popup Content - Can be customized */}
                 <b>{property.title}</b>
                 <br />
                 {property.location}
                 <br />
-                Price: ৳ {property.price?.toLocaleString()}
-                {property.mode === "rent" ? "/mo" : ""}
+                {/* Applied translation for "Price" */}
+                {t("price")}: ৳ {property.price?.toLocaleString()}
+                {property.mode === "rent" ? "/mo" : ""} {/* Keep suffix */}
               </Popup>
             </Marker>
           );
         })}
 
-      {/* Attach map event listeners if needed */}
       {onMapMove && <MapEvents />}
     </MapContainer>
   );

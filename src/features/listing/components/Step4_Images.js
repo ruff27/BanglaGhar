@@ -1,6 +1,4 @@
-import React, { useState, useCallback } from "react";
-// Need useEffect for preview generation
-import { useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react"; // Added useEffect import back
 import {
   Box,
   Button,
@@ -13,43 +11,39 @@ import {
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 /**
  * Step4_Images Component
- * Handles image uploads and previews for the property listing.
- * Note: This is a basic example. Actual implementation might involve direct uploads
- * to S3 or another service and storing URLs instead of just file names.
  */
 const Step4_Images = ({ images, handleImageUpload, errors }) => {
+  const { t } = useTranslation(); // Initialize translation
   const [previews, setPreviews] = useState([]);
 
   // Generate previews when images change
-  // This assumes 'images' passed down contains File objects initially
   useEffect(() => {
     const newPreviews = images
       .map((file) => {
         if (file instanceof File) {
           return URL.createObjectURL(file);
         }
-        // If it's already a URL (e.g., from editing), use it directly
         if (typeof file === "string" && file.startsWith("http")) {
           return file;
         }
-        // If it's just a filename (from initial load maybe), construct path
         if (typeof file === "string") {
-          return `${process.env.PUBLIC_URL}/pictures/${file}`; // Adjust path as needed
+          // Use PUBLIC_URL if images are in public folder
+          return `${process.env.PUBLIC_URL}/pictures/${file}`;
         }
-        return null; // Handle unexpected types
+        return null;
       })
-      .filter((url) => url !== null); // Filter out nulls
+      .filter((url) => url !== null);
 
     setPreviews(newPreviews);
 
-    // Cleanup object URLs on unmount or when images change
+    // Cleanup object URLs
     return () => {
       newPreviews.forEach((url) => {
         if (url.startsWith("blob:")) {
-          // Only revoke blob URLs
           URL.revokeObjectURL(url);
         }
       });
@@ -59,11 +53,9 @@ const Step4_Images = ({ images, handleImageUpload, errors }) => {
   const onFileChange = useCallback(
     (event) => {
       if (event.target.files) {
-        // Convert FileList to array and append to existing images
         const newFiles = Array.from(event.target.files);
-        // You might want to limit the number of images
-        const combined = [...images, ...newFiles].slice(0, 10); // Example limit of 10 images
-        handleImageUpload(combined); // Pass the array of File objects up
+        const combined = [...images, ...newFiles].slice(0, 10);
+        handleImageUpload(combined);
       }
     },
     [handleImageUpload, images]
@@ -82,20 +74,20 @@ const Step4_Images = ({ images, handleImageUpload, errors }) => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Upload Photos
+        Upload Photos {/* <-- Kept as is, no key found */}
       </Typography>
       <Button
         variant="outlined"
-        component="label" // Makes the button act like a file input label
+        component="label"
         startIcon={<PhotoCameraIcon />}
         sx={{ mb: 2, textTransform: "none" }}
       >
-        Select Images
+        Select Images {/* <-- Kept as is, no key found */}
         <input
           type="file"
           hidden
-          multiple // Allow multiple file selection
-          accept="image/png, image/jpeg, image/webp" // Specify accepted types
+          multiple
+          accept="image/png, image/jpeg, image/webp"
           onChange={onFileChange}
         />
       </Button>
@@ -112,9 +104,8 @@ const Step4_Images = ({ images, handleImageUpload, errors }) => {
               <CardMedia
                 component="img"
                 image={previewUrl}
-                alt={`Property Preview ${index + 1}`}
+                alt={`Property Preview ${index + 1}`} // <-- Kept as is
                 sx={{ height: "100%", objectFit: "cover" }}
-                // Add onError for previews too?
               />
               <IconButton
                 size="small"
@@ -141,6 +132,7 @@ const Step4_Images = ({ images, handleImageUpload, errors }) => {
         display="block"
         sx={{ mt: 1, color: "text.secondary" }}
       >
+        {/* Kept as is, no key found */}
         Upload up to 10 images (JPEG, PNG, WEBP). The first image will be the
         main cover.
       </Typography>
