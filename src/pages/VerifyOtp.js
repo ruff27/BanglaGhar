@@ -1,26 +1,28 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React from "react";
+// Removed Link as there are no direct links on this page in the original
 import {
   Container,
   Paper,
   Typography,
-  TextField,
-  Button,
   Box,
   Alert,
   Snackbar,
   Avatar,
+  styled,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { CognitoUser } from "amazon-cognito-identity-js";
-import { userPool } from "../aws/CognitoConfig";
 
+// Import the new hook and form component
+import useVerifyOtp from "../features/auth/hooks/useVerifyOtp"; // Adjust path
+import VerifyOtpForm from "../features/auth/components/VerifyOtpForm"; // Adjust path
+
+// --- Styled Components (Copied from original - Page structure specific) ---
 const VerifyOtpPaper = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#FFFFFF",
+  backgroundColor: theme.palette.background.paper,
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
   borderRadius: "16px",
   padding: theme.spacing(4),
+  marginTop: theme.spacing(8),
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -33,58 +35,29 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   height: 56,
 }));
 
-const StyledButton = styled(Button)(({ theme }) => ({
-  margin: theme.spacing(3, 0, 2),
-  padding: theme.spacing(1.5),
-  borderRadius: "8px",
-  textTransform: "none",
-  fontSize: "1rem",
-  fontWeight: 600,
-  backgroundColor: theme.palette.primary.main,
-  boxShadow: "0 4px 10px rgba(43, 123, 140, 0.2)",
-  "&:hover": {
-    backgroundColor: "#236C7D",
-    boxShadow: "0 6px 14px rgba(43, 123, 140, 0.3)",
-    transform: "translateY(-2px)",
-  },
-}));
+// --- Main Page Component ---
 
+/**
+ * VerifyOtp Page Component
+ * Renders the OTP verification page structure.
+ * Handles displaying email, errors, and success messages from the useVerifyOtp hook.
+ */
 const VerifyOtp = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { email } = location.state || {};
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-
-  const handleOtpSubmit = (e) => {
-    e.preventDefault();
-
-    const cognitoUser = new CognitoUser({
-      Username: email,
-      Pool: userPool,
-    });
-
-    // Only handle signup flow
-    cognitoUser.confirmRegistration(otp, true, (err, result) => {
-      if (err) {
-        setError(err.message || JSON.stringify(err));
-        return;
-      }
-      setOpenSnackbar(true);
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    });
-  };
-
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
+  // Use the custom hook to get state and handlers
+  const {
+    otp,
+    email, // Get email from hook to display
+    error,
+    isSubmitting,
+    openSnackbar,
+    handleOtpChange,
+    handleOtpSubmit,
+    handleCloseSnackbar,
+  } = useVerifyOtp();
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
-      <VerifyOtpPaper>
+      <VerifyOtpPaper elevation={3}>
         <StyledAvatar>
           <LockOutlinedIcon fontSize="large" />
         </StyledAvatar>
@@ -92,42 +65,56 @@ const VerifyOtp = () => {
         <Typography
           component="h1"
           variant="h4"
-          sx={{ mb: 3, fontWeight: 700, color: "#2B7B8C" }}
+          sx={{ mb: 3, fontWeight: 700, color: "primary.main" }}
         >
-          Verify OTP
+          Verify Your Email
         </Typography>
 
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          An OTP has been sent to {email}. Please enter it below.
-        </Typography>
+        {/* Display the email the OTP was sent to */}
+        {email ? (
+          <Typography variant="body1" sx={{ mb: 2, textAlign: "center" }}>
+            An OTP has been sent to{" "}
+            <Box component="strong" sx={{ fontWeight: "medium" }}>
+              {email}
+            </Box>
+            . Please enter it below.
+          </Typography>
+        ) : (
+          <Typography
+            variant="body1"
+            color="error"
+            sx={{ mb: 2, textAlign: "center" }}
+          >
+            Loading email address... If this persists, please go back.
+          </Typography>
+        )}
 
+        {/* Display general error messages */}
         {error && (
           <Alert
             severity="error"
             sx={{ width: "100%", mb: 2, borderRadius: "8px" }}
+            aria-live="assertive"
           >
             {error}
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleOtpSubmit} sx={{ width: "100%" }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Enter OTP"
-            variant="outlined"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            sx={{ mb: 2 }}
+        {/* Render the VerifyOtpForm component only if email is present */}
+        {email && (
+          <VerifyOtpForm
+            otp={otp}
+            onOtpChange={handleOtpChange}
+            onSubmit={handleOtpSubmit}
+            isSubmitting={isSubmitting}
           />
+        )}
 
-          <StyledButton type="submit" fullWidth variant="contained">
-            Verify OTP
-          </StyledButton>
-        </Box>
+        {/* Optionally add a Resend OTP button here if needed */}
+        {/* <Button disabled={isSubmitting}>Resend OTP</Button> */}
       </VerifyOtpPaper>
 
+      {/* Snackbar for success message */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
@@ -137,7 +124,8 @@ const VerifyOtp = () => {
         <Alert
           onClose={handleCloseSnackbar}
           severity="success"
-          sx={{ borderRadius: "8px" }}
+          variant="filled"
+          sx={{ width: "100%", borderRadius: "8px" }}
         >
           Email verified successfully! Redirecting to login...
         </Alert>
