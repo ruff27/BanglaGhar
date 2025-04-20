@@ -1,67 +1,37 @@
-import React, { useState } from "react";
-import {
-  IconButton,
-  Menu,
-  MenuItem,
-  Tooltip,
-  ListItemIcon,
-} from "@mui/material";
-import LanguageIcon from "@mui/icons-material/Language";
-import TranslateIcon from "@mui/icons-material/Translate";
+import React from "react";
 import { useTranslation } from "react-i18next";
+import { FormControlLabel, Switch, Typography, Box } from "@mui/material";
 
 const LanguageToggle = () => {
   const { i18n } = useTranslation();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+  const isBangla = i18n.language === "bn";
 
-  const handleClick = (event) => {
-    console.log("Clicked, anchorEl:", event.currentTarget); // ✅ helpful debug
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = (lang) => {
-    if (lang) i18n.changeLanguage(lang);
-    setAnchorEl(null);
+  const handleToggle = () => {
+    const newLang = isBangla ? "en" : "bn";
+    i18n.changeLanguage(newLang);
   };
 
   return (
-    <>
-      <Tooltip title="Change Language">
-        <IconButton onClick={handleClick}>
-          <LanguageIcon />
-        </IconButton>
-      </Tooltip>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={() => handleClose(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{
-          elevation: 4,
-          sx: {
-            borderRadius: 2,
-            mt: 1,
-            minWidth: 120,
-            boxShadow: "0 8px 20px rgba(0, 0, 0, 0.08)",
-          },
-        }}
+    <Box display="flex" alignItems="center" gap={1}>
+      <Typography
+        variant="body2"
+        color={!isBangla ? "primary" : "textSecondary"}
       >
-        <MenuItem onClick={() => handleClose("en")}>
-          <ListItemIcon>
-            <TranslateIcon fontSize="small" />
-          </ListItemIcon>
-          English
-        </MenuItem>
-        <MenuItem onClick={() => handleClose("bn")}>
-          <ListItemIcon>
-            <TranslateIcon fontSize="small" />
-          </ListItemIcon>
-          বাংলা
-        </MenuItem>
-      </Menu>
-    </>
+        ENG
+      </Typography>
+      <Switch
+        checked={isBangla}
+        onChange={handleToggle}
+        color="primary"
+        size="small"
+      />
+      <Typography
+        variant="body2"
+        color={isBangla ? "primary" : "textSecondary"}
+      >
+        BAN
+      </Typography>
+    </Box>
   );
 };
 
