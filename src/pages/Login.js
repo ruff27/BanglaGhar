@@ -1,25 +1,28 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom"; // Keep Link for navigation
 import {
   Container,
   Paper,
   Typography,
-  TextField,
-  Button,
   Box,
   Alert,
   Snackbar,
   Avatar,
+  styled, // Keep styled if using styled components here
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "../context/AuthContext";
 
+// Import the new hook and form component
+import useLogin from "../features/auth/hooks/useLogin"; // Adjust path as needed
+import LoginForm from "../features/auth/components/LoginForm"; // Adjust path as needed
+
+// --- Styled Components (Copied from original - Page structure specific) ---
 const LoginPaper = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#FFFFFF",
+  backgroundColor: theme.palette.background.paper, // Use theme background
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
   borderRadius: "16px",
   padding: theme.spacing(4),
+  marginTop: theme.spacing(8), // Add margin top for spacing from navbar
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -32,127 +35,104 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   height: 56,
 }));
 
-const StyledButton = styled(Button)(({ theme }) => ({
-  margin: theme.spacing(3, 0, 2),
-  padding: theme.spacing(1.5),
-  borderRadius: "8px",
-  textTransform: "none",
-  fontSize: "1rem",
-  fontWeight: 600,
-  backgroundColor: theme.palette.primary.main,
-  boxShadow: "0 4px 10px rgba(43, 123, 140, 0.2)",
-  "&:hover": {
-    backgroundColor: "#236C7D",
-    boxShadow: "0 6px 14px rgba(43, 123, 140, 0.3)",
-    transform: "translateY(-2px)",
-  },
-}));
+// --- Main Page Component ---
 
+/**
+ * Login Page Component
+ * Renders the login page structure, including the LoginForm component.
+ * Handles displaying errors and success messages from the useLogin hook.
+ */
 const Login = () => {
-  const navigate = useNavigate();
-  const { login } = useAuth(); // Use the login function from AuthContext
-  const [useremail, setUseremail] = useState(""); // Rename for clarity
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    try {
-      const userData = await login(useremail, password); // Call login from AuthContext
-      setOpenSnackbar(true);
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
-    } catch (err) {
-      setError(err.message || "Login failed");
-    }
-  };
-
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
+  // Use the custom hook to get state and handlers
+  const {
+    email,
+    password,
+    error, // General error message from the hook
+    isSubmitting,
+    openSnackbar,
+    handleEmailChange,
+    handlePasswordChange,
+    handleLoginSubmit,
+    handleCloseSnackbar,
+  } = useLogin();
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
-      <LoginPaper>
+      <LoginPaper elevation={3}>
+        {" "}
+        {/* Add elevation */}
         <StyledAvatar>
           <LockOutlinedIcon fontSize="large" />
         </StyledAvatar>
-
         <Typography
           component="h1"
-          variant="h4"
-          sx={{ mb: 3, fontWeight: 700, color: "#2B7B8C" }}
+          variant="h4" // Keep consistent heading size
+          sx={{ mb: 3, fontWeight: 700, color: "primary.main" }} // Use theme color
         >
           Sign In
         </Typography>
-
+        {/* Display general error messages */}
         {error && (
           <Alert
             severity="error"
             sx={{ width: "100%", mb: 2, borderRadius: "8px" }}
+            aria-live="assertive" // Announce errors to screen readers
           >
             {error}
           </Alert>
         )}
-
-        <Box component="form" onSubmit={handleLogin} sx={{ width: "100%" }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Email"
-            autoFocus
-            variant="outlined"
-            value={useremail}
-            onChange={(e) => setUseremail(e.target.value)} // Fixed variable name
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Password"
-            type="password"
-            variant="outlined"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-
-          <StyledButton type="submit" fullWidth variant="contained">
-            Sign In
-          </StyledButton>
+        {/* Render the LoginForm component */}
+        <LoginForm
+          email={email}
+          password={password}
+          onEmailChange={handleEmailChange}
+          onPasswordChange={handlePasswordChange}
+          onSubmit={handleLoginSubmit}
+          isSubmitting={isSubmitting}
+          // error={error} // Pass error only if LoginForm needs to display field-specific errors
+        />
+        {/* Links for Forgot Password and Sign Up */}
+        <Box
+          sx={{
+            width: "100%",
+            mt: 2,
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="body2">
+            <Link
+              to="/forgot-password"
+              style={{ color: "#2B7B8C", textDecoration: "none" }}
+            >
+              Forgot Password?
+            </Link>
+          </Typography>
+          <Typography variant="body2">
+            <Link
+              to="/signup"
+              style={{ color: "#2B7B8C", textDecoration: "none" }}
+            >
+              Don’t have an account? Sign Up
+            </Link>
+          </Typography>
         </Box>
-
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          <Link to="/forgot-password" style={{ color: "#2B7B8C" }}>
-            Forgot Password?
-          </Link>
-        </Typography>
-
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          Don’t have an account?{" "}
-          <Link to="/signup" style={{ color: "#2B7B8C" }}>
-            Sign up
-          </Link>
-        </Typography>
       </LoginPaper>
 
+      {/* Snackbar for success message */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }} // Top center might be better for auth flows
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity="success"
-          sx={{ borderRadius: "8px" }}
+          variant="filled" // Use filled for better visibility
+          sx={{ width: "100%", borderRadius: "8px" }}
         >
-          Logged in successfully!
+          Logged in successfully! Redirecting...
         </Alert>
       </Snackbar>
     </Container>
