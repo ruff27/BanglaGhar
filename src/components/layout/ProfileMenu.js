@@ -9,12 +9,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import FavoriteIcon from "@mui/icons-material/Favorite"; // Assuming you have a Saved page route
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext"; // Import useAuth to get user info directly if needed
+import { useAuth } from "../../context/AuthContext"; // Adjust path if needed
 
-// Correct the expected prop name from onLogout to handleLogout
+// Use the corrected prop name 'handleLogout'
 export default function ProfileMenu({ handleLogout }) {
   const [anchor, setAnchor] = useState(null);
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ export default function ProfileMenu({ handleLogout }) {
 
   // Helper function to navigate and close menu
   const go = (path) => {
+    console.log(`ProfileMenu: Navigating to ${path}`); // Keep console log for now
     navigate(path);
     handleClose();
   };
@@ -32,7 +33,6 @@ export default function ProfileMenu({ handleLogout }) {
   // Function to call the passed handleLogout prop and close the menu
   const triggerLogout = () => {
     if (handleLogout) {
-      // Check if the prop exists before calling
       handleLogout();
     }
     handleClose();
@@ -42,10 +42,7 @@ export default function ProfileMenu({ handleLogout }) {
     <>
       <Tooltip title="Account">
         <IconButton onClick={handleOpen} sx={{ p: 0, ml: 2 }}>
-          {/* Display user's first initial or a default icon */}
           <Avatar sx={{ bgcolor: "primary.main" }}>
-            {" "}
-            {/* Use theme color */}
             {user?.name?.charAt(0).toUpperCase() || <AccountCircleIcon />}
           </Avatar>
         </IconButton>
@@ -59,44 +56,35 @@ export default function ProfileMenu({ handleLogout }) {
           sx: {
             mt: 1.5,
             minWidth: 180,
-            overflow: "visible", // Allow potential box shadow/effects
+            overflow: "visible",
             "& .MuiAvatar-root": {
-              // Example styling if needed
               width: 32,
               height: 32,
               ml: -0.5,
               mr: 1,
             },
-            // Add arrow pointer if desired (more complex styling)
           },
         }}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        {/* Link to User Profile Page */}
-        <MenuItem onClick={() => go("/profile")}>
-          {" "}
-          {/* Updated path based on UserProfile.js likely route */}
+        {/* *** FIX: Use the correct path "/user-profile" *** */}
+        <MenuItem onClick={() => go("/user-profile")}>
           <ListItemIcon>
             <AccountCircleIcon fontSize="small" />
           </ListItemIcon>
           My Profile
         </MenuItem>
-        {/* Link to Saved Properties Page */}
+        {/* Ensure "/saved" route exists in App.js */}
         <MenuItem onClick={() => go("/saved")}>
           <ListItemIcon>
             <FavoriteIcon fontSize="small" />
           </ListItemIcon>
           Saved Properties
         </MenuItem>
-        <Divider sx={{ my: 0.5 }} /> {/* Add margin to divider */}
-        {/* Logout Menu Item */}
-        <MenuItem
-          onClick={triggerLogout} // Call the corrected triggerLogout function
-          sx={{ color: "error.main" }} // Use theme error color for text too
-        >
+        <Divider sx={{ my: 0.5 }} />
+        <MenuItem onClick={triggerLogout} sx={{ color: "error.main" }}>
           <ListItemIcon>
-            {/* Use theme error color */}
             <LogoutIcon fontSize="small" sx={{ color: "error.main" }} />
           </ListItemIcon>
           Logout

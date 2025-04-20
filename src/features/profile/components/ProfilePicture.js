@@ -1,0 +1,110 @@
+import React from "react";
+import { useState } from "react";
+import { alpha } from "@mui/material/styles";
+import {
+  Avatar,
+  Box,
+  IconButton,
+  CircularProgress,
+  Tooltip,
+  Badge,
+} from "@mui/material";
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import PersonIcon from "@mui/icons-material/Person";
+import { styled } from "@mui/material/styles";
+
+const Input = styled("input")({
+  display: "none",
+});
+
+const StyledAvatar = styled(Avatar)(({ theme }) => ({
+  width: 120, // Larger size
+  height: 120,
+  fontSize: "3.5rem",
+  backgroundColor: theme.palette.secondary.light, // Use theme color
+  color: theme.palette.secondary.contrastText,
+  border: `3px solid ${theme.palette.background.paper}`,
+  boxShadow: theme.shadows[2],
+}));
+
+const UploadIconButton = styled(IconButton)(({ theme }) => ({
+  position: "absolute",
+  bottom: 5,
+  right: 5,
+  backgroundColor: alpha(theme.palette.background.paper, 0.9),
+  boxShadow: theme.shadows[1],
+  padding: theme.spacing(0.75),
+  "&:hover": {
+    backgroundColor: theme.palette.grey[100],
+  },
+  border: `1px solid ${theme.palette.divider}`,
+}));
+
+// Helper function to limit file size
+const MAX_FILE_SIZE_MB = 1;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const ProfilePicture = ({
+  picture,
+  name,
+  onPictureChange,
+  isUpdating,
+  onError,
+}) => {
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        if (onError) onError(`Image size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+        event.target.value = null; // Reset input
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onPictureChange(reader.result); // Pass base64 string up
+      };
+      reader.onerror = () => {
+        if (onError) onError("Failed to read image file.");
+      };
+      reader.readAsDataURL(file);
+    } else if (file) {
+      if (onError)
+        onError("Please select a valid image file (JPEG, PNG, GIF, etc.).");
+    }
+    // Reset input value so the same file can be selected again if needed
+    event.target.value = null;
+  };
+
+  const fallbackInitial = name?.charAt(0).toUpperCase() || (
+    <PersonIcon sx={{ fontSize: "inherit" }} />
+  );
+
+  return (
+    <Box sx={{ position: "relative", display: "inline-block", mb: 2 }}>
+      <StyledAvatar src={picture || undefined}>
+        {!picture && fallbackInitial}
+      </StyledAvatar>
+      <Tooltip title="Change profile picture" arrow>
+        {/* Wrap IconButton in span to allow Tooltip when disabled */}
+        <span style={{ position: "absolute", bottom: 5, right: 5 }}>
+          <UploadIconButton
+            color="primary"
+            aria-label="upload picture"
+            component="label"
+            size="small"
+            disabled={isUpdating}
+          >
+            {isUpdating ? (
+              <CircularProgress size={22} />
+            ) : (
+              <PhotoCamera sx={{ fontSize: 20 }} />
+            )}
+            <Input type="file" accept="image/*" onChange={handleFileChange} />
+          </UploadIconButton>
+        </span>
+      </Tooltip>
+    </Box>
+  );
+};
+
+export default ProfilePicture;
