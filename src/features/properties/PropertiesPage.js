@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react"; // Removed useCallback as handleViewDetails is gone
+import { useParams, useLocation, useNavigate } from "react-router-dom"; // Keep navigate if needed for other things
 import {
   Container,
   Grid,
@@ -15,11 +15,11 @@ import {
   Button,
   TextField,
   InputAdornment,
-  Paper, // Added Paper
+  Paper,
 } from "@mui/material";
-import FilterListIcon from "@mui/icons-material/FilterList"; // Icon for mobile filter button
+import FilterListIcon from "@mui/icons-material/FilterList";
 import SearchIcon from "@mui/icons-material/Search";
-import RefreshIcon from "@mui/icons-material/Refresh"; // For no results button
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 // Import Hooks and Components
 import usePropertyFilters from "./hooks/usePropertyFilters";
@@ -27,21 +27,18 @@ import useWishlist from "./hooks/useWishlist";
 import FilterSidebar from "./components/FilterSidebar";
 import SortDropdown from "./components/SortDropdown";
 import PropertyCard from "./components/PropertyCard";
-import PropertyDetailsDialog from "./components/PropertyDetailsDialog";
+// PropertyDetailsDialog import is removed
 
 /**
  * PropertiesPage Component
- *
- * Displays a list of properties based on the mode (rent/buy/sold).
- * Uses hooks for data fetching/filtering and wishlist management.
- * Renders filter sidebar, sort controls, property grid, and details dialog.
+ * Displays filterable/sortable property listings.
  */
 const PropertiesPage = () => {
-  const { mode } = useParams(); // 'rent', 'buy', or 'sold'
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { mode } = useParams();
+  // const navigate = useNavigate(); // Keep if needed elsewhere
+  // const location = useLocation(); // Keep if needed elsewhere
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Use md breakpoint for sidebar toggle
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // --- State from Hooks ---
   const {
@@ -56,11 +53,11 @@ const PropertiesPage = () => {
     handleSortChange,
     resetFilters,
   } = usePropertyFilters(mode);
-  const { wishlist, toggleWishlist, loadingWishlist } = useWishlist();
+  const { wishlistIds, toggleWishlist, loadingWishlist, wishlistError } =
+    useWishlist();
 
   // --- Local State ---
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
+  // Removed state related to dialog: detailsDialogOpen, selectedProperty
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -69,65 +66,37 @@ const PropertiesPage = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // --- Handlers ---
-  const handleViewDetails = (property) => {
-    setSelectedProperty(property);
-    setDetailsDialogOpen(true);
-    // Optional: Update URL without full page reload
-    // navigate(`${location.pathname}?open=${property._id}`, { replace: true });
-  };
-  const handleClosePropertyDetails = () => {
-    setDetailsDialogOpen(false);
-    setSelectedProperty(null);
-    // Optional: Clear query param on close
-    // navigate(location.pathname, { replace: true });
-  };
+  // Removed handleViewDetails and handleClosePropertyDetails
   const handleCloseNotification = (event, reason) => {
     if (reason === "clickaway") return;
     setNotification((prev) => ({ ...prev, open: false }));
   };
+  const showWishlistNotification = (message, severity) => {
+    setNotification({ open: true, message, severity });
+  };
   const handleWishlistToggle = (propertyId) => {
-    toggleWishlist(propertyId, (message, severity) => {
-      setNotification({ open: true, message, severity });
-    });
+    if (!propertyId) return;
+    toggleWishlist(propertyId, showWishlistNotification);
   };
   const handleDrawerToggle = () => {
     setMobileFiltersOpen(!mobileFiltersOpen);
   };
 
-  // Effect to check URL query params for opening dialog on load/navigation
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const propertyIdToOpen = queryParams.get("open");
-    if (propertyIdToOpen && properties.length > 0) {
-      // Prevent opening if already open with the same property
-      if (!detailsDialogOpen || selectedProperty?._id !== propertyIdToOpen) {
-        const propertyToOpen = properties.find(
-          (p) => p._id === propertyIdToOpen
-        );
-        if (propertyToOpen) {
-          handleViewDetails(propertyToOpen);
-        }
-      }
-    } else if (!propertyIdToOpen && detailsDialogOpen) {
-      // Close dialog if query param is removed (e.g., browser back)
-      // handleClosePropertyDetails(); // This might be too aggressive, consider user experience
-    }
-    // Only run when properties or search query changes significantly
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [properties, location.search]);
+  // --- Effects ---
+  // Removed useEffect related to opening dialog via query params
 
   const pageTitle = mode
     ? `${mode.charAt(0).toUpperCase() + mode.slice(1)} Properties`
-    : "Properties";
+    : "All Properties";
 
-  // Sidebar content component (to reuse in Drawer and Grid)
+  // Sidebar content component
   const sidebarContent = (
     <FilterSidebar
       filters={filters}
       onFilterChange={handleFilterChange}
       onResetFilters={resetFilters}
       isMobile={isMobile}
-      onClose={handleDrawerToggle} // Pass handler to close drawer
+      onClose={handleDrawerToggle}
     />
   );
 
@@ -137,11 +106,27 @@ const PropertiesPage = () => {
         {pageTitle}
       </Typography>
 
+      {wishlistError && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Could not load wishlist status: {wishlistError}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
         {/* Sidebar Grid Item (Hidden on Mobile) */}
         {!isMobile && (
           <Grid item md={3} lg={2.5}>
-            {sidebarContent}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: "12px",
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              {sidebarContent}
+            </Paper>
           </Grid>
         )}
 
@@ -178,7 +163,11 @@ const PropertiesPage = () => {
             />
             <SortDropdown sortBy={sortBy} onSortChange={handleSortChange} />
             {isMobile && (
-              <IconButton onClick={handleDrawerToggle} color="primary">
+              <IconButton
+                onClick={handleDrawerToggle}
+                color="primary"
+                aria-label="Open filters"
+              >
                 <FilterListIcon />
               </IconButton>
             )}
@@ -202,16 +191,20 @@ const PropertiesPage = () => {
             </Alert>
           ) : properties.length > 0 ? (
             <Grid container spacing={3}>
-              {properties.map((property) => (
-                <Grid item xs={12} sm={6} lg={4} key={property._id}>
-                  <PropertyCard
-                    property={property}
-                    isWishlisted={wishlist.includes(property._id)}
-                    onWishlistToggle={() => handleWishlistToggle(property._id)}
-                    onViewDetails={() => handleViewDetails(property)}
-                  />
-                </Grid>
-              ))}
+              {properties.map((property) =>
+                property && property._id ? (
+                  <Grid item xs={12} sm={6} lg={4} key={property._id}>
+                    <PropertyCard
+                      property={property}
+                      isWishlisted={wishlistIds.has(property._id)}
+                      onWishlistToggle={() =>
+                        handleWishlistToggle(property._id)
+                      }
+                      // onViewDetails prop is removed
+                    />
+                  </Grid>
+                ) : null
+              )}
             </Grid>
           ) : (
             // No results message
@@ -239,7 +232,7 @@ const PropertiesPage = () => {
               </Button>
             </Box>
           )}
-          {/* Add Pagination component here later if needed */}
+          {/* TODO: Add Pagination component here */}
         </Grid>
       </Grid>
 
@@ -251,19 +244,16 @@ const PropertiesPage = () => {
           onClose={handleDrawerToggle}
           PaperProps={{ sx: { width: "80%", maxWidth: "300px" } }}
         >
-          {sidebarContent}
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Filters
+            </Typography>
+            {sidebarContent}
+          </Box>
         </Drawer>
       )}
 
-      {/* Property Details Dialog */}
-      {selectedProperty && ( // Conditionally render dialog only when a property is selected
-        <PropertyDetailsDialog
-          open={detailsDialogOpen}
-          property={selectedProperty}
-          onClose={handleClosePropertyDetails}
-          mode={mode} // Pass mode if needed inside dialog
-        />
-      )}
+      {/* Property Details Dialog is removed */}
 
       {/* Notification Snackbar */}
       <Snackbar

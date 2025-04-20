@@ -1,112 +1,94 @@
 import React from "react";
+import { Link as RouterLink } from "react-router-dom"; // Import RouterLink
 import {
   Box,
   Card,
   CardMedia,
   CardContent,
-  CardActionArea,
+  // CardActionArea removed - we'll use Link now
   Typography,
-  IconButton,
   Chip,
   Divider,
-  alpha, // alpha is usually imported from @mui/material/styles or @mui/material
-  useTheme, // Import useTheme hook
+  alpha,
+  useTheme,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import BedIcon from "@mui/icons-material/Bed";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import HomeWorkIcon from "@mui/icons-material/HomeWork"; // Example icon
+import HomeWorkIcon from "@mui/icons-material/HomeWork";
+import WishlistButton from "./WishlistButton"; // Keep WishlistButton
 
 /**
  * PropertyCard Component
- *
- * Displays a single property listing in a card format.
- * Handles image display, basic details, wishlist toggle, and click to view details.
+ * Displays a single property listing card that links to the detail page.
  */
 const PropertyCard = ({
   property,
   isWishlisted,
   onWishlistToggle,
-  onViewDetails,
+  // onViewDetails prop is removed
 }) => {
-  const theme = useTheme(); // Get the theme object
+  const theme = useTheme();
 
-  // Basic validation
-  if (!property) {
-    return null; // Or render a loading/error state
+  if (!property || !property._id) {
+    console.warn("PropertyCard received invalid property data:", property);
+    return null;
   }
 
-  // Construct image path with placeholder and error handling
-  const placeholderImg = `${process.env.PUBLIC_URL}/pictures/placeholder.png`;
+  const placeholderImg = `/pictures/placeholder.png`;
   const imgSrc = property.images?.[0]
-    ? `${process.env.PUBLIC_URL}/pictures/${property.images[0]}`
+    ? `/pictures/${property.images[0]}`
     : placeholderImg;
-
   const handleImageError = (e) => {
     e.target.onerror = null;
     e.target.src = placeholderImg;
   };
 
-  // Price display logic (simplified example)
   const displayPrice = property.price
     ? `৳ ${property.price.toLocaleString()}${
         property.mode === "rent" ? "/mo" : ""
       }`
     : "Price N/A";
 
-  // Prevent card click from triggering when wishlist button is clicked
-  const handleWishlistClick = (event) => {
-    event.stopPropagation(); // Stop event bubbling
-    onWishlistToggle(); // Call the passed handler
-  };
-
-  // Determine chip background color using resolved theme values
   const chipBgColor =
     property.mode === "sold"
-      ? theme.palette.grey[700] // Get actual grey color
-      : theme.palette.primary.main; // Get actual primary color
+      ? theme.palette.grey[700]
+      : theme.palette.primary.main;
+
+  // *** Define the detail page URL ***
+  const detailUrl = `/properties/details/${property._id}`;
 
   return (
-    <Card
-      sx={{
-        borderRadius: "12px",
-        overflow: "hidden",
-        boxShadow: "0 5px 15px rgba(0, 0, 0, 0.06)",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        transition: "all 0.3s ease",
-        border: "1px solid rgba(43, 123, 140, 0.08)",
-        "&:hover": {
-          transform: "translateY(-8px)",
-          boxShadow: "0 12px 25px rgba(43, 123, 140, 0.12)",
-        },
-      }}
+    // *** Wrap the entire Card in RouterLink ***
+    <RouterLink
+      to={detailUrl}
+      style={{ textDecoration: "none", height: "100%" }}
     >
-      {/* Use CardActionArea to make the main card clickable */}
-      <CardActionArea
-        onClick={onViewDetails}
-        sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+      <Card
+        sx={{
+          borderRadius: "12px",
+          overflow: "hidden",
+          boxShadow: "0 5px 15px rgba(0, 0, 0, 0.06)",
+          height: "100%", // Ensure card takes full height of link wrapper
+          display: "flex",
+          flexDirection: "column",
+          transition: "all 0.3s ease",
+          border: "1px solid rgba(43, 123, 140, 0.08)",
+          "&:hover": {
+            transform: "translateY(-8px)",
+            boxShadow: "0 12px 25px rgba(43, 123, 140, 0.12)",
+          },
+        }}
       >
+        {/* Removed CardActionArea */}
         <Box sx={{ position: "relative", width: "100%" }}>
-          <IconButton
-            aria-label="add to favorites"
-            onClick={handleWishlistClick}
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              zIndex: 2,
-              bgcolor: alpha("#ffffff", 0.7), // alpha() works fine with direct hex/rgb
-              "&:hover": { bgcolor: alpha("#ffffff", 0.9) },
-              color: isWishlisted ? "error.main" : "action.active",
-            }}
-          >
-            {isWishlisted ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-          </IconButton>
+          {/* Keep WishlistButton - its onClick stops propagation */}
+          <WishlistButton
+            isWishlisted={isWishlisted}
+            onClick={onWishlistToggle}
+            sx={{ position: "absolute", top: 8, right: 8, zIndex: 2 }}
+          />
           <CardMedia
             component="img"
             height="200"
@@ -115,7 +97,6 @@ const PropertyCard = ({
             onError={handleImageError}
             sx={{ objectFit: "cover" }}
           />
-          {/* Optional: Property Status Label */}
           {property.mode && (
             <Chip
               label={
@@ -127,9 +108,8 @@ const PropertyCard = ({
                 top: 8,
                 left: 8,
                 zIndex: 1,
-                // Apply alpha() to the resolved color string
                 bgcolor: alpha(chipBgColor, 0.85),
-                color: "white", // Ensure text is readable
+                color: "white",
                 fontWeight: 500,
                 borderRadius: "4px",
                 backdropFilter: "blur(2px)",
@@ -154,7 +134,6 @@ const PropertyCard = ({
           >
             {property.title || "Untitled Property"}
           </Typography>
-
           <Box
             sx={{
               display: "flex",
@@ -170,12 +149,13 @@ const PropertyCard = ({
               {property.location || "Location N/A"}
             </Typography>
           </Box>
-
           {/* Features */}
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 1,
               mb: 2,
               color: "text.secondary",
             }}
@@ -203,9 +183,7 @@ const PropertyCard = ({
               </Typography>
             </Box>
           </Box>
-
           <Divider sx={{ my: 1 }} />
-
           {/* Price and Type */}
           <Box
             sx={{
@@ -236,8 +214,9 @@ const PropertyCard = ({
             )}
           </Box>
         </CardContent>
-      </CardActionArea>
-    </Card>
+        {/* Removed CardActionArea */}
+      </Card>
+    </RouterLink>
   );
 };
 
