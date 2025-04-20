@@ -331,7 +331,7 @@ const PropertyDetailPage = () => {
                 {/* Push contact to bottom */}
                 <Divider sx={{ mb: 2 }} />
                 <Typography variant="h6" gutterBottom>
-                  Contact Agent
+                  Contact Owner
                 </Typography>
                 {/* Replace with actual contact logic/info */}
                 <Button variant="contained" fullWidth>
