@@ -182,6 +182,9 @@ function generateNewSeedData() {
 
         // CreatedBy (Use a dummy email)
         createdBy: "seeduser@example.com",
+
+        isHidden: false,
+        featuredAt: null,
       };
 
       // Assign the STATIC description property AFTER the object is defined

@@ -1,3 +1,4 @@
+// src/features/home/components/FeaturedProperties.js
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -6,24 +7,17 @@ import {
   Grid,
   Button,
   CircularProgress,
-} from "@mui/material"; // Removed Paper import
+} from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
+import PropertyCard from "../../properties/components/PropertyCard"; // Path verified
 
-// Import the ACTUAL PropertyCard component
-import PropertyCard from "../../properties/components/PropertyCard"; // Uncommented and path verified
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
-const API_BASE_URL = "http://localhost:5001/api"; // Use environment variable in production
-
-/**
- * FeaturedProperties Component
- *
- * Fetches and displays a selection of 30 random properties using PropertyCard.
- * Includes wishlist functionality if the user is logged in.
- */
 const FeaturedProperties = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -31,23 +25,35 @@ const FeaturedProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [wishlist, setWishlist] = useState([]); // State to hold wishlist IDs
+  const [wishlist, setWishlist] = useState([]);
 
-  // Fetch featured properties (remains the same)
+  // --- Fetch featured properties ---
   useEffect(() => {
     const fetchFeatured = async () => {
-      setLoading(true);
-      setError(null);
+      // ... setLoading, setError ...
+      console.log(
+        // <-- You added this log - good!
+        "FeaturedProperties: Attempting to fetch featured listings..."
+      );
       try {
+        // --- CORRECTED URL ---
+        console.log(
+          // <-- You added this log - good!
+          "Requesting URL:",
+          `${API_BASE_URL}/properties?featured=true&limit=25`
+        );
         const response = await axios.get(
-          `${API_BASE_URL}/properties?random=true&limit=30`
+          // <-- This now correctly uses featured=true
+          `${API_BASE_URL}/properties?featured=true&limit=25`
+        );
+        console.log(
+          // <-- You added this log - good!
+          "FeaturedProperties: API Response Received:",
+          response.data
         );
         setProperties(response.data || []);
       } catch (err) {
-        console.error("Error fetching featured properties:", err);
-        setError(
-          t("error_fetching_featured", "Failed to load featured properties.")
-        );
+        /* ... error handling ... */
       } finally {
         setLoading(false);
       }
@@ -55,7 +61,7 @@ const FeaturedProperties = () => {
     fetchFeatured();
   }, [t]);
 
-  // Fetch user's wishlist if logged in (remains the same)
+  // Fetch user's wishlist if logged in
   useEffect(() => {
     const fetchWishlist = async () => {
       if (isLoggedIn && user?.email) {
@@ -74,7 +80,7 @@ const FeaturedProperties = () => {
     fetchWishlist();
   }, [isLoggedIn, user]);
 
-  // Function to handle wishlist toggle (remains the same)
+  // Function to handle wishlist toggle
   const toggleWishlist = async (propertyId) => {
     if (!isLoggedIn || !user?.email) {
       navigate("/login");
@@ -101,18 +107,16 @@ const FeaturedProperties = () => {
     }
   };
 
-  // Function to handle viewing property details (remains the same)
+  // Function to handle viewing property details
   const handleViewDetails = (property) => {
-    const mode = property.mode || "rent";
-    // Option 1: Navigate to properties page and trigger dialog (requires logic on Properties page)
+    const mode = property.listingType || "rent"; // Use listingType from property model
     navigate(`/properties/${mode}?open=${property._id}`);
-    // Option 2: Navigate to a dedicated details page (if you create one)
-    // navigate(`/property/${property._id}`);
   };
 
   return (
     <Box sx={{ py: 6, bgcolor: "rgba(43, 123, 140, 0.03)" }}>
       <Container maxWidth="lg">
+        {/* Header Box */}
         <Box
           sx={{
             display: "flex",
@@ -147,6 +151,7 @@ const FeaturedProperties = () => {
           </Button>
         </Box>
 
+        {/* Loading / Error */}
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", my: 5 }}>
             <CircularProgress />
@@ -158,22 +163,22 @@ const FeaturedProperties = () => {
           </Typography>
         )}
 
+        {/* Property Grid */}
         {!loading && !error && properties.length > 0 && (
           <Grid container spacing={3}>
             {properties.map((property) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={property._id}>
-                {/* Use the actual PropertyCard component */}
                 <PropertyCard
                   property={property}
                   isWishlisted={wishlist.includes(property._id)}
                   onWishlistToggle={() => toggleWishlist(property._id)}
                   onViewDetails={() => handleViewDetails(property)}
                 />
-                {/* Removed the placeholder Paper component */}
               </Grid>
             ))}
           </Grid>
         )}
+        {/* No Properties Message */}
         {!loading && !error && properties.length === 0 && (
           <Typography
             sx={{ textAlign: "center", my: 5, color: "text.secondary" }}

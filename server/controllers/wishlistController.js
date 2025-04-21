@@ -2,7 +2,7 @@
 
 const mongoose = require("mongoose");
 const Wishlist = require("../models/Wishlist");
-const Property = require("../models/Property"); // for populate()
+const Property = require("../models/property"); // for populate()
 
 exports.addToWishlist = async (req, res) => {
   try {

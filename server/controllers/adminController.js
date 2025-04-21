@@ -261,11 +261,12 @@ exports.getAllListings = async (req, res) => {
     // --- Query Parameters ---
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 25;
-    const sortField = req.query.sort || "createdAt";
-    const sortOrder = req.query.order === "asc" ? 1 : -1;
-    const searchTerm = req.query.search || "";
-    const statusFilter = req.query.status || "";
+    const sortField = req.query.sort || "createdAt"; // Default sort by creation date
+    const sortOrder = req.query.order === "asc" ? 1 : -1; // Default desc (-1)
+    const searchTerm = req.query.search || ""; // Search term for title, address parts
+    const statusFilter = req.query.status || ""; // Filter by listingType ('rent', 'buy', 'sold')
 
+    // --- Calculate Skip ---
     const skip = (page - 1) * limit;
 
     // --- Build Filter Query ---
@@ -278,12 +279,13 @@ exports.getAllListings = async (req, res) => {
         { cityTown: regex },
         { upazila: regex },
         { district: regex },
-        { createdBy: regex }, // Ensure 'createdBy' exists and is searchable this way
+        { createdBy: regex }, // Search by creator email too
       ];
     }
     if (statusFilter && ["rent", "buy", "sold"].includes(statusFilter)) {
       filterQuery.listingType = statusFilter;
     }
+    // Add other filters if needed (e.g., isHidden: req.query.hidden === 'true')
 
     // --- Build Sort Object ---
     const sortObject = {};
@@ -292,22 +294,19 @@ exports.getAllListings = async (req, res) => {
       sortObject["_id"] = 1; // Secondary sort
     }
 
-    // --- DEBUG LOG ---
-    // console.log("Fetching listings with Filter:", JSON.stringify(filterQuery));
-    // console.log("Fetching listings with Sort:", JSON.stringify(sortObject));
-    // --- END DEBUG LOG ---
-
     // --- Fetch Data ---
     const totalListings = await Property.countDocuments(filterQuery);
 
     const listings = await Property.find(filterQuery)
       .select(
-        "title price addressLine1 cityTown district upazila propertyType listingType createdBy createdAt images"
+        // Select fields needed for the admin table
+        "title price addressLine1 cityTown district upazila propertyType listingType createdBy createdAt images isHidden featuredAt" // Ensure all needed fields are here
       )
       .sort(sortObject)
       .skip(skip)
       .limit(limit);
 
+    // --- Calculate Total Pages ---
     const totalPages = Math.ceil(totalListings / limit);
 
     // --- Send Response ---
@@ -319,13 +318,8 @@ exports.getAllListings = async (req, res) => {
       limit: limit,
     });
   } catch (error) {
-    // <<<--- THIS IS THE IMPORTANT PART FOR LOGS ---<<<
-    console.error("Error fetching all listings:", error); // Log the full error
-    // Send a more specific error message if possible
-    res.status(500).json({
-      message: "Server error fetching listings.",
-      error: error.message,
-    }); // Include error message
+    console.error("Error fetching all listings for admin:", error); // Log specific context
+    res.status(500).json({ message: "Server error fetching listings." });
   }
 };
 
@@ -374,5 +368,104 @@ exports.updateListingVisibility = async (req, res) => {
     res
       .status(500)
       .json({ message: "Server error updating listing visibility." });
+  }
+};
+
+// --- NEW: Feature/Unfeature Listing ---
+exports.featureListing = async (req, res) => {
+  const { listingId } = req.params;
+  const { feature } = req.body; // Expect { feature: true } or { feature: false }
+  const FEATURE_LIMIT = 25; // Define the limit
+
+  // Validate listingId
+  if (!mongoose.Types.ObjectId.isValid(listingId)) {
+    return res.status(400).json({ message: "Invalid listing ID format." });
+  }
+
+  // Validate input data
+  if (typeof feature !== "boolean") {
+    return res.status(400).json({
+      message: "Invalid value for feature flag. Must be true or false.",
+    });
+  }
+
+  try {
+    // Find the target property
+    const property = await Property.findById(listingId);
+    if (!property) {
+      return res.status(404).json({ message: "Property listing not found." });
+    }
+
+    if (feature) {
+      // --- Logic to FEATURE a listing ---
+
+      // Check if already featured (idempotency)
+      if (property.featuredAt !== null) {
+        console.log(`Listing ${listingId} is already featured.`);
+        return res.status(200).json({
+          message: "Listing is already featured.",
+          listing: { _id: property._id, featuredAt: property.featuredAt },
+        });
+      }
+
+      // Count currently featured listings (excluding the current one)
+      const currentFeaturedCount = await Property.countDocuments({
+        featuredAt: { $ne: null },
+        _id: { $ne: listingId }, // Exclude the current one if it somehow had a date
+      });
+
+      // If limit is reached or exceeded, remove the oldest one(s)
+      if (currentFeaturedCount >= FEATURE_LIMIT) {
+        const excessCount = currentFeaturedCount - FEATURE_LIMIT + 1; // +1 because we're adding one more
+        console.log(
+          `Featured limit (${FEATURE_LIMIT}) reached. Removing ${excessCount} oldest featured listing(s).`
+        );
+
+        // Find the oldest 'excessCount' featured listings
+        const oldestFeatured = await Property.find({
+          featuredAt: { $ne: null },
+          _id: { $ne: listingId },
+        })
+          .sort({ featuredAt: 1 }) // Sort ascending by date (oldest first)
+          .limit(excessCount)
+          .select("_id featuredAt"); // Select only ID needed for update
+
+        const idsToUnfeature = oldestFeatured.map((p) => p._id);
+
+        if (idsToUnfeature.length > 0) {
+          // Set featuredAt to null for the oldest ones
+          const updateResult = await Property.updateMany(
+            { _id: { $in: idsToUnfeature } },
+            { $set: { featuredAt: null } }
+          );
+          console.log(
+            `Unfeatured ${updateResult.modifiedCount} oldest listing(s).`
+          );
+        }
+      }
+
+      // Now, set the featuredAt date for the target listing
+      property.featuredAt = new Date();
+    } else {
+      // --- Logic to UNFEATURE a listing ---
+      property.featuredAt = null;
+    }
+
+    // Save the changes to the target property
+    await property.save();
+
+    const action = feature ? "featured" : "unfeatured";
+    console.log(`Admin ${req.user.email} ${action} listing ${listingId}.`);
+
+    res.status(200).json({
+      message: `Listing ${action} successfully.`,
+      listing: { _id: property._id, featuredAt: property.featuredAt },
+    });
+  } catch (error) {
+    console.error(
+      `Error updating feature status for listing ${listingId}:`,
+      error
+    );
+    res.status(500).json({ message: "Server error updating feature status." });
   }
 };

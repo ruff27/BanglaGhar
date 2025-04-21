@@ -52,6 +52,13 @@ router.put(
   adminController.updateListingVisibility // Linked to the new controller
 );
 
+// Feature / Unfeature a listing
+router.put(
+  "/listings/:listingId/feature", // New endpoint
+  requireAdmin,
+  adminController.featureListing // Linked to the new controller
+);
+
 // Approve a user
 router.put("/users/:userId/approve", requireAdmin, adminController.approveUser);
 

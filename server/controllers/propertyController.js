@@ -27,41 +27,54 @@ exports.createProperty = async (req, res) => {
 
 // --- MODIFIED Get All Properties ---
 exports.getAllProperties = async (req, res) => {
-  try {
-    // Check for 'random' query parameter
-    const isRandom = req.query.random === "true";
-    // Get limit, default to a reasonable number if random, maybe 30?
-    // Or use the limit specifically requested for random (e.g., 30)
-    const limit = parseInt(req.query.limit) || (isRandom ? 30 : 0); // Default limit 0 means no limit unless random
+  // --- ADDED DEBUG LOG ---
+  console.log("--- getAllProperties: Received req.query:", req.query);
+  // -------------------------
 
+  try {
+    // Check for query parameters
+    const isRandom = req.query.random === "true";
+    const isFeatured = req.query.featured === "true"; // <<<--- Check for featured
+    const defaultLimit = isRandom ? 30 : isFeatured ? 25 : 0;
+    const limit = parseInt(req.query.limit) || defaultLimit;
+    const baseFilter = { isHidden: { $ne: true } };
     let properties;
+    let query;
 
     if (isRandom && limit > 0) {
-      // Use $sample aggregation for random selection
-      properties = await Property.aggregate([{ $sample: { size: limit } }]);
+      // Random logic
+      properties = await Property.aggregate([
+        { $match: baseFilter },
+        { $sample: { size: limit } },
+      ]);
       console.log(
-        `Fetched ${properties.length} random properties (limit: ${limit})`
+        `Fetched ${properties.length} random, visible properties (limit: ${limit})`
       );
-    } else {
-      // Standard find query (add filters/pagination later if needed)
-      // Example: Add filtering based on query params like mode, location etc.
-      const queryFilters = {};
-      if (req.query.listingType) {
-        queryFilters.listingType = req.query.listingType;
+    } else if (isFeatured) {
+      // <<<--- Logic for featured
+      console.log(`Fetching featured listings (limit: ${limit})`);
+      query = Property.find({ ...baseFilter, featuredAt: { $ne: null } }).sort({
+        featuredAt: -1,
+      });
+      if (limit > 0) {
+        query.limit(limit);
       }
-      // Add more filters as needed...
-
-      // Apply limit if provided and not random, otherwise fetch all matching filters
-      const query = Property.find(queryFilters);
+      properties = await query.exec();
+      console.log(`Fetched ${properties.length} featured properties.`);
+    } else {
+      // Standard logic
+      const queryFilters = { ...baseFilter };
+      if (req.query.listingType)
+        queryFilters.listingType = req.query.listingType;
+      query = Property.find(queryFilters).sort({ createdAt: -1 });
       if (limit > 0) {
         query.limit(limit);
       }
       properties = await query.exec();
       console.log(
-        `Fetched ${properties.length} properties with filters/limit.`
+        `Fetched ${properties.length} visible properties with filters/limit.`
       );
     }
-
     res.json(properties);
   } catch (err) {
     console.error("Fetch all properties error:", err);
@@ -69,25 +82,29 @@ exports.getAllProperties = async (req, res) => {
   }
 };
 
-// Example for Get Property by ID (remains the same):
+// --- MODIFIED Get Property by ID (for public) ---
 exports.getPropertyById = async (req, res) => {
-  // ... (existing code) ...
   try {
-    const property = await Property.findById(req.params.id);
+    // --- Use findOne with isHidden check ---
+    const property = await Property.findOne({
+      _id: req.params.id,
+      isHidden: { $ne: true }, // <<<--- ADDED: Ensure property is not hidden
+    });
+    // ---------------------------------------
+
     if (!property) {
+      // Return 404 whether it doesn't exist OR it's hidden
       return res.status(404).json({ error: "Property not found" });
     }
     res.json(property);
   } catch (err) {
     console.error("Fetch property by ID error:", err);
     if (err.kind === "ObjectId") {
-      // Handle invalid ID format
       return res.status(400).json({ error: "Invalid property ID format" });
     }
     res.status(500).json({ error: "Server error fetching property" });
   }
 };
-
 // Example for Update Property (remains the same):
 exports.updateProperty = async (req, res) => {
   // ... (existing code) ...

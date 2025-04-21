@@ -107,6 +107,12 @@ const propertySchema = new mongoose.Schema(
       index: true, // Add index for faster filtering if needed later
     },
 
+    featuredAt: {
+      type: Date, // Store the timestamp when it was featured
+      default: null, // Default to not featured
+      index: true, // Index for efficient sorting/finding oldest
+    },
+
     // Description & Images
     description: { type: String },
     images: [{ type: String }], // Store image URLs or keys
