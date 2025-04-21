@@ -17,11 +17,25 @@ const requireAdmin = [
   isAdminMiddleware, // 3. Check if user is admin
 ];
 
+// Update user status (isAdmin, approvalStatus)
+router.put(
+  "/users/:userId/status", // The new endpoint for general status updates
+  requireAdmin,
+  adminController.updateUserStatus // Linked to the new controller function
+);
+
 // Get users pending approval
 router.get(
   "/pending-approvals",
   requireAdmin,
   adminController.getPendingApprovals
+);
+
+// Get all users
+router.get(
+  "/users", // The new endpoint
+  requireAdmin, // Protected by the same middleware chain
+  adminController.getAllUsers // Linked to the new controller function
 );
 
 // Approve a user
