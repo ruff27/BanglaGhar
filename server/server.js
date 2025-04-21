@@ -22,7 +22,8 @@ console.log("------------------------------------------");
 const aiRoutes = require("./routes/aiRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
-const userProfileRoutes = require("./routes/userProfileRoutes"); // Import the new routes
+const userProfileRoutes = require("./routes/userProfileRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 // 2) imports
 const express = require("express");
@@ -36,8 +37,9 @@ app.use(express.json());
 // 3) API Routes
 app.use("/api", aiRoutes);
 app.use("/api/properties", propertyRoutes);
-app.use("/api/users/:username/wishlist", wishlistRoutes); // Keep existing wishlist route structure
-app.use("/api/user-profiles", userProfileRoutes); // Mount the new user profile routes
+app.use("/api/users/:username/wishlist", wishlistRoutes);
+app.use("/api/user-profiles", userProfileRoutes);
+app.use("/api/admin", adminRoutes); // Mount admin routes under /api/admin
 
 // 4) Connect to DB
 const uri = process.env.MONGO_URI;
