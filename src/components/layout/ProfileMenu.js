@@ -1,3 +1,5 @@
+// src/components/layout/ProfileMenu.js
+
 import React, { useState } from "react";
 import {
   IconButton,
@@ -7,28 +9,29 @@ import {
   Divider,
   ListItemIcon,
   Tooltip,
-  ListItemText, // Import ListItemText
+  ListItemText,
 } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import LogoutIcon from "@mui/icons-material/Logout";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings"; // Import admin icon
+// Link is not needed if using navigate directly in 'go' function
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext"; // Adjust path if needed
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
 
 // Use the corrected prop name 'handleLogout'
 export default function ProfileMenu({ handleLogout }) {
   const [anchor, setAnchor] = useState(null);
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get user info from context
-  const { t } = useTranslation(); // Initialize translation
+  const { user } = useAuth(); // Get user info from context (includes isAdmin)
+  const { t } = useTranslation();
 
   const handleOpen = (e) => setAnchor(e.currentTarget);
   const handleClose = () => setAnchor(null);
 
   // Helper function to navigate and close menu
   const go = (path) => {
-    // console.log(`ProfileMenu: Navigating to ${path}`); // Keep console log for now
     navigate(path);
     handleClose();
   };
@@ -44,10 +47,9 @@ export default function ProfileMenu({ handleLogout }) {
   return (
     <>
       <Tooltip title="Account">
-        {" "}
-        {/* <-- Kept as is, no key found */}
         <IconButton onClick={handleOpen} sx={{ p: 0, ml: 2 }}>
           <Avatar sx={{ bgcolor: "primary.main" }}>
+            {/* Display first letter of user's name or default icon */}
             {user?.name?.charAt(0).toUpperCase() || <AccountCircleIcon />}
           </Avatar>
         </IconButton>
@@ -62,39 +64,49 @@ export default function ProfileMenu({ handleLogout }) {
             mt: 1.5,
             minWidth: 180,
             overflow: "visible",
-            "& .MuiAvatar-root": {
-              width: 32,
-              height: 32,
-              ml: -0.5,
-              mr: 1,
-            },
+            "& .MuiAvatar-root": { width: 32, height: 32, ml: -0.5, mr: 1 },
           },
         }}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        {/* *** FIX: Use the correct path "/user-profile" *** */}
+        {/* Standard User Links */}
         <MenuItem onClick={() => go("/user-profile")}>
           <ListItemIcon>
             <AccountCircleIcon fontSize="small" />
           </ListItemIcon>
-          {/* Applied translation */}
           <ListItemText>{t("nav_profile")}</ListItemText>
         </MenuItem>
-        {/* Ensure "/saved" route exists in App.js */}
         <MenuItem onClick={() => go("/saved")}>
           <ListItemIcon>
             <FavoriteIcon fontSize="small" />
           </ListItemIcon>
-          {/* Applied translation */}
           <ListItemText>{t("nav_saved")}</ListItemText>
         </MenuItem>
+
+        {/* --- Conditional Admin Link --- */}
+        {user?.isAdmin && (
+          <>
+            <Divider sx={{ my: 0.5 }} />
+            <MenuItem onClick={() => go("/admin/pending-approvals")}>
+              {" "}
+              {/* Link to admin section */}
+              <ListItemIcon>
+                <AdminPanelSettingsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Admin Dashboard</ListItemText>{" "}
+              {/* Or use t('nav_admin') */}
+            </MenuItem>
+          </>
+        )}
+        {/* --- End Conditional Admin Link --- */}
+
         <Divider sx={{ my: 0.5 }} />
+        {/* Logout Link */}
         <MenuItem onClick={triggerLogout} sx={{ color: "error.main" }}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" sx={{ color: "error.main" }} />
           </ListItemIcon>
-          {/* Applied translation */}
           <ListItemText>{t("nav_logout")}</ListItemText>
         </MenuItem>
       </Menu>
