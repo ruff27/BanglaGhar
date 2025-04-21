@@ -1,3 +1,4 @@
+// src/components/layout/Navbar.js
 import React, { useState, useEffect } from "react";
 import {
   AppBar,
@@ -10,29 +11,28 @@ import {
   Slide,
   Container,
   Snackbar,
-  Alert, // Added Snackbar, Alert
+  Alert,
 } from "@mui/material";
-import { styled, useTheme, alpha } from "@mui/material/styles"; // Ensure alpha is imported if needed by sub-components passed down
+import { styled, useTheme, alpha } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../context/AuthContext"; // Adjust path if needed
-import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom"; // Added RouterLink
+import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
 import DesktopNav from "./DesktopNav";
 import MobileDrawer from "./MobileDrawer";
 import ProfileMenu from "./ProfileMenu";
 import LanguageToggle from "../common/LanguageToggle";
-// Import icons for navLinks if defined here (or pass them down)
+// Import icons
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import ContactsIcon from "@mui/icons-material/Contacts";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
+// Import the UploadIdModal
+import UploadIdModal from "../../features/profile/components/UploadIdModal"; // Adjust path
 
-// --- Re-introduce styling from original Navbar.js ---
-
-// 1. HideOnScroll component (if used in original)
+// --- Styling Components (Keep existing HideOnScroll, NavbarContainer) ---
 function HideOnScroll(props) {
   const { children } = props;
-  // Reverted to original HideOnScroll logic if it was different
   const trigger = useScrollTrigger();
   return (
     <Slide appear={false} direction="down" in={!trigger}>
@@ -40,34 +40,31 @@ function HideOnScroll(props) {
     </Slide>
   );
 }
-
-// 2. NavbarContainer styled component (matches original)
 const NavbarContainer = styled(AppBar)(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.background.paper, 0.9), // Use theme background with alpha
+  backgroundColor: alpha(theme.palette.background.paper, 0.9),
   backdropFilter: "blur(10px)",
-  boxShadow: "inset 0px -1px 1px #E5E5E5", // Match original shadow
-  color: theme.palette.text.primary, // Use theme text color
+  boxShadow: "inset 0px -1px 1px #E5E5E5",
+  color: theme.palette.text.primary,
 }));
-
-// --- End of re-introduced styling ---
+// --- End Styling ---
 
 const Navbar = () => {
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth(); // Get user object which includes approvalStatus
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("home");
-  const [logoutSnackbar, setLogoutSnackbar] = useState(false); // State for logout notification
+  const [logoutSnackbar, setLogoutSnackbar] = useState(false);
+  // --- State for Upload ID Modal ---
+  const [uploadIdModalOpen, setUploadIdModalOpen] = useState(false);
 
-  // Define nav links data (add icons as used in original MobileDrawer)
-  // Apply translation to labels
   const navLinks = [
     { id: "home", label: t("nav_home"), path: "/", icon: <HomeIcon /> },
     {
       id: "properties",
       label: t("nav_properties"),
-      path: "/properties/rent", // Path is placeholder for dropdown trigger
+      path: "/properties/rent",
       icon: <HomeWorkIcon />,
     },
     { id: "about", label: t("nav_about"), path: "/about", icon: <InfoIcon /> },
@@ -81,44 +78,80 @@ const Navbar = () => {
 
   useEffect(() => {
     const currentPath = location.pathname;
-    // More robust active link detection
     if (currentPath === "/") setActiveLink("home");
     else if (currentPath.startsWith("/properties")) setActiveLink("properties");
     else if (currentPath.startsWith("/about")) setActiveLink("about");
     else if (currentPath.startsWith("/contact")) setActiveLink("contact");
-    // Handle /list-property route - could set 'properties' or none
-    else if (currentPath.startsWith("/list-property"))
-      setActiveLink(""); // Or 'properties' if desired
-    else setActiveLink(""); // No active link for others like /login, /user-profile etc.
+    else if (currentPath.startsWith("/list-property")) setActiveLink("");
+    else setActiveLink("");
   }, [location.pathname]);
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
-  const handleNavigate = (path) => navigate(path);
+
+  // --- Handlers for Upload ID Modal ---
+  const handleOpenUploadModal = () => setUploadIdModalOpen(true);
+  const handleCloseUploadModal = () => setUploadIdModalOpen(false);
+
+  // --- Modified Navigation Logic ---
+  const handleNavigate = (path) => {
+    if (path === "/list-property") {
+      // Check approval status before navigating
+      handleListPropertyClick();
+    } else {
+      navigate(path);
+    }
+  };
+
+  // --- Logic for "List Property" click ---
+  const handleListPropertyClick = () => {
+    if (!user) {
+      // Should ideally not happen if the button is shown only when logged in
+      navigate("/login");
+      return;
+    }
+
+    console.log("Checking approval status:", user.approvalStatus); // Debug log
+
+    switch (user.approvalStatus) {
+      case "approved":
+        navigate("/list-property");
+        break;
+      case "pending":
+        alert("Your listing request is pending admin approval."); // Use Snackbar for better UX later
+        break;
+      case "rejected":
+        alert(
+          "Your listing request has been rejected. Please contact support."
+        );
+        break;
+      case "not_started":
+      default:
+        // Open the upload ID modal
+        handleOpenUploadModal();
+        break;
+    }
+  };
 
   const handleLogout = () => {
     logout();
-    setLogoutSnackbar(true); // Show snackbar on logout
+    setLogoutSnackbar(true);
     navigate("/");
   };
 
   const handleCloseLogoutSnackbar = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
+    if (reason === "clickaway") return;
     setLogoutSnackbar(false);
   };
 
   return (
     <>
-      {/* Use HideOnScroll and NavbarContainer */}
       <HideOnScroll>
         <NavbarContainer position="sticky">
-          {/* Use Container for max width and centering */}
           <Container maxWidth="xl">
             <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-              {/* Logo/Brand */}
+              {/* Logo */}
               <Typography
-                variant="h5" // Adjusted variant
+                variant="h5"
                 noWrap
                 component={RouterLink}
                 to="/"
@@ -130,10 +163,10 @@ const Navbar = () => {
                   cursor: "pointer",
                 }}
               >
-                BanglaGhor {/* <-- Kept as is, brand name */}
+                BanglaGhor
               </Typography>
 
-              {/* Desktop Navigation & Actions */}
+              {/* Desktop Nav */}
               <Box
                 sx={{
                   display: { xs: "none", md: "flex" },
@@ -144,30 +177,32 @@ const Navbar = () => {
                 <DesktopNav
                   navLinks={navLinks}
                   activeLink={activeLink}
+                  // Pass the combined handler
                   handleNavigate={handleNavigate}
+                  // Pass the specific list property handler for direct use
+                  onListPropertyClick={handleListPropertyClick}
                 />
                 <LanguageToggle />
                 {isLoggedIn ? (
                   <ProfileMenu handleLogout={handleLogout} />
                 ) : (
-                  // Use RouterLink for login button for consistency
                   <Button
                     component={RouterLink}
                     to="/login"
                     sx={{
-                      color: "text.primary", // Use theme text color
+                      color: "text.primary",
                       ml: 1,
                       textTransform: "none",
                       borderRadius: "8px",
                       "&:hover": { bgcolor: "action.hover" },
                     }}
                   >
-                    {t("nav_login")} {/* Applied translation */}
+                    {t("nav_login")}
                   </Button>
                 )}
               </Box>
 
-              {/* Mobile Menu Button & Actions */}
+              {/* Mobile Nav Trigger & Actions */}
               <Box
                 sx={{
                   display: { xs: "flex", md: "none" },
@@ -181,7 +216,7 @@ const Navbar = () => {
                   aria-label="open drawer"
                   edge="end"
                   onClick={handleDrawerToggle}
-                  color="inherit" // Use inherit color
+                  color="inherit"
                 >
                   <MenuIcon />
                 </IconButton>
@@ -195,13 +230,21 @@ const Navbar = () => {
       <MobileDrawer
         mobileOpen={mobileOpen}
         handleDrawerToggle={handleDrawerToggle}
-        navLinks={navLinks} // Pass translated links
+        navLinks={navLinks}
         activeLink={activeLink}
+        // Pass the combined handler
         handleNavigate={handleNavigate}
-        // Pass other necessary props like isLoggedIn for conditional rendering inside drawer
+        // Pass the specific list property handler for direct use
+        onListPropertyClick={handleListPropertyClick}
       />
 
-      {/* Logout success snackbar (from original) */}
+      {/* Render the Upload ID Modal */}
+      <UploadIdModal
+        open={uploadIdModalOpen}
+        onClose={handleCloseUploadModal}
+      />
+
+      {/* Logout Snackbar */}
       <Snackbar
         open={logoutSnackbar}
         autoHideDuration={3000}
@@ -211,10 +254,10 @@ const Navbar = () => {
         <Alert
           onClose={handleCloseLogoutSnackbar}
           severity="success"
-          variant="filled" // Make it stand out more
+          variant="filled"
           sx={{ width: "100%", borderRadius: "8px" }}
         >
-          Successfully logged out! {/* <-- Kept as is, no key found */}
+          Successfully logged out!
         </Alert>
       </Snackbar>
     </>

@@ -1,3 +1,4 @@
+// src/components/layout/MobileDrawer.js
 import React from "react";
 import {
   Drawer,
@@ -13,19 +14,20 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
-import { Link as RouterLink, useLocation } from "react-router-dom"; // Import useLocation
-// Import necessary icons if passed via navLinks or define here
+import { Link as RouterLink, useLocation } from "react-router-dom";
+// Import necessary icons
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import ContactsIcon from "@mui/icons-material/Contacts";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
-import AddBusinessIcon from "@mui/icons-material/AddBusiness"; // Example for List Property
-import SellIcon from "@mui/icons-material/Sell"; // Example for Buy/Rent/Sold
+import AddBusinessIcon from "@mui/icons-material/AddBusiness";
+import SellIcon from "@mui/icons-material/Sell";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
+// No longer need useAuth here
 
-// --- Re-introduce styling from original Navbar.js ---
+// --- Styling (Keep DrawerItem style) ---
 const DrawerItem = styled(ListItemButton)(({ theme, selected }) => ({
   paddingTop: theme.spacing(1.5),
   paddingBottom: theme.spacing(1.5),
@@ -33,40 +35,46 @@ const DrawerItem = styled(ListItemButton)(({ theme, selected }) => ({
   paddingRight: theme.spacing(3),
   marginBottom: theme.spacing(0.5),
   borderRadius: "8px",
-  margin: theme.spacing(0, 1), // Add horizontal margin
+  margin: theme.spacing(0, 1),
   backgroundColor: selected ? theme.palette.action.selected : "transparent",
   "&:hover": {
     backgroundColor: selected
       ? theme.palette.action.selected
       : theme.palette.action.hover,
   },
-  // Style for the icon when selected
   "& .MuiListItemIcon-root": {
-    color: selected ? theme.palette.primary.main : theme.palette.text.secondary, // Use primary color when selected
-    minWidth: "40px", // Original minWidth
+    color: selected ? theme.palette.primary.main : theme.palette.text.secondary,
+    minWidth: "40px",
   },
-  // Style for the text when selected
   "& .MuiListItemText-primary": {
-    fontWeight: selected ? 600 : 500, // Original fontWeight logic
-    color: selected ? theme.palette.primary.main : theme.palette.text.primary, // Use primary color when selected
+    fontWeight: selected ? 600 : 500,
+    color: selected ? theme.palette.primary.main : theme.palette.text.primary,
   },
 }));
-// --- End of re-introduced styling ---
+// --- End Styling ---
 
+// Accept onListPropertyClick prop from Navbar
 const MobileDrawer = ({
   mobileOpen,
   handleDrawerToggle,
   navLinks,
   activeLink,
   handleNavigate,
+  onListPropertyClick,
 }) => {
   const drawerWidth = 260;
-  const location = useLocation(); // Get location object using the hook
-  const { t } = useTranslation(); // Initialize translation
+  const location = useLocation();
+  const { t } = useTranslation();
 
   const handleLinkClick = (path) => {
-    handleNavigate(path);
+    handleNavigate(path); // Use the passed navigate handler
     handleDrawerToggle(); // Close drawer on link click
+  };
+
+  // Specific handler for list property in drawer
+  const handleListPropertyDrawerClick = () => {
+    onListPropertyClick(); // Call the main handler passed from Navbar
+    handleDrawerToggle(); // Close the drawer
   };
 
   return (
@@ -74,16 +82,16 @@ const MobileDrawer = ({
       variant="temporary"
       open={mobileOpen}
       onClose={handleDrawerToggle}
-      ModalProps={{ keepMounted: true }} // Better open performance on mobile.
+      ModalProps={{ keepMounted: true }}
       sx={{
         display: { xs: "block", md: "none" },
         "& .MuiDrawer-paper": {
           boxSizing: "border-box",
           width: drawerWidth,
-          borderTopRightRadius: 16, // Original radius
+          borderTopRightRadius: 16,
           borderBottomRightRadius: 16,
-          boxShadow: 3, // Add some shadow
-          border: "none", // Remove default border if needed
+          boxShadow: 3,
+          border: "none",
         },
       }}
     >
@@ -95,7 +103,6 @@ const MobileDrawer = ({
             alignItems: "center",
           }}
         >
-          {/* Match logo style from Navbar */}
           <Typography
             variant="h5"
             onClick={() => handleLinkClick("/")}
@@ -105,7 +112,7 @@ const MobileDrawer = ({
               fontWeight: "bold",
             }}
           >
-            BanglaGhor {/* <-- Kept as is, brand name */}
+            BanglaGhor
           </Typography>
           <IconButton onClick={handleDrawerToggle}>
             <CloseIcon />
@@ -114,37 +121,32 @@ const MobileDrawer = ({
         <Divider sx={{ my: 1 }} />
       </Box>
       <List sx={{ px: 1 }}>
-        {" "}
-        {/* Add padding to list container */}
         {/* Main Nav Links */}
         {navLinks.map(
           (link) =>
-            link.id !== "properties" && ( // Render non-dropdown links directly
+            link.id !== "properties" && (
               <ListItem key={link.id} disablePadding>
-                {/* Use DrawerItem styled component */}
                 <DrawerItem
                   component={RouterLink}
                   to={link.path}
-                  selected={activeLink === link.id} // Use activeLink prop passed down
-                  onClick={handleDrawerToggle} // Close drawer on link click
+                  selected={activeLink === link.id}
+                  onClick={handleDrawerToggle}
                 >
                   <ListItemIcon>{link.icon}</ListItemIcon>
-                  {/* Label is already translated in Navbar.js */}
                   <ListItemText primary={link.label} />
                 </DrawerItem>
               </ListItem>
             )
         )}
-        {/* Properties Links (Buy/Rent/Sold) */}
+        {/* Properties Links */}
         <Divider sx={{ my: 1 }} />
         <Typography
           variant="caption"
           sx={{ pl: 3, color: "text.secondary", textTransform: "uppercase" }}
         >
-          {t("nav_properties")} {/* Applied translation */}
+          {t("nav_properties")}
         </Typography>
         <ListItem disablePadding>
-          {/* Use location object from the hook */}
           <DrawerItem
             selected={location.pathname.startsWith("/properties/buy")}
             onClick={() => handleLinkClick("/properties/buy")}
@@ -152,11 +154,10 @@ const MobileDrawer = ({
             <ListItemIcon>
               <StorefrontIcon />
             </ListItemIcon>
-            <ListItemText primary={t("nav_buy")} /> {/* Applied translation */}
+            <ListItemText primary={t("nav_buy")} />
           </DrawerItem>
         </ListItem>
         <ListItem disablePadding>
-          {/* Use location object from the hook */}
           <DrawerItem
             selected={location.pathname.startsWith("/properties/rent")}
             onClick={() => handleLinkClick("/properties/rent")}
@@ -164,11 +165,10 @@ const MobileDrawer = ({
             <ListItemIcon>
               <SellIcon />
             </ListItemIcon>
-            <ListItemText primary={t("nav_rent")} /> {/* Applied translation */}
+            <ListItemText primary={t("nav_rent")} />
           </DrawerItem>
         </ListItem>
         <ListItem disablePadding>
-          {/* Use location object from the hook */}
           <DrawerItem
             selected={location.pathname.startsWith("/properties/sold")}
             onClick={() => handleLinkClick("/properties/sold")}
@@ -176,17 +176,18 @@ const MobileDrawer = ({
             <ListItemIcon>
               <CheckCircleOutlineIcon />
             </ListItemIcon>
-            <ListItemText primary={t("nav_sold")} /> {/* Applied translation */}
+            <ListItemText primary={t("nav_sold")} />
           </DrawerItem>
         </ListItem>
+
         {/* List Property Button */}
         <Divider sx={{ my: 1 }} />
         <ListItem disablePadding>
-          <DrawerItem onClick={() => handleLinkClick("/list-property")}>
+          {/* Use the specific handler for list property click */}
+          <DrawerItem onClick={handleListPropertyDrawerClick}>
             <ListItemIcon>
               <AddBusinessIcon />
             </ListItemIcon>
-            {/* Applied translation */}
             <ListItemText primary={t("list_property")} />
           </DrawerItem>
         </ListItem>
