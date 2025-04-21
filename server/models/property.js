@@ -101,6 +101,12 @@ const propertySchema = new mongoose.Schema(
       reasonForSelling: { type: String },
     },
 
+    isHidden: {
+      type: Boolean,
+      default: false, // Listings are visible by default
+      index: true, // Add index for faster filtering if needed later
+    },
+
     // Description & Images
     description: { type: String },
     images: [{ type: String }], // Store image URLs or keys
@@ -125,4 +131,5 @@ propertySchema.index({
   price: 1,
 });
 
-module.exports = mongoose.model("Property", propertySchema);
+module.exports =
+  mongoose.models.Property || mongoose.model("Property", propertySchema);

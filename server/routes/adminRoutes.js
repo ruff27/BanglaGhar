@@ -38,6 +38,20 @@ router.get(
   adminController.getAllUsers // Linked to the new controller function
 );
 
+// Get all property listings
+router.get(
+  "/listings", // The new endpoint
+  requireAdmin,
+  adminController.getAllListings // Linked to the new controller
+);
+
+// Update listing visibility (Hide/Unhide)
+router.put(
+  "/listings/:listingId/visibility", // New endpoint
+  requireAdmin,
+  adminController.updateListingVisibility // Linked to the new controller
+);
+
 // Approve a user
 router.put("/users/:userId/approve", requireAdmin, adminController.approveUser);
 

@@ -20,25 +20,24 @@ import {
   TextField,
   InputAdornment,
   debounce,
-  Switch, // Added
-  Select, // Added
-  MenuItem, // Added
-  FormControl, // Added
-  IconButton, // Added for potential alternative actions
-  Tooltip, // Added for clarity
+  Switch,
+  Select,
+  MenuItem,
+  FormControl,
+  IconButton,
+  Tooltip,
+  InputLabel, // Added InputLabel
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-// Consider adding icons for actions if using IconButton
-// import EditIcon from '@mui/icons-material/Edit';
-// import BlockIcon from '@mui/icons-material/Block';
 import { format } from "date-fns";
-import { useAuth } from "../../context/AuthContext"; // To get logged-in user info and token
+import { useAuth } from "../../context/AuthContext";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
-// Define table headers - Add 'actions'
+// Define table headers (no change needed here)
 const headCells = [
+  // ... (same as before)
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
   { id: "email", numeric: false, disablePadding: false, label: "Email" },
   {
@@ -47,7 +46,7 @@ const headCells = [
     disablePadding: false,
     label: "Registered",
   },
-  { id: "isAdmin", numeric: false, disablePadding: false, label: "Admin?" }, // Shortened label
+  { id: "isAdmin", numeric: false, disablePadding: false, label: "Admin?" },
   {
     id: "approvalStatus",
     numeric: false,
@@ -60,14 +59,14 @@ const headCells = [
     disablePadding: false,
     label: "Actions",
     sortable: false,
-  }, // Indicate not sortable
+  },
 ];
 
 const ManageUsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { idToken, user: loggedInUser } = useAuth(); // Get logged-in user details too
+  const { idToken, user: loggedInUser } = useAuth();
 
   // --- State for Pagination, Sorting, Filtering ---
   const [page, setPage] = useState(0);
@@ -76,15 +75,15 @@ const ManageUsersPage = () => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("name");
   const [searchTerm, setSearchTerm] = useState("");
-  // State to track loading status for individual row actions
-  const [actionLoading, setActionLoading] = useState({}); // e.g., { userId: true }
+  const [filterStatus, setFilterStatus] = useState(""); // <<<--- NEW STATE for status filter
+  const [actionLoading, setActionLoading] = useState({});
 
-  // Debounced search handler (corrected dependencies based on previous feedback)
+  // Debounced search handler
   const debouncedSearch = useCallback(
     debounce((value) => {
       setPage(0);
     }, 500),
-    [setPage] // Dependency added
+    [setPage]
   );
 
   const handleSearchChange = (event) => {
@@ -93,9 +92,14 @@ const ManageUsersPage = () => {
     debouncedSearch(newSearchTerm);
   };
 
-  // --- Fetch Users Effect (no change needed here) ---
+  // --- NEW: Handler for Status Filter Change ---
+  const handleFilterStatusChange = (event) => {
+    setFilterStatus(event.target.value);
+    setPage(0); // Reset to first page when filter changes
+  };
+
+  // --- Fetch Users Effect (Updated Dependencies and Params) ---
   useEffect(() => {
-    // ... (fetchUsers logic remains the same as previous step) ...
     const fetchUsers = async () => {
       if (!idToken) {
         setError("Authentication token not available.");
@@ -108,13 +112,17 @@ const ManageUsersPage = () => {
 
       // Construct query params
       const params = new URLSearchParams({
-        page: page + 1, // API expects 1-based page index
+        page: page + 1,
         limit: rowsPerPage,
         sort: orderBy,
         order: order,
         search: searchTerm,
-        // status: filterStatus, // Add later if implementing status filter
       });
+
+      // <<<--- ADD status param if filterStatus is set ---<<<
+      if (filterStatus) {
+        params.append("status", filterStatus);
+      }
 
       try {
         const response = await axios.get(
@@ -127,14 +135,13 @@ const ManageUsersPage = () => {
         );
         setUsers(response.data.users);
         setTotalUsers(response.data.totalUsers);
-        // Note: We don't need to set totalPages state, TablePagination calculates it
       } catch (err) {
         console.error("Error fetching users:", err);
         setError(
           err.response?.data?.message ||
             "Failed to fetch users. Please try again."
         );
-        setUsers([]); // Clear users on error
+        setUsers([]);
         setTotalUsers(0);
       } finally {
         setLoading(false);
@@ -142,15 +149,15 @@ const ManageUsersPage = () => {
     };
 
     fetchUsers();
-  }, [idToken, page, rowsPerPage, orderBy, order, searchTerm]);
+  }, [idToken, page, rowsPerPage, orderBy, order, searchTerm, filterStatus]); // <<<--- ADD filterStatus dependency
 
-  // --- Event Handlers (Sorting, Pagination - no change needed) ---
+  // --- Event Handlers (Sorting, Pagination - no change) ---
   const handleRequestSort = (event, property) => {
     // ... (sorting logic remains the same) ...
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
-    setPage(0); // Reset to first page on sort change
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -161,33 +168,31 @@ const ManageUsersPage = () => {
   const handleChangeRowsPerPage = (event) => {
     // ... (rows per page logic remains the same) ...
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to first page when rows per page changes
+    setPage(0);
   };
 
-  // --- NEW: Handler for User Status Updates ---
+  // --- Handler for User Status Updates (no change needed here) ---
   const handleUserUpdate = async (userId, field, value) => {
+    // ... (update logic remains the same) ...
     if (!idToken) {
       setError("Authentication token not available for update.");
       return;
     }
-    // Prevent logged-in admin from changing their own admin status via UI
     if (
       loggedInUser?.email === users.find((u) => u._id === userId)?.email &&
       field === "isAdmin"
     ) {
       setError("You cannot change your own admin status from this interface.");
-      // Revert switch visually if needed (though disabled state is better)
-      // For now, just show error and don't proceed
       return;
     }
 
-    setActionLoading((prev) => ({ ...prev, [userId]: true })); // Set loading for this specific user action
-    setError(null); // Clear previous errors
+    setActionLoading((prev) => ({ ...prev, [userId]: true }));
+    setError(null);
 
     try {
       const response = await axios.put(
         `${API_BASE_URL}/admin/users/${userId}/status`,
-        { [field]: value }, // Send only the updated field
+        { [field]: value },
         {
           headers: {
             Authorization: `Bearer ${idToken}`,
@@ -195,34 +200,27 @@ const ManageUsersPage = () => {
         }
       );
 
-      // Update local state for immediate feedback
       setUsers((currentUsers) =>
-        currentUsers.map(
-          (user) =>
-            user._id === userId
-              ? { ...user, [field]: response.data.user[field] }
-              : user
-          // Ensure we update with the actual value returned by the server
+        currentUsers.map((user) =>
+          user._id === userId
+            ? { ...user, [field]: response.data.user[field] }
+            : user
         )
       );
-      // Optionally show a success snackbar/message here
     } catch (err) {
       console.error(`Error updating user ${userId}:`, err);
       setError(
         err.response?.data?.message ||
           `Failed to update user ${field}. Please try again.`
       );
-      // Note: No need to manually revert UI state here if using controlled components,
-      // as the local 'users' state wasn't permanently changed on error.
-      // If using uncontrolled components or need explicit revert, add logic here.
     } finally {
-      setActionLoading((prev) => ({ ...prev, [userId]: false })); // Clear loading for this user action
+      setActionLoading((prev) => ({ ...prev, [userId]: false }));
     }
   };
 
   // --- Helper Functions (formatDate, getStatusChipColor - no change) ---
   const formatDate = (dateString) => {
-    // ... (same as before)
+    /* ... */
     try {
       return format(new Date(dateString), "PPpp"); // e.g., Aug 18, 2023, 4:30 PM
     } catch {
@@ -230,7 +228,7 @@ const ManageUsersPage = () => {
     }
   };
   const getStatusChipColor = (status) => {
-    // ... (same as before)
+    /* ... */
     switch (status) {
       case "approved":
         return "success";
@@ -246,15 +244,22 @@ const ManageUsersPage = () => {
 
   return (
     <Container maxWidth="xl">
-      {" "}
-      {/* Consider wider container for more columns */}
       <Typography variant="h4" gutterBottom sx={{ mt: 2, mb: 2 }}>
         Manage Users
       </Typography>
-      {/* Search/Filter Paper (no change) */}
+
+      {/* Search/Filter Paper (Updated) */}
       <Paper sx={{ mb: 2, p: 2 }} elevation={2}>
-        {/* ... (search input code remains the same) ... */}
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          {" "}
+          {/* Added flexWrap */}
           <TextField
             label="Search by Name/Email"
             variant="outlined"
@@ -268,31 +273,49 @@ const ManageUsersPage = () => {
                 </InputAdornment>
               ),
             }}
-            sx={{ flexGrow: 1 }}
+            sx={{ flexGrow: 1, minWidth: "250px" }} // Allow grow but set minWidth
           />
-          {/* Add Filter Dropdown/Buttons here later */}
+          {/* <<<--- STATUS FILTER DROPDOWN ---<<< */}
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            {" "}
+            {/* Give it minWidth */}
+            <InputLabel id="status-filter-label">Approval Status</InputLabel>
+            <Select
+              labelId="status-filter-label"
+              id="status-filter-select"
+              value={filterStatus}
+              label="Approval Status"
+              onChange={handleFilterStatusChange}
+            >
+              <MenuItem value="">
+                <em>All Statuses</em>
+              </MenuItem>
+              <MenuItem value="not_started">Not Started</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="approved">Approved</MenuItem>
+              <MenuItem value="rejected">Rejected</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
       </Paper>
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {" "}
-          {/* Allow dismissing error */}
           {error}
         </Alert>
       )}
+
       <Paper sx={{ width: "100%", overflow: "hidden" }} elevation={3}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 320px)" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 340px)" }}>
           {" "}
-          {/* Adjust maxHeight */}
+          {/* Adjusted maxHeight slightly */}
           <Table
             stickyHeader
             sx={{ minWidth: 900 }}
             aria-label="manage users table"
           >
-            {" "}
-            {/* Increased minWidth */}
             <TableHead>
-              {/* Table Head Row (adjust map for non-sortable 'actions') */}
+              {/* ... (Table Head definition remains the same) ... */}
               <TableRow
                 sx={{
                   "& th": {
@@ -308,7 +331,6 @@ const ManageUsersPage = () => {
                     padding={headCell.disablePadding ? "none" : "normal"}
                     sortDirection={orderBy === headCell.id ? order : false}
                   >
-                    {/* Check if column is sortable */}
                     {headCell.sortable !== false ? (
                       <TableSortLabel
                         active={orderBy === headCell.id}
@@ -326,13 +348,14 @@ const ManageUsersPage = () => {
                         {headCell.label}
                       </TableSortLabel>
                     ) : (
-                      headCell.label // Display label without sort functionality
+                      headCell.label
                     )}
                   </TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
+              {/* ... (Table Body logic remains the same, including loading/no results/map users) ... */}
               {loading ? (
                 <TableRow>
                   <TableCell
@@ -346,17 +369,16 @@ const ManageUsersPage = () => {
               ) : users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={headCells.length} align="center">
-                    {/* ... (no results message remains same) ... */}
-                    {searchTerm
-                      ? `No users found matching "${searchTerm}".`
+                    {searchTerm || filterStatus
+                      ? `No users found matching the current criteria.`
                       : "No users found."}
                   </TableCell>
                 </TableRow>
               ) : (
                 // --- Table Body Rows with Actions ---
                 users.map((user) => {
-                  const isCurrentUser = loggedInUser?.email === user.email; // Check if row is the logged-in user
-                  const isLoadingAction = actionLoading[user._id]; // Check if an action is loading for this row
+                  const isCurrentUser = loggedInUser?.email === user.email;
+                  const isLoadingAction = actionLoading[user._id];
 
                   return (
                     <TableRow
@@ -364,6 +386,7 @@ const ManageUsersPage = () => {
                       key={user._id}
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
+                      {/* Cells for name, email, createdAt */}
                       <TableCell component="th" scope="row">
                         {user.name || "N/A"}
                       </TableCell>
@@ -380,7 +403,6 @@ const ManageUsersPage = () => {
                               : "Promote to Admin"
                           }
                         >
-                          {/* Wrap Switch in span to allow Tooltip when disabled */}
                           <span>
                             <Switch
                               checked={user.isAdmin}
@@ -391,14 +413,14 @@ const ManageUsersPage = () => {
                                   e.target.checked
                                 )
                               }
-                              disabled={isCurrentUser || isLoadingAction} // Disable for self or while loading
-                              color="secondary" // Or another appropriate color
+                              disabled={isCurrentUser || isLoadingAction}
+                              color="secondary"
                               size="small"
                             />
                           </span>
                         </Tooltip>
                       </TableCell>
-                      {/* Approval Status Cell (Using Chip as display only for now) */}
+                      {/* Approval Status Cell (Display) */}
                       <TableCell>
                         <Chip
                           label={
@@ -409,15 +431,13 @@ const ManageUsersPage = () => {
                           sx={{ textTransform: "capitalize" }}
                         />
                       </TableCell>
-                      {/* Actions Cell */}
+                      {/* Actions Cell (Status Change) */}
                       <TableCell>
                         <FormControl
                           size="small"
                           sx={{ minWidth: 130 }}
                           disabled={isLoadingAction}
                         >
-                          {/* <InputLabel>Status</InputLabel> */}{" "}
-                          {/* Optional: Label if needed */}
                           <Select
                             value={user.approvalStatus || "not_started"}
                             onChange={(e) =>
@@ -431,9 +451,9 @@ const ManageUsersPage = () => {
                             inputProps={{
                               "aria-label": "Change approval status",
                             }}
-                            variant="outlined" // Use outlined or standard
+                            variant="outlined"
                             size="small"
-                            sx={{ fontSize: "0.875rem" }} // Match chip size roughly
+                            sx={{ fontSize: "0.875rem" }}
                           >
                             <MenuItem value="not_started">Not Started</MenuItem>
                             <MenuItem value="pending">Pending</MenuItem>
@@ -441,13 +461,6 @@ const ManageUsersPage = () => {
                             <MenuItem value="rejected">Rejected</MenuItem>
                           </Select>
                         </FormControl>
-                        {/* Add other actions like Block/Delete later using IconButtons */}
-                        {/*
-                         <Tooltip title="Block User (Not Implemented)">
-                            <span> <IconButton size="small" disabled={isLoadingAction}> <BlockIcon fontSize="small" /> </IconButton> </span>
-                         </Tooltip>
-                          */}
-                        {/* Show mini-loader if action is processing for this row */}
                         {isLoadingAction && (
                           <CircularProgress
                             size={20}

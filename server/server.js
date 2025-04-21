@@ -6,13 +6,14 @@ require("dotenv").config({
   path: path.resolve(__dirname, "./.env"),
 });
 
-console.log("------------------------------------------");
-console.log("[DEBUG Server Start] Loading environment variables...");
-console.log("[DEBUG Server Start] AWS_REGION:", process.env.AWS_REGION);
-console.log(
-  "[DEBUG Server Start] COGNITO_USER_POOL_ID:",
-  process.env.COGNITO_USER_POOL_ID
-);
+// just for debugging purposes:
+// console.log("------------------------------------------");
+// console.log("[DEBUG Server Start] Loading environment variables...");
+// console.log("[DEBUG Server Start] AWS_REGION:", process.env.AWS_REGION);
+// console.log(
+//   "[DEBUG Server Start] COGNITO_USER_POOL_ID:",
+//   process.env.COGNITO_USER_POOL_ID
+// );
 console.log(
   "[DEBUG Server Start] MONGO_URI:",
   process.env.MONGO_URI ? "Loaded successfully" : "!!! MONGO_URI NOT LOADED !!!"
@@ -60,9 +61,9 @@ mongoose
   });
 
 // 5) MODELS (Ensure UserProfile is defined in its file)
-const Property = require("./models/Property");
+const Property = require("./models/property");
 const Wishlist = require("./models/Wishlist");
-const UserProfile = require("./models/UserProfile"); // Make sure this model file exists
+const UserProfile = require("./models/UserProfile");
 
 // 6) TEST ROUTE
 app.get("/", (req, res) => {

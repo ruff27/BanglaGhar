@@ -1,5 +1,6 @@
 // server/controllers/adminController.js
 const UserProfile = require("../models/UserProfile");
+const Property = require("../models/property");
 const mongoose = require("mongoose"); // Required for ObjectId validation
 
 // Get users pending approval
@@ -221,11 +222,9 @@ exports.updateUserStatus = async (req, res) => {
         console.warn(
           `Admin ${req.user.email} attempted to change their own admin status via bulk update route.`
         );
-        return res
-          .status(403)
-          .json({
-            message: "Cannot change your own admin status using this control.",
-          });
+        return res.status(403).json({
+          message: "Cannot change your own admin status using this control.",
+        });
       }
       // Can potentially allow changing own approval status if needed, otherwise add similar check
     }
@@ -256,4 +255,124 @@ exports.updateUserStatus = async (req, res) => {
   }
 };
 
-// Add other admin functions later (e.g., list all users, block user)
+// Get all property listings (with Pagination, Sorting, Filtering)
+exports.getAllListings = async (req, res) => {
+  try {
+    // --- Query Parameters ---
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const sortField = req.query.sort || "createdAt";
+    const sortOrder = req.query.order === "asc" ? 1 : -1;
+    const searchTerm = req.query.search || "";
+    const statusFilter = req.query.status || "";
+
+    const skip = (page - 1) * limit;
+
+    // --- Build Filter Query ---
+    let filterQuery = {};
+    if (searchTerm) {
+      const regex = new RegExp(searchTerm, "i");
+      filterQuery.$or = [
+        { title: regex },
+        { addressLine1: regex },
+        { cityTown: regex },
+        { upazila: regex },
+        { district: regex },
+        { createdBy: regex }, // Ensure 'createdBy' exists and is searchable this way
+      ];
+    }
+    if (statusFilter && ["rent", "buy", "sold"].includes(statusFilter)) {
+      filterQuery.listingType = statusFilter;
+    }
+
+    // --- Build Sort Object ---
+    const sortObject = {};
+    sortObject[sortField] = sortOrder;
+    if (sortField !== "_id") {
+      sortObject["_id"] = 1; // Secondary sort
+    }
+
+    // --- DEBUG LOG ---
+    // console.log("Fetching listings with Filter:", JSON.stringify(filterQuery));
+    // console.log("Fetching listings with Sort:", JSON.stringify(sortObject));
+    // --- END DEBUG LOG ---
+
+    // --- Fetch Data ---
+    const totalListings = await Property.countDocuments(filterQuery);
+
+    const listings = await Property.find(filterQuery)
+      .select(
+        "title price addressLine1 cityTown district upazila propertyType listingType createdBy createdAt images"
+      )
+      .sort(sortObject)
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(totalListings / limit);
+
+    // --- Send Response ---
+    res.status(200).json({
+      listings: listings,
+      currentPage: page,
+      totalPages: totalPages,
+      totalListings: totalListings,
+      limit: limit,
+    });
+  } catch (error) {
+    // <<<--- THIS IS THE IMPORTANT PART FOR LOGS ---<<<
+    console.error("Error fetching all listings:", error); // Log the full error
+    // Send a more specific error message if possible
+    res.status(500).json({
+      message: "Server error fetching listings.",
+      error: error.message,
+    }); // Include error message
+  }
+};
+
+//hidden listing?
+exports.updateListingVisibility = async (req, res) => {
+  const { listingId } = req.params;
+  const { isHidden } = req.body; // Expect { isHidden: true } or { isHidden: false }
+
+  // Validate listingId
+  if (!mongoose.Types.ObjectId.isValid(listingId)) {
+    return res.status(400).json({ message: "Invalid listing ID format." });
+  }
+
+  // Validate input data
+  if (typeof isHidden !== "boolean") {
+    return res
+      .status(400)
+      .json({ message: "Invalid value for isHidden. Must be true or false." });
+  }
+
+  try {
+    // Find the property by ID
+    const property = await Property.findById(listingId);
+
+    if (!property) {
+      return res.status(404).json({ message: "Property listing not found." });
+    }
+
+    // Update the isHidden status
+    property.isHidden = isHidden;
+
+    // Save the updated property
+    await property.save();
+
+    console.log(
+      `Admin ${req.user.email} updated visibility for listing ${listingId} to isHidden=${isHidden}.`
+    );
+
+    // Return success response (can return updated property if needed)
+    res.status(200).json({
+      message: `Listing visibility updated successfully.`,
+      listing: { _id: property._id, isHidden: property.isHidden }, // Return minimal updated info
+    });
+  } catch (error) {
+    console.error(`Error updating visibility for listing ${listingId}:`, error);
+    res
+      .status(500)
+      .json({ message: "Server error updating listing visibility." });
+  }
+};

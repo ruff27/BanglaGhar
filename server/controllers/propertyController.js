@@ -1,5 +1,5 @@
 // server/controllers/propertyController.js
-const Property = require("../models/Property");
+const Property = require("../models/property");
 const mongoose = require("mongoose"); // Ensure mongoose is required if not already
 
 // Example for Create Property (remains the same):
