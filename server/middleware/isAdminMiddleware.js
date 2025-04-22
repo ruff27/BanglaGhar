@@ -1,27 +1,33 @@
 // server/middleware/isAdminMiddleware.js
 
 const isAdminMiddleware = (req, res, next) => {
-  // Ensure fetchUserProfileMiddleware has run and attached userProfile
+  // Check if fetchUserProfileMiddleware successfully attached the profile
   if (!req.userProfile) {
+    // This might happen if the user exists in Cognito but not in your UserProfile DB,
+    // or if fetchUserProfileMiddleware had an error.
     console.error(
-      "[Admin Check Error] req.userProfile not found. Ensure fetchUserProfileMiddleware runs first."
+      "[Admin Check Error] req.userProfile not found. Ensure user exists in database and fetchUserProfileMiddleware ran correctly."
     );
-    // This indicates a problem earlier in the middleware chain
     return res
-      .status(500)
-      .json({ message: "User profile data is missing for admin check." });
+      .status(403)
+      .json({ message: "Forbidden: User profile data not available." });
   }
 
-  if (req.userProfile.isAdmin === true) {
-    // User is an admin, allow request to proceed
-    console.log(`Admin access granted for user: ${req.userProfile.email}`);
-    next();
+  // Now safely check the isAdmin flag
+  if (req.userProfile.isAdmin) {
+    console.log(
+      `[Admin Check Success] User ${
+        req.user.email || req.userProfile.email
+      } is an admin.`
+    ); // Log email for clarity
+    next(); // User is admin, proceed
   } else {
-    // User is not an admin, send a 403 Forbidden response
-    console.log(`Admin access denied for user: ${req.userProfile.email}`);
-    res
-      .status(403)
-      .json({ message: "Access denied. Administrator privileges required." });
+    console.warn(
+      `[Admin Check Failed] User ${
+        req.user.email || req.userProfile.email
+      } is not an admin.`
+    );
+    res.status(403).json({ message: "Forbidden: Requires admin privileges." }); // User is not admin
   }
 };
 

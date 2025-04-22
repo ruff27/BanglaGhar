@@ -33,6 +33,7 @@ import { theme } from "./styles/theme"; // Adjust path if needed
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider } from "./context/AuthContext"; // Adjust path if needed
+import { SnackbarProvider } from "./context/SnackbarContext"; // Adjust path if needed
 
 // --- Create Layout Components ---
 
@@ -113,7 +114,15 @@ function App() {
             <Route element={<AdminProtectedRoute />}>
               {/* Render the AdminRoutes component for any path starting with /admin */}
               {/* AdminRoutes itself contains the AdminLayout and specific admin page routes */}
-              <Route path="/admin/*" element={<AdminRoutes />} />
+              {/* Wrap AdminRoutes with SnackbarProvider */}
+              <Route
+                path="/admin/*"
+                element={
+                  <SnackbarProvider>
+                    <AdminRoutes />
+                  </SnackbarProvider>
+                }
+              />
             </Route>
             {/* --- End Admin Routes --- */}
 

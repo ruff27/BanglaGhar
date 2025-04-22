@@ -1,83 +1,178 @@
-// server/routes/adminRoutes.js  <-- Make sure this is the content of this file
-
+// server/routes/adminRoutes.js
 const express = require("express");
-const router = express.Router();
-// Verify this path is correct
+const { body, param, query } = require("express-validator"); // Keep validator imports
 const adminController = require("../controllers/adminController");
-
-// Import Middlewares - Verify these paths are correct
 const authMiddleware = require("../middleware/authMiddleware");
-const fetchUserProfileMiddleware = require("../middleware/fetchUserProfileMiddleware");
-const isAdminMiddleware = require("../middleware/isAdminMiddleware"); // Make sure you created this middleware file
+const fetchUserProfileMiddleware = require("../middleware/fetchUserProfileMiddleware"); // <<<--- IMPORT THIS MIDDLEWARE
+const isAdminMiddleware = require("../middleware/isAdminMiddleware");
+const {
+  handleValidationErrors,
+} = require("../middleware/ValidationMiddleware"); // Keep this
 
-// Middleware chain for all admin routes
-const requireAdmin = [
-  authMiddleware, // 1. Authenticate user
-  fetchUserProfileMiddleware, // 2. Fetch user's profile
-  isAdminMiddleware, // 3. Check if user is admin
-];
+// Assuming mongoose might be needed if you have custom validation needing it
+const mongoose = require("mongoose");
 
-// Update user status (isAdmin, approvalStatus)
+const router = express.Router();
+
+// --- IMPORTANT: Correct Middleware Order ---
+// 1. Authenticate the user (provides req.user, e.g., req.user.email)
+// 2. Fetch the full user profile from DB based on req.user info (provides req.userProfile)
+// 3. Check if the fetched profile (req.userProfile) has admin privileges
+router.use(authMiddleware, fetchUserProfileMiddleware, isAdminMiddleware);
+// -------------------------------------------
+// Now, all subsequent routes defined on this router instance will first pass through
+// these three middlewares in the specified order.
+
+// --- Your Admin Routes (Validation remains the same) ---
+
+// GET /api/admin/stats
+router.get("/stats", adminController.getDashboardStats);
+
+// GET /api/admin/pending-approvals
+router.get("/pending-approvals", adminController.getPendingApprovals);
+
+// PUT /api/admin/users/:userId/approve
 router.put(
-  "/users/:userId/status", // The new endpoint for general status updates
-  requireAdmin,
-  adminController.updateUserStatus // Linked to the new controller function
+  "/users/:userId/approve",
+  [param("userId").isMongoId().withMessage("Invalid user ID format.")],
+  handleValidationErrors,
+  adminController.approveUser // This controller can now safely assume req.userProfile exists if isAdminMiddleware passed
 );
 
-// Get Dashboard Overview
-router.get(
-  "/stats", // Make sure this path is exactly "/stats"
-  requireAdmin,
-  adminController.getDashboardStats // Ensure adminController.getDashboardStats exists in your controller
-);
-
-// Get users pending approval
-router.get(
-  "/pending-approvals",
-  requireAdmin,
-  adminController.getPendingApprovals
-);
-
-// Get all users
-router.get(
-  "/users", // The new endpoint
-  requireAdmin, // Protected by the same middleware chain
-  adminController.getAllUsers // Linked to the new controller function
-);
-
-// Get all property listings
-router.get(
-  "/listings", // The new endpoint
-  requireAdmin,
-  adminController.getAllListings // Linked to the new controller
-);
-
-// Update listing visibility (Hide/Unhide)
+// PUT /api/admin/users/:userId/reject
 router.put(
-  "/listings/:listingId/visibility", // New endpoint
-  requireAdmin,
-  adminController.updateListingVisibility // Linked to the new controller
+  "/users/:userId/reject",
+  [param("userId").isMongoId().withMessage("Invalid user ID format.")],
+  handleValidationErrors,
+  adminController.rejectUser
 );
 
-// Feature / Unfeature a listing
+// GET /api/admin/users
+router.get(
+  "/users",
+  [
+    query("page")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Page must be a positive integer."),
+    query("limit")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Limit must be a positive integer."),
+    query("sort").optional().isString().trim().escape(),
+    query("order")
+      .optional()
+      .isIn(["asc", "desc"])
+      .withMessage('Order must be "asc" or "desc".'),
+    query("search").optional().isString().trim().escape(),
+    query("status")
+      .optional()
+      .isIn(["not_started", "pending", "approved", "rejected"])
+      .withMessage("Invalid status filter."),
+  ],
+  handleValidationErrors,
+  adminController.getAllUsers
+);
+
+// PUT /api/admin/users/:userId/status
 router.put(
-  "/listings/:listingId/feature", // New endpoint
-  requireAdmin,
-  adminController.featureListing // Linked to the new controller
+  "/users/:userId/status",
+  [
+    param("userId").isMongoId().withMessage("Invalid user ID format."),
+    body("isAdmin")
+      .optional()
+      .isBoolean()
+      .withMessage("isAdmin must be true or false."),
+    body("approvalStatus")
+      .optional()
+      .isIn(["not_started", "pending", "approved", "rejected"])
+      .withMessage("Invalid approval status."),
+    body("accountStatus")
+      .optional()
+      .isIn(["active", "blocked"])
+      .withMessage("Invalid account status."),
+  ],
+  handleValidationErrors,
+  adminController.updateUserStatus
 );
 
-// Approve a user
-router.put("/users/:userId/approve", requireAdmin, adminController.approveUser);
-
-// Reject a user
-router.put("/users/:userId/reject", requireAdmin, adminController.rejectUser);
-
-// --- NEW: Delete Multiple Listings ---
-router.delete(
-  "/listings", // Using DELETE method on the base /listings route for bulk action
-  requireAdmin,
-  adminController.deleteMultipleListings // Link to the new controller function
+// GET /api/admin/listings
+router.get(
+  "/listings",
+  [
+    query("page")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Page must be a positive integer."),
+    query("limit")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Limit must be a positive integer."),
+    query("sort").optional().isString().trim().escape(),
+    query("order")
+      .optional()
+      .isIn(["asc", "desc"])
+      .withMessage('Order must be "asc" or "desc".'),
+    query("search").optional().isString().trim().escape(),
+    query("listingType")
+      .optional()
+      .isIn(["rent", "buy", "sold"])
+      .withMessage("Invalid listing type filter."),
+    query("propertyType")
+      .optional()
+      .isIn(["apartment", "house", "condo", "land", "commercial"])
+      .withMessage("Invalid property type filter."),
+    query("isHidden")
+      .optional()
+      .isBoolean()
+      .withMessage("isHidden filter must be true or false."),
+    query("isFeatured")
+      .optional()
+      .isBoolean()
+      .withMessage("isFeatured filter must be true or false."),
+  ],
+  handleValidationErrors,
+  adminController.getAllListings
 );
 
-// Ensure this line is present and correct at the very end
+// PUT /api/admin/listings/:listingId/visibility
+router.put(
+  "/listings/:listingId/visibility",
+  [
+    param("listingId").isMongoId().withMessage("Invalid listing ID format."),
+    body("isHidden").isBoolean().withMessage("isHidden must be true or false."),
+  ],
+  handleValidationErrors,
+  adminController.updateListingVisibility
+);
+
+// PUT /api/admin/listings/:listingId/feature
+router.put(
+  "/listings/:listingId/feature",
+  [
+    param("listingId").isMongoId().withMessage("Invalid listing ID format."),
+    body("feature").isBoolean().withMessage("feature must be true or false."),
+  ],
+  handleValidationErrors,
+  adminController.featureListing
+);
+
+// POST /api/admin/listings/delete-multiple
+router.post(
+  "/listings/delete-multiple",
+  [
+    body("listingIds")
+      .isArray({ min: 1 })
+      .withMessage("listingIds must be a non-empty array.")
+      .custom((ids) => {
+        if (!ids.every((id) => mongoose.Types.ObjectId.isValid(id))) {
+          throw new Error("One or more listing IDs are invalid.");
+        }
+        return true;
+      }),
+  ],
+  handleValidationErrors,
+  adminController.deleteMultipleListings
+);
+
 module.exports = router;
