@@ -30,6 +30,11 @@ import {
   Button,
   Toolbar,
   Dialog,
+  Select,
+  Grid,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -44,6 +49,19 @@ import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
+
+const PROPERTY_TYPES = ["apartment", "house", "condo", "land", "commercial"];
+const LISTING_TYPES = ["rent", "buy", "sold"];
+const VISIBILITY_OPTIONS = [
+  { label: "All", value: "" },
+  { label: "Visible", value: "false" },
+  { label: "Hidden", value: "true" },
+];
+const FEATURED_OPTIONS = [
+  { label: "All", value: "" },
+  { label: "Featured", value: "true" },
+  { label: "Not Featured", value: "false" },
+];
 
 const headCells = [
   {
@@ -109,23 +127,34 @@ const ManageListingsPage = () => {
   const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("createdAt");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  // const [filterStatus, setFilterStatus] = useState("");
+  const [filterPropertyType, setFilterPropertyType] = useState("");
+  const [filterListingType, setFilterListingType] = useState("");
+  const [filterVisibility, setFilterVisibility] = useState(""); // Stores "true", "false", or ""
+  const [filterFeatured, setFilterFeatured] = useState(""); // Stores "true", "false", or ""
   const [actionLoading, setActionLoading] = useState({});
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [selected, setSelected] = useState([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  const debouncedSearch = useCallback(
-    debounce(() => setPage(0), 500),
-    []
+  // Debounced reset page handler (can be used by multiple filters)
+  const debouncedResetPage = useCallback(
+    debounce(() => {
+      setPage(0);
+    }, 500),
+    [setPage] // setPage should be stable, but include for correctness
   );
+
+  // Debounced search handler
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    debouncedSearch();
+    debouncedResetPage(); // Reset page when search term changes
   };
-  const handleFilterStatusChange = (e) => {
-    setFilterStatus(e.target.value);
-    setPage(0);
+
+  // Handlers for new filters
+  const handleFilterChange = (setter) => (event) => {
+    setter(event.target.value);
+    debouncedResetPage();
   };
 
   useEffect(() => {
@@ -140,7 +169,11 @@ const ManageListingsPage = () => {
         order,
         search: searchTerm,
       });
-      if (filterStatus) params.append("status", filterStatus);
+
+      if (filterPropertyType) params.append("propertyType", filterPropertyType);
+      if (filterListingType) params.append("listingType", filterListingType);
+      if (filterVisibility) params.append("isHidden", filterVisibility); // Send "true" or "false"
+      if (filterFeatured) params.append("isFeatured", filterFeatured); // Send "true" or "false"
 
       try {
         const response = await axios.get(
@@ -159,7 +192,18 @@ const ManageListingsPage = () => {
       }
     };
     fetchListings();
-  }, [idToken, page, rowsPerPage, orderBy, order, searchTerm, filterStatus]);
+  }, [
+    idToken,
+    page,
+    rowsPerPage,
+    orderBy,
+    order,
+    searchTerm,
+    filterPropertyType,
+    filterListingType,
+    filterVisibility,
+    filterFeatured, // Add new filter states
+  ]);
 
   // --- Selection Handlers ---
   const handleSelectAllClick = (event) => {
@@ -316,30 +360,118 @@ const ManageListingsPage = () => {
       </Typography>
       {/* Search/Filter Bar (existing) */}
       <Paper sx={{ mb: 2, p: 2 }} elevation={2}>
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <TextField
-            label="Search Title/Location/Creator"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ flexGrow: 1, minWidth: 300 }}
-          />
-          {/* Add filter dropdown if needed */}
-        </Box>
+        <Grid container spacing={2} alignItems="center">
+          {" "}
+          {/* Use Grid for better layout */}
+          {/* Search Field */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              label="Search Title/Location/Creator"
+              size="small"
+              fullWidth // Make text field take full grid item width
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          {/* Property Type Filter */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="property-type-filter-label">
+                Property Type
+              </InputLabel>
+              <Select
+                labelId="property-type-filter-label"
+                value={filterPropertyType}
+                label="Property Type"
+                onChange={handleFilterChange(setFilterPropertyType)}
+              >
+                <MenuItem value="">
+                  <em>All Types</em>
+                </MenuItem>
+                {PROPERTY_TYPES.map((type) => (
+                  <MenuItem
+                    key={type}
+                    value={type}
+                    sx={{ textTransform: "capitalize" }}
+                  >
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          {/* Listing Type Filter */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="listing-type-filter-label">
+                Listing Type
+              </InputLabel>
+              <Select
+                labelId="listing-type-filter-label"
+                value={filterListingType}
+                label="Listing Type"
+                onChange={handleFilterChange(setFilterListingType)}
+              >
+                <MenuItem value="">
+                  <em>All Modes</em>
+                </MenuItem>
+                {LISTING_TYPES.map((type) => (
+                  <MenuItem
+                    key={type}
+                    value={type}
+                    sx={{ textTransform: "capitalize" }}
+                  >
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          {/* Visibility Status Filter */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="visibility-filter-label">Visibility</InputLabel>
+              <Select
+                labelId="visibility-filter-label"
+                value={filterVisibility}
+                label="Visibility"
+                onChange={handleFilterChange(setFilterVisibility)}
+              >
+                {VISIBILITY_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          {/* Featured Status Filter */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="featured-filter-label">Featured</InputLabel>
+              <Select
+                labelId="featured-filter-label"
+                value={filterFeatured}
+                label="Featured"
+                onChange={handleFilterChange(setFilterFeatured)}
+              >
+                {FEATURED_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>{" "}
+        {/* End Grid container */}
       </Paper>
       {/* --- Enhanced Toolbar for Bulk Actions --- */}
       <Paper sx={{ width: "100%", mb: 2 }} elevation={1}>

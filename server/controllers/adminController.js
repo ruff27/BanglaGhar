@@ -317,7 +317,10 @@ exports.getAllListings = async (req, res) => {
     const sortField = req.query.sort || "createdAt"; // Default sort by creation date
     const sortOrder = req.query.order === "asc" ? 1 : -1; // Default desc (-1)
     const searchTerm = req.query.search || ""; // Search term for title, address parts
-    const statusFilter = req.query.status || ""; // Filter by listingType ('rent', 'buy', 'sold')
+    const filterListingType = req.query.listingType || "";
+    const filterPropertyType = req.query.propertyType || "";
+    const filterIsHidden = req.query.isHidden; // Will be 'true', 'false', or undefined
+    const filterIsFeatured = req.query.isFeatured; // Will be 'true', 'false', or undefined
 
     // --- Calculate Skip ---
     const skip = (page - 1) * limit;
@@ -335,9 +338,35 @@ exports.getAllListings = async (req, res) => {
         { createdBy: regex }, // Search by creator email too
       ];
     }
-    if (statusFilter && ["rent", "buy", "sold"].includes(statusFilter)) {
-      filterQuery.listingType = statusFilter;
+    // New Listing Type Filter
+    if (
+      filterListingType &&
+      ["rent", "buy", "sold"].includes(filterListingType)
+    ) {
+      filterQuery.listingType = filterListingType;
     }
+    // New Property Type Filter
+    if (
+      filterPropertyType &&
+      ["apartment", "house", "condo", "land", "commercial"].includes(
+        filterPropertyType
+      )
+    ) {
+      filterQuery.propertyType = filterPropertyType;
+    }
+    // Visibility Filter
+    if (filterIsHidden === "true") {
+      filterQuery.isHidden = true;
+    } else if (filterIsHidden === "false") {
+      filterQuery.isHidden = { $ne: true }; // Handles false and undefined/null isHidden values
+    } // If undefined, no filter applied
+
+    // Featured Filter
+    if (filterIsFeatured === "true") {
+      filterQuery.featuredAt = { $ne: null }; // Has a featured date
+    } else if (filterIsFeatured === "false") {
+      filterQuery.featuredAt = null; // featuredAt is null
+    } // If undefined, no filter applied
     // Add other filters if needed (e.g., isHidden: req.query.hidden === 'true')
 
     // --- Build Sort Object ---
