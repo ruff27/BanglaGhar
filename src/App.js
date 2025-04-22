@@ -16,6 +16,7 @@ import Footer from "./components/layout/Footer";
 import Home from "./features/home/HomePage";
 import AboutUs from "./features/static/AboutUsPage";
 import Contact from "./features/static/ContactPage";
+import MyListingsPage from "./pages/MyListingsPage";
 import Login from "./pages/Login";
 import ListProperty from "./features/listing/ListPropertyPage";
 import Signup from "./pages/Signup";
@@ -80,56 +81,61 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          {/* Routes are defined here */}
-          <Routes>
-            {/* Routes using the MainLayout (Navbar/Footer) */}
-            <Route element={<MainLayout />}>
-              <Route index element={<Home />} /> {/* Default route */}
-              <Route path="/home" element={<Home />} />
-              <Route path="/properties/:mode" element={<PropertiesPage />} />
-              <Route
-                path="/properties/details/:propertyId"
-                element={<PropertyDetailPage />}
-              />
-              <Route path="/about" element={<AboutUs />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/saved" element={<Saved />} />
-              <Route path="/user-profile" element={<UserProfilePage />} />
-              {/* Add other main pages here */}
-            </Route>
+        <SnackbarProvider>
+          <Router>
+            {/* Routes are defined here */}
+            <Routes>
+              {/* Routes using the MainLayout (Navbar/Footer) */}
+              <Route element={<MainLayout />}>
+                <Route index element={<Home />} /> {/* Default route */}
+                <Route path="/home" element={<Home />} />
+                <Route path="/properties/:mode" element={<PropertiesPage />} />
+                <Route
+                  path="/properties/details/:propertyId"
+                  element={<PropertyDetailPage />}
+                />
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/saved" element={<Saved />} />
+                <Route path="/my-listings" element={<MyListingsPage />} />
+                <Route path="/user-profile" element={<UserProfilePage />} />
+                {/* Add other main pages here */}
+              </Route>
 
-            {/* Routes using the BlankLayout (No Navbar/Footer) */}
-            <Route element={<BlankLayout />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/verify-otp" element={<VerifyOtp />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/list-property" element={<ListProperty />} />
-              {/* Add other full-page routes without main nav/footer here */}
-            </Route>
+              {/* Routes using the BlankLayout (No Navbar/Footer) */}
+              <Route element={<BlankLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/verify-otp" element={<VerifyOtp />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/list-property" element={<ListProperty />} />
+                {/* Add other full-page routes without main nav/footer here */}
+              </Route>
 
-            {/* --- Admin Routes --- */}
-            {/* Wrap the admin routes in the protective component */}
-            <Route element={<AdminProtectedRoute />}>
-              {/* Render the AdminRoutes component for any path starting with /admin */}
-              {/* AdminRoutes itself contains the AdminLayout and specific admin page routes */}
-              {/* Wrap AdminRoutes with SnackbarProvider */}
-              <Route
-                path="/admin/*"
-                element={
-                  <SnackbarProvider>
-                    <AdminRoutes />
-                  </SnackbarProvider>
-                }
-              />
-            </Route>
-            {/* --- End Admin Routes --- */}
+              {/* --- Admin Routes --- */}
+              {/* Wrap the admin routes in the protective component */}
+              <Route element={<AdminProtectedRoute />}>
+                {/* Render the AdminRoutes component for any path starting with /admin */}
+                {/* AdminRoutes itself contains the AdminLayout and specific admin page routes */}
+                {/* Wrap AdminRoutes with SnackbarProvider */}
+                <Route
+                  path="/admin/*"
+                  element={
+                    <SnackbarProvider>
+                      <AdminRoutes />
+                    </SnackbarProvider>
+                  }
+                />
+              </Route>
+              {/* --- End Admin Routes --- */}
 
-            {/* Optional: Catch-all 404 Not Found Route */}
-            {/* <Route path="*" element={<NotFoundPage />} /> */}
-          </Routes>
-        </Router>
+              {/* Optional: Catch-all 404 Not Found Route */}
+              {/* <Route path="*" element={<NotFoundPage />} /> */}
+            </Routes>
+          </Router>
+        </SnackbarProvider>
+        {/* Optional: Add a global Snackbar or Toast component here if needed */}
+        {/* <SnackbarComponent /> */}
       </AuthProvider>
     </ThemeProvider>
   );

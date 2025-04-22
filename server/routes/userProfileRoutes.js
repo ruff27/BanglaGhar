@@ -77,6 +77,13 @@ router.post(
   userProfileController.uploadGovtId
 );
 
+// GET /api/user-profiles/me/listings - Fetch properties listed by current user
+router.get(
+  "/me/listings",
+  authMiddleware, // Ensure user is logged in
+  userProfileController.getMyListings // Use the new controller function
+);
+
 // --- Multer Error Handling Middleware ---
 // This should be placed after routes that use multer
 router.use((error, req, res, next) => {

@@ -1,17 +1,19 @@
-import React from "react";
-import { useState } from "react";
+// src/features/profile/UserProfilePage.js
+import React, { useState } from "react"; // <<< Added useState import
 import {
   Container,
   Paper,
   Typography,
-  Box,
-  CircularProgress,
-  Alert,
+  Box, // <<< Use Box directly
+  CircularProgress, // <<< Use CircularProgress directly
+  Alert, // <<< Use Alert directly
   Snackbar,
   Button,
+  Grid, // <<< Import Grid
+  Divider, // <<< Import Divider
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
 
 // Import Hook and Components
 import useProfileManagement from "./hooks/useProfileManagement";
@@ -22,7 +24,7 @@ import EditNameDialog from "./components/EditNameDialog";
 import ChangePasswordDialog from "./components/ChangePasswordDialog";
 import DeleteAccountDialog from "./components/DeleteAccountDialog";
 
-// Styled Paper for consistent look
+// Styled Paper (Unchanged)
 const ProfilePaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: theme.shadows[3],
@@ -35,11 +37,9 @@ const ProfilePaper = styled(Paper)(({ theme }) => ({
   width: "100%",
 }));
 
-/**
- * UserProfilePage
- */
 const UserProfilePage = () => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation();
+  // Destructure hook returns (ensure these match the hook's return object)
   const {
     profileData,
     loading,
@@ -67,29 +67,29 @@ const UserProfilePage = () => {
     handleUpdatePicture,
   } = useProfileManagement();
 
+  // Snackbar state (Unchanged)
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "info",
   });
-
   const handleShowSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
   };
-
   const handleCloseSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  if (loading) {
+  // --- Main Profile Loading/Error Handling (Unchanged) ---
+  if (loading && !profileData) {
+    // Show loading only if profileData isn't already loaded
     return (
       <Container sx={{ display: "flex", justifyContent: "center", py: 5 }}>
         <CircularProgress />
       </Container>
     );
   }
-
   if (error && !profileData) {
     return (
       <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
@@ -99,57 +99,47 @@ const UserProfilePage = () => {
           onClick={() => window.history.back()}
           sx={{ mt: 2 }}
         >
-          Go Back {/* <-- Kept as is, no key found */}
+          Go Back
         </Button>
       </Container>
     );
   }
+  // Allow rendering even if profileData is null initially if not loading and no error
+  // Components downstream should handle null profileData if necessary
 
-  if (!profileData) {
-    return (
-      <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
-        <Alert severity="warning">
-          {/* Kept as is, no key found */}
-          {error || "User profile data could not be loaded."}
-        </Alert>
-        <Button
-          variant="outlined"
-          onClick={() => window.history.back()}
-          sx={{ mt: 2 }}
-        >
-          Go Back {/* <-- Kept as is, no key found */}
-        </Button>
-      </Container>
-    );
-  }
+  // --- Render My Listings Section ---
+  // Use standard MUI component names, variables come from hook destructuring
 
   return (
     <Container component="main" maxWidth="md" sx={{ py: 4 }}>
+      {/* --- Profile Info Section --- */}
+      {/* Render profile section even if profileData is initially null but not loading/error */}
       <ProfilePaper elevation={3}>
         <Typography
           component="h1"
           variant="h4"
           sx={{ mb: 2, fontWeight: 700, color: "text.primary" }}
         >
-          {t("nav_profile")} {/* Applied translation */}
+          {t("nav_profile")}
         </Typography>
-
-        <ProfilePicture
-          picture={profileData.picture}
-          name={profileData.displayName} // <-- Use displayName here for the initial
-          onPictureChange={handleUpdatePicture}
-          isUpdating={isUpdating}
-          onError={(msg) => handleShowSnackbar(msg, "error")}
-        />
-
+        {/* Conditionally render profile picture only if profileData exists */}
+        {profileData && (
+          <ProfilePicture
+            picture={profileData.picture}
+            name={profileData.displayName} // Use displayName
+            onPictureChange={handleUpdatePicture}
+            isUpdating={isUpdating}
+            onError={(msg) => handleShowSnackbar(msg, "error")}
+          />
+        )}
+        {/* Display general error if needed */}
         {error && (
-          <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
+          <Alert severity="warning" sx={{ width: "100%", mb: 2 }}>
             {error}
           </Alert>
         )}
-
-        <ProfileDisplay profileData={profileData} />
-
+        {/* Conditionally render profile display */}
+        {profileData && <ProfileDisplay profileData={profileData} />}
         <ProfileActions
           onEditName={openEditNameDialog}
           onChangePassword={openPasswordDialog}
@@ -167,7 +157,6 @@ const UserProfilePage = () => {
         isLoading={isUpdating}
         error={dialogError}
       />
-
       <ChangePasswordDialog
         open={passwordOpen}
         onClose={closePasswordDialog}
@@ -179,7 +168,6 @@ const UserProfilePage = () => {
         isLoading={isUpdating}
         error={dialogError}
       />
-
       <DeleteAccountDialog
         open={deleteOpen}
         onClose={closeDeleteDialog}
@@ -188,6 +176,7 @@ const UserProfilePage = () => {
         error={dialogError}
       />
 
+      {/* --- Snackbar --- */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -200,8 +189,7 @@ const UserProfilePage = () => {
           variant="filled"
           sx={{ width: "100%" }}
         >
-          {snackbar.message}{" "}
-          {/* Assume message is simple or translated in hook */}
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </Container>

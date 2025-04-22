@@ -2,6 +2,7 @@
 const UserProfile = require("../models/UserProfile");
 const fs = require("fs");
 const path = require("path");
+const Property = require("../models/property"); // Assuming you have a Property model
 
 // --- getMyProfile function (Modified) ---
 exports.getMyProfile = async (req, res) => {
@@ -206,5 +207,35 @@ exports.uploadGovtId = async (req, res) => {
         console.error("Error deleting uploaded file after DB error:", err);
     });
     res.status(500).json({ message: "Server error processing ID upload." });
+  }
+};
+
+exports.getMyListings = async (req, res) => {
+  // Ensure user is authenticated
+  if (!req.user || !req.user.email) {
+    console.error(
+      "Get My Listings Error: User not authenticated or email missing."
+    );
+    return res.status(401).json({ error: "Authentication required." });
+  }
+
+  const userEmail = req.user.email;
+
+  try {
+    // Find properties where 'createdBy' matches the user's email
+    // Select fields you want to return (optional, but good practice)
+    // Sort by creation date descending (newest first)
+    const userListings = await Property.find({ createdBy: userEmail })
+      .sort({ createdAt: -1 }) // Sort newest first
+      .select(
+        "title price listingType propertyType images addressLine1 cityTown district createdAt isHidden bedrooms bathrooms area"
+      ); // Select relevant fields
+
+    console.log(`Found ${userListings.length} listings for user ${userEmail}`);
+
+    res.status(200).json(userListings);
+  } catch (error) {
+    console.error(`Error fetching listings for user ${userEmail}:`, error);
+    res.status(500).json({ error: "Server error fetching user listings." });
   }
 };

@@ -4,12 +4,22 @@ const mongoose = require("mongoose"); // Ensure mongoose is required if not alre
 
 // Example for Create Property (remains the same):
 exports.createProperty = async (req, res) => {
-  // ... (existing code) ...
+  // Ensure user is authenticated and req.user exists
+  if (!req.user || !req.user.email) {
+    // This check depends on your authMiddleware populating req.user
+    console.error(
+      "Create Property Error: User not authenticated or email missing."
+    );
+    return res
+      .status(401)
+      .json({ error: "Authentication required to list property." });
+  }
+
   try {
     const newProperty = new Property({
-      ...req.body,
-      // Ensure createdBy is handled correctly, perhaps passed in req.body
-      // createdBy: req.user.id // Example if user info was available
+      ...req.body, // Spread the data from the frontend form
+      createdBy: req.user.email, // <<< Set createdBy from authenticated user's email
+      // Make sure other required fields (title, price, etc.) are present in req.body
     });
     await newProperty.save();
     res.status(201).json(newProperty);

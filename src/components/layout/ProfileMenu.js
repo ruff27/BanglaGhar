@@ -19,6 +19,8 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings"; // 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext"; // Adjust path if needed
 import { useTranslation } from "react-i18next";
+import myListings from "../../features/profile/hooks/useMyListings"; // Adjust path if needed
+import HomeWorkIcon from "@mui/icons-material/HomeWork"; // Import icon for My Listings
 
 // Use the corrected prop name 'handleLogout'
 export default function ProfileMenu({ handleLogout }) {
@@ -79,6 +81,15 @@ export default function ProfileMenu({ handleLogout }) {
           </ListItemIcon>
           <ListItemText>{t("nav_profile")}</ListItemText>
         </MenuItem>
+
+        <MenuItem onClick={() => go("/my-listings")}>
+          <ListItemIcon>
+            <HomeWorkIcon fontSize="small" /> {/* Or other suitable icon */}
+          </ListItemIcon>
+          <ListItemText>My Listings</ListItemText>{" "}
+          {/* Add translation key if needed */}
+        </MenuItem>
+
         <MenuItem onClick={() => go("/saved")}>
           <ListItemIcon>
             <FavoriteIcon fontSize="small" />
