@@ -1,5 +1,5 @@
 // src/admin/hooks/useManageUsers.js
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react"; // Added useMemo
 import axios from "axios";
 import { debounce } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
@@ -23,25 +23,38 @@ export const useManageUsers = () => {
   const [orderBy, setOrderBy] = useState("name");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [actionLoading, setActionLoading] = useState({}); // State for specific user action loading
+  const [actionLoading, setActionLoading] = useState({});
 
-  // Debounced search/filter reset page logic
-  const debouncedResetPage = useCallback(
-    debounce(() => setPage(0), 500),
-    [setPage]
-  );
+  // --- REVISED Debounced Reset Page Logic ---
+  // Create the core function to be debounced
+  const resetPage = useCallback(() => {
+    setPage(0);
+  }, [setPage]); // Depends only on the stable setPage
+
+  // Memoize the debounced version of the resetPage function
+  const debouncedResetPage = useMemo(() => {
+    return debounce(resetPage, 500);
+  }, [resetPage]); // Depends on the stable resetPage callback
+  // --- End of Revised Logic ---
+
+  // Debounce cleanup on unmount
+  useEffect(() => {
+    return () => {
+      debouncedResetPage.clear(); // Clear any pending debounce timers
+    };
+  }, [debouncedResetPage]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    debouncedResetPage();
+    debouncedResetPage(); // Call the memoized debounced function
   };
 
   const handleFilterStatusChange = (event) => {
     setFilterStatus(event.target.value);
-    debouncedResetPage();
+    debouncedResetPage(); // Call the memoized debounced function
   };
 
-  // Fetch Users Effect
+  // Fetch Users Effect (No changes needed here)
   useEffect(() => {
     const fetchUsers = async () => {
       if (!idToken) return;
@@ -77,7 +90,7 @@ export const useManageUsers = () => {
     fetchUsers();
   }, [idToken, page, rowsPerPage, orderBy, order, searchTerm, filterStatus]);
 
-  // Handlers for Sorting, Pagination
+  // Handlers for Sorting, Pagination (No changes needed here)
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -94,10 +107,9 @@ export const useManageUsers = () => {
     setPage(0);
   };
 
-  // Handler for User Status Updates (Block/Unblock, Admin, Approval)
+  // Handler for User Status Updates (No changes needed here, assuming previous fix applied)
   const handleUserUpdate = useCallback(
     async (userId, field, value) => {
-      // Basic checks (token, self-update prevention)
       if (!idToken) {
         showSnackbar("Authentication token missing.", "error");
         return;
@@ -125,20 +137,28 @@ export const useManageUsers = () => {
         const response = await axios.put(
           `${API_BASE_URL}/admin/users/${userId}/status`,
           { [field]: value },
-          {
-            headers: { Authorization: `Bearer ${idToken}` },
-          }
+          { headers: { Authorization: `Bearer ${idToken}` } }
         );
-        // Update local state optimistically or based on response
         setUsers((currentUsers) =>
-          currentUsers.map(
-            (user) =>
-              user._id === userId ? { ...user, ...response.data.user } : user // Use response data
+          currentUsers.map((user) =>
+            user._id === userId ? { ...user, ...response.data.user } : user
           )
         );
-        // Show success feedback
         let successMessage = `User ${field} updated successfully.`;
-        // ... (generate specific success messages as before) ...
+        if (field === "accountStatus") {
+          successMessage = `User account ${
+            value === "blocked" ? "blocked" : "unblocked"
+          }.`;
+        } else if (field === "approvalStatus") {
+          successMessage = `User approval status set to ${value.replace(
+            "_",
+            " "
+          )}.`;
+        } else if (field === "isAdmin") {
+          successMessage = `User ${
+            value ? "promoted to Admin" : "demoted to User"
+          }.`;
+        }
         showSnackbar(successMessage, "success");
       } catch (err) {
         console.error(`Error updating user ${userId} field ${field}:`, err);
@@ -146,7 +166,6 @@ export const useManageUsers = () => {
           err.response?.data?.message || `Failed to update user ${field}.`,
           "error"
         );
-        // Optionally revert optimistic update here if needed
       } finally {
         setActionLoading((prev) => ({ ...prev, [userId]: false }));
       }
@@ -159,7 +178,7 @@ export const useManageUsers = () => {
       setUsers,
       setActionLoading,
     ]
-  ); // Add dependencies
+  );
 
   // Return state and handlers needed by the UI
   return {
@@ -182,4 +201,4 @@ export const useManageUsers = () => {
     handleChangeRowsPerPage,
     handleUserUpdate,
   };
-};
+}; // [cite: 2]

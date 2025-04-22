@@ -1,5 +1,5 @@
 // src/admin/hooks/useManageListings.js
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react"; // Added useMemo
 import axios from "axios";
 import { debounce } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
@@ -24,33 +24,44 @@ export const useManageListings = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPropertyType, setFilterPropertyType] = useState("");
   const [filterListingType, setFilterListingType] = useState("");
-  const [filterVisibility, setFilterVisibility] = useState(""); // Stores "true", "false", or ""
-  const [filterFeatured, setFilterFeatured] = useState(""); // Stores "true", "false", or ""
+  const [filterVisibility, setFilterVisibility] = useState("");
+  const [filterFeatured, setFilterFeatured] = useState("");
 
   // State for Actions
-  const [actionLoading, setActionLoading] = useState({}); // For individual row actions (hide/feature)
-  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false); // For bulk delete button
-  const [selected, setSelected] = useState([]); // Array of selected listing IDs
+  const [actionLoading, setActionLoading] = useState({});
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [selected, setSelected] = useState([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  // Debounced reset page handler
-  const debouncedResetPage = useCallback(
-    debounce(() => setPage(0), 500),
-    [setPage]
-  );
+  // --- REVISED Debounced Reset Page Logic ---
+  const resetPage = useCallback(() => {
+    setPage(0);
+  }, [setPage]);
+
+  const debouncedResetPage = useMemo(() => {
+    return debounce(resetPage, 500);
+  }, [resetPage]);
+  // --- End of Revised Logic ---
+
+  // Debounce cleanup on unmount
+  useEffect(() => {
+    return () => {
+      debouncedResetPage.clear();
+    };
+  }, [debouncedResetPage]);
 
   // Filter/Search Handlers
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    debouncedResetPage();
+    debouncedResetPage(); // Call memoized debounced function
   };
 
   const handleFilterChange = (setter) => (event) => {
     setter(event.target.value);
-    debouncedResetPage();
+    debouncedResetPage(); // Call memoized debounced function
   };
 
-  // Fetch Listings Effect
+  // Fetch Listings Effect (No changes needed here)
   useEffect(() => {
     const fetchListings = async () => {
       if (!idToken) return;
@@ -71,13 +82,10 @@ export const useManageListings = () => {
       try {
         const response = await axios.get(
           `${API_BASE_URL}/admin/listings?${params.toString()}`,
-          {
-            headers: { Authorization: `Bearer ${idToken}` },
-          }
+          { headers: { Authorization: `Bearer ${idToken}` } }
         );
         setListings(response.data.listings || []);
         setTotalListings(response.data.totalListings || 0);
-        // Clear selection when data reloads to avoid stale selections
         setSelected([]);
       } catch (err) {
         console.error("Error fetching listings:", err);
@@ -104,7 +112,7 @@ export const useManageListings = () => {
     filterFeatured,
   ]);
 
-  // --- Selection Handlers ---
+  // --- Selection Handlers (No changes needed here) ---
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
       const newSelecteds = listings.map((n) => n._id);
@@ -115,7 +123,6 @@ export const useManageListings = () => {
   };
 
   const handleRowClick = (event, id) => {
-    // Renamed from handleClick for clarity
     const selectedIndex = selected.indexOf(id);
     let newSelected = [];
     if (selectedIndex === -1) newSelected = newSelected.concat(selected, id);
@@ -133,7 +140,7 @@ export const useManageListings = () => {
 
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  // --- Sorting & Pagination Handlers ---
+  // --- Sorting & Pagination Handlers (No changes needed here) ---
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -146,7 +153,7 @@ export const useManageListings = () => {
     setPage(0);
   };
 
-  // --- Individual Action Handlers ---
+  // --- Individual Action Handlers (No changes needed here, assuming previous fix applied) ---
   const handleVisibilityToggle = useCallback(
     async (id, isHidden) => {
       if (!idToken) {
@@ -161,7 +168,6 @@ export const useManageListings = () => {
           { isHidden: !isHidden },
           { headers: { Authorization: `Bearer ${idToken}` } }
         );
-        // Update local state
         setListings((lst) =>
           lst.map((l) => (l._id === id ? { ...l, isHidden: !isHidden } : l))
         );
@@ -176,7 +182,7 @@ export const useManageListings = () => {
         setActionLoading((prev) => ({ ...prev, [currentActionKey]: false }));
       }
     },
-    [idToken, showSnackbar, setListings, setActionLoading]
+    [idToken, showSnackbar, setListings, setActionLoading] // Keep dependencies updated
   );
 
   const handleFeatureToggle = useCallback(
@@ -194,7 +200,6 @@ export const useManageListings = () => {
           { feature: !isCurrentlyFeatured },
           { headers: { Authorization: `Bearer ${idToken}` } }
         );
-        // Update local state
         setListings((lst) =>
           lst.map((l) =>
             l._id === id
@@ -218,28 +223,25 @@ export const useManageListings = () => {
         setActionLoading((prev) => ({ ...prev, [currentActionKey]: false }));
       }
     },
-    [idToken, showSnackbar, setListings, setActionLoading]
+    [idToken, showSnackbar, setListings, setActionLoading] // Keep dependencies updated
   );
 
-  // --- Bulk Delete Handlers ---
+  // --- Bulk Delete Handlers (No changes needed here) ---
   const handleDeleteSelected = () => {
-    // Just opens the dialog
     if (selected.length === 0 || !idToken) return;
     setConfirmDialogOpen(true);
   };
 
   const executeBulkDelete = async () => {
-    // Called by dialog confirmation
     setBulkDeleteLoading(true);
     try {
       const response = await axios.delete(`${API_BASE_URL}/admin/listings`, {
         headers: { Authorization: `Bearer ${idToken}` },
-        data: { listingIds: selected }, // Send IDs in the request body
+        data: { listingIds: selected },
       });
-      // Update local state
       setListings((prev) => prev.filter((l) => !selected.includes(l._id)));
       setTotalListings((prev) => prev - response.data.deletedCount);
-      setSelected([]); // Clear selection
+      setSelected([]);
       showSnackbar(
         `${response.data.deletedCount} listing(s) deleted successfully.`,
         "success"
@@ -279,9 +281,9 @@ export const useManageListings = () => {
     bulkDeleteLoading,
     selected,
     confirmDialogOpen,
-    isSelected, // Pass helper
+    isSelected,
     handleSearchChange,
-    handleFilterChange, // Pass generic filter handler
+    handleFilterChange,
     handleSelectAllClick,
     handleRowClick,
     handleRequestSort,
@@ -289,12 +291,12 @@ export const useManageListings = () => {
     handleChangeRowsPerPage,
     handleVisibilityToggle,
     handleFeatureToggle,
-    handleDeleteSelected, // To open dialog
-    executeBulkDelete, // To execute delete
-    closeConfirmDialog, // To close dialog
-    setFilterPropertyType, // Pass setters for filters if needed by ListingFilters
+    handleDeleteSelected,
+    executeBulkDelete,
+    closeConfirmDialog,
+    setFilterPropertyType,
     setFilterListingType,
     setFilterVisibility,
     setFilterFeatured,
   };
-};
+}; // [cite: 1]
