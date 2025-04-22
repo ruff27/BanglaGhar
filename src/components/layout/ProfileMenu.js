@@ -49,8 +49,10 @@ export default function ProfileMenu({ handleLogout }) {
       <Tooltip title="Account">
         <IconButton onClick={handleOpen} sx={{ p: 0, ml: 2 }}>
           <Avatar sx={{ bgcolor: "primary.main" }}>
-            {/* Display first letter of user's name or default icon */}
-            {user?.name?.charAt(0).toUpperCase() || <AccountCircleIcon />}
+            {/* Use displayName first, fallback to name, then icon */}
+            {(
+              user?.displayName?.charAt(0) || user?.name?.charAt(0)
+            )?.toUpperCase() || <AccountCircleIcon />}
           </Avatar>
         </IconButton>
       </Tooltip>

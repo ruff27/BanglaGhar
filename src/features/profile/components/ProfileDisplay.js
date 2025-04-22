@@ -44,8 +44,9 @@ const ProfileDisplay = ({ profileData }) => {
           </ListItemIcon>
           {/* Applied translation */}
           <ListItemText
-            primary={t("name")}
-            secondary={profileData.name || "-"}
+            primary={t("Display Name")} // Consider using a specific translation key
+            // Show displayName, fallback to Cognito name, then placeholder
+            secondary={profileData.displayName || profileData.name || "-"}
           />
         </ListItem>
         <Divider component="li" />

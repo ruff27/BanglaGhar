@@ -18,7 +18,6 @@ import useProfileManagement from "./hooks/useProfileManagement";
 import ProfilePicture from "./components/ProfilePicture";
 import ProfileDisplay from "./components/ProfileDisplay";
 import ProfileActions from "./components/ProfileActions";
-
 import EditNameDialog from "./components/EditNameDialog";
 import ChangePasswordDialog from "./components/ChangePasswordDialog";
 import DeleteAccountDialog from "./components/DeleteAccountDialog";
@@ -137,7 +136,7 @@ const UserProfilePage = () => {
 
         <ProfilePicture
           picture={profileData.picture}
-          name={profileData.name}
+          name={profileData.displayName} // <-- Use displayName here for the initial
           onPictureChange={handleUpdatePicture}
           isUpdating={isUpdating}
           onError={(msg) => handleShowSnackbar(msg, "error")}

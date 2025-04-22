@@ -58,6 +58,13 @@ const upload = multer({
 // Route to get the logged-in user's profile
 router.get("/me", authMiddleware, userProfileController.getMyProfile);
 
+// PUT /api/user-profiles/me - Update current user's profile (e.g., displayName)
+router.put(
+  "/me",
+  authMiddleware, // Ensures user is logged in
+  userProfileController.updateMyProfile // Uses the new controller function
+);
+
 // NEW: Route to upload government ID
 // Applying middlewares:
 // 1. authMiddleware: Verifies token, attaches req.user

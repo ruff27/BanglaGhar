@@ -300,6 +300,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     signup,
+    checkAuthState, // Keep this for manual checks if needed
     // updateAuthState, // Removed
   };
 
