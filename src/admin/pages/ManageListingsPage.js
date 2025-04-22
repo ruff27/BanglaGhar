@@ -29,6 +29,7 @@ import {
   Checkbox,
   Button,
   Toolbar,
+  Dialog,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -39,6 +40,7 @@ import { format } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
 import { formatPrice } from "../../utils/formatPrice";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -250,16 +252,16 @@ const ManageListingsPage = () => {
     }
   };
 
-  // --- Bulk Delete Handler ---
+  // --- Bulk Delete: Step 1 - Open Confirmation Dialog ---
   const handleDeleteSelected = async () => {
     if (selected.length === 0 || !idToken) return;
+    // Just open the confirmation dialog
+    setConfirmDialogOpen(true);
+  };
 
-    // Optional: Show confirmation dialog before proceeding
-    // setConfirmDialogOpen(true);
-    // // If using a confirmation dialog, the actual deletion logic would move
-    // // to the dialog's confirm handler. For simplicity, deleting directly here:
-
-    setBulkDeleteLoading(true);
+  // --- Bulk Delete: Step 2 - Execute Deletion (Called by Dialog's Confirm) ---
+  const executeBulkDelete = async () => {
+    setBulkDeleteLoading(true); // Show loading state on confirm button
     setError(null);
     try {
       const response = await axios.delete(`${API_BASE_URL}/admin/listings`, {
@@ -271,19 +273,20 @@ const ManageListingsPage = () => {
       // Refresh listings after deletion
       setListings((prev) => prev.filter((l) => !selected.includes(l._id)));
       setSelected([]); // Clear selection
-      // Optionally trigger a full refetch if pagination/total counts need update
-      // fetchListings(); // Or manually adjust totalListings count
       setTotalListings((prev) => prev - response.data.deletedCount);
+      // Optionally: Add a success Snackbar/Toast message here later (Req 5)
     } catch (err) {
       console.error("Error deleting selected listings:", err);
       setError(
         err.response?.data?.message || "Failed to delete selected listings."
       );
+      // Optionally: Add an error Snackbar/Toast message here later (Req 5)
     } finally {
       setBulkDeleteLoading(false);
-      // setConfirmDialogOpen(false);
+      setConfirmDialogOpen(false); // Close the dialog regardless of success/error
     }
   };
+
   const formatDate = (ds) => {
     try {
       return format(new Date(ds), "PP"); // PP formats like 'Oct 13, 2023'
@@ -384,9 +387,6 @@ const ManageListingsPage = () => {
                   disabled={bulkDeleteLoading}
                 >
                   <DeleteIcon />
-                  {bulkDeleteLoading && (
-                    <CircularProgress size={24} sx={{ position: "absolute" }} />
-                  )}
                 </IconButton>
               </span>
             </Tooltip>
@@ -635,18 +635,18 @@ const ManageListingsPage = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
-      {/* 
-      {
-        <ConfirmationDialog // Confirmation Dialog
-          open={confirmDialogOpen}
-          onClose={() => setConfirmDialogOpen(false)}
-          onConfirm={handleDeleteSelected} // Call the actual delete logic on confirm
-          title="Confirm Deletion"
-          message={`Are you sure you want to delete ${selected.length} selected listing(s)? This action cannot be undone.`}
-          confirmText="Delete"
-          cancelText="Cancel"
-        />
-      } */}
+      {/* --- Confirmation Dialog Integration --- */}
+      <ConfirmationDialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)} // Close dialog on cancel/outside click
+        onConfirm={executeBulkDelete} // Call the actual delete logic on confirm
+        title="Confirm Deletion"
+        message={`Are you sure you want to delete ${selected.length} selected listing(s)? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmButtonProps={{ color: "error" }} // Make delete button red
+        isConfirming={bulkDeleteLoading} // Show loading state on confirm button
+      />
     </Container>
   );
 };

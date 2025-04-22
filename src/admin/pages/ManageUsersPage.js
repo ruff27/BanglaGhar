@@ -182,18 +182,21 @@ const ManageUsersPage = () => {
   // --- Handler for User Status Updates (no change needed here) ---
   const handleUserUpdate = async (userId, field, value) => {
     // ... (update logic remains the same) ...
+
     if (!idToken) {
       setError("Authentication token not available for update.");
       return;
     }
-    if (
-      loggedInUser?.email === users.find((u) => u._id === userId)?.email &&
-      field === "isAdmin"
-    ) {
+    const targetUser = users.find((u) => u._id === userId);
+    const isSelf = loggedInUser?.email === targetUser?.email;
+
+    if (isSelf && field === "isAdmin") {
       setError("You cannot change your own admin status from this interface.");
       return;
     }
-    if (field === "accountStatus" && value === "blocked") {
+
+    // 2) can’t block your own account
+    if (isSelf && field === "accountStatus" && value === "blocked") {
       setError("You cannot block your own account.");
       return;
     }
@@ -471,7 +474,7 @@ const ManageUsersPage = () => {
                                 )
                               }
                               disabled={isCurrentUser || isLoadingAction}
-                              color="secondary"
+                              color="success"
                               size="small"
                             />
                           </span>
