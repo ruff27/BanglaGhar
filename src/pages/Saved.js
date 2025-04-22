@@ -4,17 +4,15 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  Button,
   CircularProgress,
   Alert,
   Snackbar,
 } from "@mui/material";
-import { useAuth } from "../context/AuthContext"; // Adjust path if needed
+import { useAuth } from "../context/AuthContext";
 import axios from "axios";
-import { Link as RouterLink } from "react-router-dom"; // *** Import RouterLink ***
+import { Link as RouterLink } from "react-router-dom";
+// Ensure this path is correct for your project structure
+import PropertyCard from "../features/properties/components/PropertyCard";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -30,6 +28,8 @@ const Saved = () => {
     severity: "info",
   });
 
+  // --- Functions (fetchSavedProperties, handleRemoveFromWishlist, handleCloseSnackbar) ---
+  // Unchanged
   const fetchSavedProperties = useCallback(async () => {
     if (isLoggedIn && user?.email) {
       setLoading(true);
@@ -64,8 +64,8 @@ const Saved = () => {
     fetchSavedProperties();
   }, [fetchSavedProperties]);
 
-  const removeFromWishlist = async (propertyId) => {
-    if (!user?.email) return;
+  const handleRemoveFromWishlist = async (propertyId) => {
+    if (!user?.email || !propertyId) return;
     try {
       await axios.delete(`${API_BASE_URL}/users/${user.email}/wishlist`, {
         data: { propertyId },
@@ -91,94 +91,68 @@ const Saved = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
+  // --- Loading/Error/Login States (using maxWidth="lg") ---
   if (loading) {
-    /* ... loading UI ... */
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 2 }}>Loading saved properties...</Typography>
+      </Container>
+    );
   }
   if (!isLoggedIn) {
-    /* ... login prompt ... */
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="warning">
+          Please <RouterLink to="/login">log in</RouterLink> to view your saved
+          properties.
+        </Alert>
+      </Container>
+    );
   }
   if (error) {
-    /* ... error UI ... */
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
   }
 
+  // --- Main Content ---
   return (
-    <Container sx={{ py: 4 }}>
+    // Use standard Container settings matching MyListingsPage
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" sx={{ mb: 4 }}>
         Saved Properties
       </Typography>
-      {savedProperties.length === 0 ? (
+      {savedProperties.length === 0 && !loading ? (
         <Alert severity="info">You haven't saved any properties yet.</Alert>
       ) : (
+        // Use standard Grid container (no width: 100% needed usually)
         <Grid container spacing={3}>
           {savedProperties.map((property) =>
             property && property._id ? (
+              // Use standard Grid item sizing
               <Grid item xs={12} sm={6} md={4} key={property._id}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={
-                      property.images?.[0]
-                        ? `/pictures/${property.images[0]}`
-                        : "/pictures/placeholder.png"
-                    }
-                    alt={property.title || "Property Image"}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/pictures/placeholder.png";
-                    }}
-                  />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="h6" gutterBottom noWrap>
-                      {property.title || "Untitled Property"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {property.location || "No Location"}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ mt: 1, fontWeight: "bold", color: "primary.main" }}
-                    >
-                      {property.price
-                        ? `৳${property.price.toLocaleString()}`
-                        : "Price N/A"}
-                    </Typography>
-                  </CardContent>
-                  <Box sx={{ p: 2, pt: 0, display: "flex", gap: 1 }}>
-                    {/* *** FIX: Use RouterLink for View Details *** */}
-                    <Button
-                      component={RouterLink}
-                      to={`/properties/details/${property._id}`} // Link to property detail page
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      fullWidth
-                    >
-                      View Details
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={() => removeFromWishlist(property._id)}
-                      fullWidth
-                    >
-                      Remove
-                    </Button>
-                  </Box>
-                </Card>
+                <PropertyCard
+                  property={property}
+                  isWishlisted={true}
+                  onWishlistToggle={() =>
+                    handleRemoveFromWishlist(property._id)
+                  }
+                />
               </Grid>
             ) : null
           )}
         </Grid>
       )}
-      <Snackbar /* ... snackbar code ... */>
+      {/* --- Snackbar --- */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}

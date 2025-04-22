@@ -19,27 +19,22 @@ import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
 import WishlistButton from "./WishlistButton";
 
-/**
- * PropertyCard Component - Updated for new address structure
- */
 const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
   const theme = useTheme();
 
-  // Add more robust checking
   if (!property || typeof property !== "object" || !property._id) {
     console.warn("PropertyCard received invalid property data:", property);
     return null;
   }
 
-  const placeholderImg = `/pictures/placeholder.png`; // Ensure this path is correct relative to your public folder
-  // Check if images array exists and has content
+  const placeholderImg = `/pictures/placeholder.png`;
   const imgSrc =
     Array.isArray(property.images) && property.images.length > 0
-      ? `/pictures/${property.images[0]}` // Assuming image names are stored directly
+      ? `/pictures/${property.images[0]}`
       : placeholderImg;
 
   const handleImageError = (e) => {
-    e.target.onerror = null; // Prevent infinite loop if placeholder fails
+    e.target.onerror = null;
     e.target.src = placeholderImg;
   };
 
@@ -47,40 +42,41 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
     property.price !== null && property.price !== undefined
       ? `৳ ${Number(property.price).toLocaleString()}${
           property.listingType === "rent" ? "/mo" : ""
-        }` // Use listingType
+        }`
       : "Price N/A";
 
-  // Use listingType for chip logic
   const chipBgColor =
     property.listingType === "sold"
       ? theme.palette.grey[700]
       : theme.palette.primary.main;
 
-  // Construct location string from new fields
   const locationString =
     [
       property.addressLine1,
       property.upazila,
-      property.cityTown, // Or district? Choose the most relevant parts for a short display
+      property.cityTown,
       property.district,
     ]
-      .filter(Boolean) // Remove empty/null parts
-      .join(", ") || "Location N/A"; // Fallback
+      .filter(Boolean)
+      .join(", ") || "Location N/A";
 
   const detailUrl = `/properties/details/${property._id}`;
   const isLandOrCommercial =
     property.propertyType === "land" || property.propertyType === "commercial";
 
   return (
+    // Wrap with RouterLink first
+    // --- Ensure Link fills the Grid Item ---
     <RouterLink
       to={detailUrl}
-      style={{ textDecoration: "none", height: "100%" }}
+      style={{ textDecoration: "none", display: "block", height: "100%" }}
     >
       <Card
         sx={{
-          /* Existing styles... */ borderRadius: "12px",
+          borderRadius: "12px",
           overflow: "hidden",
           boxShadow: "0 5px 15px rgba(0, 0, 0, 0.06)",
+          // --- Ensure Card fills the Link wrapper ---
           height: "100%",
           display: "flex",
           flexDirection: "column",
@@ -93,20 +89,32 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
         }}
       >
         <Box sx={{ position: "relative", width: "100%" }}>
-          <WishlistButton
-            isWishlisted={isWishlisted}
-            onClick={onWishlistToggle}
-            sx={{ position: "absolute", top: 8, right: 8, zIndex: 2 }}
-          />
+          {/* Add stopPropagation to WishlistButton onClick */}
+          {onWishlistToggle && (
+            <WishlistButton
+              isWishlisted={isWishlisted}
+              onClick={(e) => {
+                e.preventDefault(); // Prevent default link behavior
+                e.stopPropagation(); // Stop click from reaching RouterLink
+                onWishlistToggle();
+              }}
+              sx={{ position: "absolute", top: 8, right: 8, zIndex: 2 }}
+            />
+          )}
+          {/* --- Use Aspect Ratio for Image --- */}
           <CardMedia
             component="img"
-            height="200"
+            // height="200" // <-- REMOVED fixed height
             image={imgSrc}
             alt={property.title || "Property image"}
             onError={handleImageError}
-            sx={{ objectFit: "cover" }}
+            sx={{
+              objectFit: "cover",
+              // Use aspect ratio for responsive height
+              aspectRatio: "16/9", // Common ratio, adjust e.g., '3/2', '4/3' if needed
+              width: "100%", // Ensure it takes full width
+            }}
           />
-          {/* Use listingType */}
           {property.listingType && (
             <Chip
               label={
@@ -115,7 +123,7 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
               }
               size="small"
               sx={{
-                /* Existing styles... */ position: "absolute",
+                position: "absolute",
                 top: 8,
                 left: 8,
                 zIndex: 1,
@@ -131,12 +139,15 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
 
         <CardContent
           sx={{
-            /* Existing styles... */ flexGrow: 1,
+            flexGrow: 1, // Allows content to expand vertically
             display: "flex",
             flexDirection: "column",
             width: "100%",
+            p: 2, // Ensure consistent padding
+            // Remove padding bottom if Divider has margin: pb: 0
           }}
         >
+          {/* Top details */}
           <Typography
             variant="h6"
             component="div"
@@ -156,30 +167,32 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
             <LocationOnIcon
               sx={{ fontSize: "1rem", mr: 0.5, color: "primary.main" }}
             />
-            {/* Use constructed locationString */}
             <Typography variant="body2" noWrap title={locationString}>
               {locationString}
             </Typography>
           </Box>
 
-          {/* Features - Conditionally render based on type */}
+          {/* Middle features */}
           {!isLandOrCommercial ? (
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 1,
+                justifyContent: "space-between", // Distribute space
+                flexWrap: "wrap", // Allow wrapping on narrow cards
+                gap: 1.5, // Space between items
                 mb: 2,
                 color: "text.secondary",
+                alignItems: "center",
               }}
             >
+              {/* Bed */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <BedIcon sx={{ fontSize: "1.1rem", color: "primary.light" }} />
                 <Typography variant="body2">
                   {property.bedrooms ?? "?"} Beds
                 </Typography>
               </Box>
+              {/* Bath */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <BathtubIcon
                   sx={{ fontSize: "1.1rem", color: "primary.light" }}
@@ -188,6 +201,7 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
                   {property.bathrooms ?? "?"} Baths
                 </Typography>
               </Box>
+              {/* Area */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <SquareFootIcon
                   sx={{ fontSize: "1.1rem", color: "primary.light" }}
@@ -198,7 +212,7 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
               </Box>
             </Box>
           ) : (
-            // Display Area prominently for Land/Commercial
+            // Area for Land/Commercial
             <Box
               sx={{
                 display: "flex",
@@ -214,19 +228,20 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
               <Typography variant="body2">
                 Area: {property.area ?? "?"} sqft
               </Typography>
-              {/* Add other relevant info for Land/Commercial if available */}
             </Box>
           )}
 
-          <Divider sx={{ my: 1 }} />
+          {/* --- Spacer pushes content below it to the bottom --- */}
+          <Box sx={{ flexGrow: 1 }} />
 
-          {/* Price and Type */}
+          {/* Bottom divider and price/type */}
+          <Divider sx={{ my: 1 }} />
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              mt: "auto",
+              // mt: "auto", // REMOVED - using spacer box now
             }}
           >
             <Typography
