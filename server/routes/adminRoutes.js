@@ -65,7 +65,12 @@ router.put("/users/:userId/approve", requireAdmin, adminController.approveUser);
 // Reject a user
 router.put("/users/:userId/reject", requireAdmin, adminController.rejectUser);
 
-// Add other admin routes here later
+// --- NEW: Delete Multiple Listings ---
+router.delete(
+  "/listings", // Using DELETE method on the base /listings route for bulk action
+  requireAdmin,
+  adminController.deleteMultipleListings // Link to the new controller function
+);
 
 // Ensure this line is present and correct at the very end
 module.exports = router;

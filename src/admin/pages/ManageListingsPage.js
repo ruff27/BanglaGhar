@@ -26,6 +26,9 @@ import {
   Avatar,
   Tooltip,
   IconButton,
+  Checkbox,
+  Button,
+  Toolbar,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -35,11 +38,19 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { format } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
 import { formatPrice } from "../../utils/formatPrice";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
 const headCells = [
+  {
+    id: "select",
+    numeric: false,
+    disablePadding: true,
+    label: "", // No label needed, will use Checkbox
+    sortable: false,
+  },
   {
     id: "images",
     numeric: false,
@@ -98,6 +109,9 @@ const ManageListingsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [actionLoading, setActionLoading] = useState({});
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [selected, setSelected] = useState([]);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   const debouncedSearch = useCallback(
     debounce(() => setPage(0), 500),
@@ -144,6 +158,37 @@ const ManageListingsPage = () => {
     };
     fetchListings();
   }, [idToken, page, rowsPerPage, orderBy, order, searchTerm, filterStatus]);
+
+  // --- Selection Handlers ---
+  const handleSelectAllClick = (event) => {
+    if (event.target.checked) {
+      const newSelecteds = listings.map((n) => n._id);
+      setSelected(newSelecteds);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleClick = (event, id) => {
+    const selectedIndex = selected.indexOf(id);
+    let newSelected = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1)
+      );
+    }
+    setSelected(newSelected);
+  };
+
+  const isSelected = (id) => selected.indexOf(id) !== -1;
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -205,13 +250,48 @@ const ManageListingsPage = () => {
     }
   };
 
-  const formatDate = (ds) => {
+  // --- Bulk Delete Handler ---
+  const handleDeleteSelected = async () => {
+    if (selected.length === 0 || !idToken) return;
+
+    // Optional: Show confirmation dialog before proceeding
+    // setConfirmDialogOpen(true);
+    // // If using a confirmation dialog, the actual deletion logic would move
+    // // to the dialog's confirm handler. For simplicity, deleting directly here:
+
+    setBulkDeleteLoading(true);
+    setError(null);
     try {
-      return format(new Date(ds), "PP");
-    } catch {
-      return "-";
+      const response = await axios.delete(`${API_BASE_URL}/admin/listings`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+        data: { listingIds: selected }, // Send IDs in the request body
+      });
+
+      console.log("Bulk delete response:", response.data);
+      // Refresh listings after deletion
+      setListings((prev) => prev.filter((l) => !selected.includes(l._id)));
+      setSelected([]); // Clear selection
+      // Optionally trigger a full refetch if pagination/total counts need update
+      // fetchListings(); // Or manually adjust totalListings count
+      setTotalListings((prev) => prev - response.data.deletedCount);
+    } catch (err) {
+      console.error("Error deleting selected listings:", err);
+      setError(
+        err.response?.data?.message || "Failed to delete selected listings."
+      );
+    } finally {
+      setBulkDeleteLoading(false);
+      // setConfirmDialogOpen(false);
     }
   };
+  const formatDate = (ds) => {
+    try {
+      return format(new Date(ds), "PP"); // PP formats like 'Oct 13, 2023'
+    } catch {
+      return "-"; // Return hyphen if date is invalid
+    }
+  };
+
   const getListingStatusChipColor = (status) => {
     switch (status) {
       case "buy":
@@ -223,11 +303,15 @@ const ManageListingsPage = () => {
     }
   };
 
+  const numSelected = selected.length;
+  const rowCount = listings.length;
+
   return (
     <Container maxWidth="xl">
       <Typography variant="h4" gutterBottom sx={{ mt: 2, mb: 2 }}>
         Manage Listings
       </Typography>
+      {/* Search/Filter Bar (existing) */}
       <Paper sx={{ mb: 2, p: 2 }} elevation={2}>
         <Box
           sx={{
@@ -251,7 +335,63 @@ const ManageListingsPage = () => {
             }}
             sx={{ flexGrow: 1, minWidth: 300 }}
           />
+          {/* Add filter dropdown if needed */}
         </Box>
+      </Paper>
+      {/* --- Enhanced Toolbar for Bulk Actions --- */}
+      <Paper sx={{ width: "100%", mb: 2 }} elevation={1}>
+        <Toolbar
+          sx={{
+            pl: { sm: 2 },
+            pr: { xs: 1, sm: 1 },
+            ...(numSelected > 0 && {
+              bgcolor: (theme) =>
+                theme.palette.mode === "light"
+                  ? theme.palette.secondary.lighter // Example color
+                  : theme.palette.secondary.darker, // Example color
+            }),
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          {numSelected > 0 ? (
+            <Typography
+              sx={{ flex: "1 1 100%" }}
+              color="inherit"
+              variant="subtitle1"
+              component="div"
+            >
+              {numSelected} selected
+            </Typography>
+          ) : (
+            <Typography
+              sx={{ flex: "1 1 100%" }}
+              variant="h6"
+              id="tableTitle"
+              component="div"
+            >
+              All Listings {/* Or keep your search bar here */}
+            </Typography>
+          )}
+
+          {numSelected > 0 && (
+            <Tooltip title="Delete Selected">
+              <span>
+                {" "}
+                {/* Span needed for disabled button tooltip */}
+                <IconButton
+                  onClick={handleDeleteSelected}
+                  disabled={bulkDeleteLoading}
+                >
+                  <DeleteIcon />
+                  {bulkDeleteLoading && (
+                    <CircularProgress size={24} sx={{ position: "absolute" }} />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+        </Toolbar>
       </Paper>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
@@ -259,7 +399,9 @@ const ManageListingsPage = () => {
         </Alert>
       )}
       <Paper sx={{ width: "100%", overflow: "hidden" }} elevation={3}>
-        <TableContainer sx={{ maxHeight: "calc(100vh-300px)" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 350px)" }}>
+          {" "}
+          {/* Adjusted height */}
           <Table stickyHeader sx={{ minWidth: 1000 }}>
             <TableHead>
               <TableRow
@@ -270,39 +412,62 @@ const ManageListingsPage = () => {
                   },
                 }}
               >
-                {headCells.map((h) => (
-                  <TableCell
-                    key={h.id}
-                    align={h.numeric ? "right" : "left"}
-                    padding={h.disablePadding ? "none" : "normal"}
-                    sortDirection={orderBy === h.id ? order : false}
-                  >
-                    {h.sortable !== false ? (
-                      <TableSortLabel
-                        active={orderBy === h.id}
-                        direction={orderBy === h.id ? order : "asc"}
-                        onClick={(e) => handleRequestSort(e, h.id)}
-                        sx={{
-                          "&.Mui-active": { color: "primary.contrastText" },
-                          "& .MuiTableSortLabel-icon": {
-                            color: "primary.contrastText!important",
-                          },
-                        }}
+                <TableCell padding="checkbox">
+                  {" "}
+                  {/* Header Checkbox */}
+                  <Checkbox
+                    color="primary"
+                    indeterminate={numSelected > 0 && numSelected < rowCount}
+                    checked={rowCount > 0 && numSelected === rowCount}
+                    onChange={handleSelectAllClick}
+                    inputProps={{ "aria-label": "select all listings" }}
+                    sx={{
+                      color: "primary.contrastText",
+                      "&.Mui-checked": { color: "primary.contrastText" },
+                      "&.MuiCheckbox-indeterminate": {
+                        color: "primary.contrastText",
+                      },
+                    }}
+                  />
+                </TableCell>
+                {headCells.map(
+                  (
+                    h // Skip 'select' headCell since it's handled above
+                  ) =>
+                    h.id !== "select" && (
+                      <TableCell
+                        key={h.id}
+                        align={h.numeric ? "right" : "left"}
+                        padding={h.disablePadding ? "none" : "normal"}
+                        sortDirection={orderBy === h.id ? order : false}
                       >
-                        {h.label}
-                      </TableSortLabel>
-                    ) : (
-                      h.label
-                    )}
-                  </TableCell>
-                ))}
+                        {h.sortable !== false ? (
+                          <TableSortLabel
+                            active={orderBy === h.id}
+                            direction={orderBy === h.id ? order : "asc"}
+                            onClick={(e) => handleRequestSort(e, h.id)}
+                            sx={{
+                              "&.Mui-active": { color: "primary.contrastText" },
+                              "& .MuiTableSortLabel-icon": {
+                                color: "primary.contrastText!important",
+                              },
+                            }}
+                          >
+                            {h.label}
+                          </TableSortLabel>
+                        ) : (
+                          h.label
+                        )}
+                      </TableCell>
+                    )
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={headCells.length}
+                    colSpan={headCells.length + 1} // Adjusted colspan
                     align="center"
                     sx={{ py: 5 }}
                   >
@@ -311,23 +476,43 @@ const ManageListingsPage = () => {
                 </TableRow>
               ) : listings.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={headCells.length} align="center">
+                  <TableCell
+                    colSpan={headCells.length + 1} // Adjusted colspan
+                    align="center"
+                  >
                     No listings found.
                   </TableCell>
                 </TableRow>
               ) : (
                 listings.map((l) => {
+                  const isItemSelected = isSelected(l._id); // <-- Check if item is selected
+                  const labelId = `enhanced-table-checkbox-${l._id}`;
                   const hidKey = l._id;
                   const featKey = "feature-" + l._id;
                   const anyLoading =
                     actionLoading[hidKey] || actionLoading[featKey];
                   const isFeatured = l.featuredAt != null;
+
                   return (
                     <TableRow
                       key={l._id}
                       hover
-                      sx={{ opacity: l.isHidden ? 0.6 : 1 }}
+                      onClick={(event) => handleClick(event, l._id)} // <-- Handle row click for selection
+                      role="checkbox"
+                      aria-checked={isItemSelected}
+                      tabIndex={-1}
+                      selected={isItemSelected} // <-- Highlight selected rows
+                      sx={{ opacity: l.isHidden ? 0.6 : 1, cursor: "pointer" }} // Add pointer cursor
                     >
+                      <TableCell padding="checkbox">
+                        {" "}
+                        {/* Row Checkbox */}
+                        <Checkbox
+                          color="primary"
+                          checked={isItemSelected}
+                          inputProps={{ "aria-labelledby": labelId }}
+                        />
+                      </TableCell>
                       <TableCell padding="checkbox">
                         <Avatar
                           variant="rounded"
@@ -378,16 +563,20 @@ const ManageListingsPage = () => {
                       <TableCell>{l.createdBy}</TableCell>
                       <TableCell>{formatDate(l.createdAt)}</TableCell>
                       <TableCell align="center">
+                        {" "}
+                        {/* Actions */}
+                        {/* Stop propagation on buttons to prevent row selection */}
                         <Tooltip
                           title={l.isHidden ? "Make Visible" : "Hide Listing"}
                         >
                           <span>
                             <IconButton
                               size="small"
-                              onClick={() =>
-                                handleVisibilityToggle(hidKey, l.isHidden)
-                              }
-                              disabled={anyLoading}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleVisibilityToggle(hidKey, l.isHidden);
+                              }}
+                              disabled={anyLoading || bulkDeleteLoading}
                               color={l.isHidden ? "warning" : "default"}
                             >
                               {l.isHidden ? (
@@ -406,10 +595,11 @@ const ManageListingsPage = () => {
                           <span>
                             <IconButton
                               size="small"
-                              onClick={() =>
-                                handleFeatureToggle(hidKey, l.featuredAt)
-                              }
-                              disabled={anyLoading}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFeatureToggle(hidKey, l.featuredAt);
+                              }}
+                              disabled={anyLoading || bulkDeleteLoading}
                               color={isFeatured ? "warning" : "default"}
                             >
                               {isFeatured ? (
@@ -420,6 +610,7 @@ const ManageListingsPage = () => {
                             </IconButton>
                           </span>
                         </Tooltip>
+                        {/* Loading indicators */}
                         {anyLoading && (
                           <CircularProgress
                             size={20}
@@ -444,6 +635,18 @@ const ManageListingsPage = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+      {/* 
+      {
+        <ConfirmationDialog // Confirmation Dialog
+          open={confirmDialogOpen}
+          onClose={() => setConfirmDialogOpen(false)}
+          onConfirm={handleDeleteSelected} // Call the actual delete logic on confirm
+          title="Confirm Deletion"
+          message={`Are you sure you want to delete ${selected.length} selected listing(s)? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
+      } */}
     </Container>
   );
 };

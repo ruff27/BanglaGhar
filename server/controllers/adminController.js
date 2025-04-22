@@ -469,3 +469,68 @@ exports.featureListing = async (req, res) => {
     res.status(500).json({ message: "Server error updating feature status." });
   }
 };
+
+// --- NEW: Delete Multiple Listings ---
+exports.deleteMultipleListings = async (req, res) => {
+  // Expect an array of listing IDs in the request body
+  const { listingIds } = req.body;
+
+  // Basic validation
+  if (!Array.isArray(listingIds) || listingIds.length === 0) {
+    return res
+      .status(400)
+      .json({
+        message:
+          "Invalid request: Listing IDs must be provided as a non-empty array.",
+      });
+  }
+
+  // Validate each ID (optional but recommended)
+  const validIds = listingIds.filter((id) =>
+    mongoose.Types.ObjectId.isValid(id)
+  );
+  if (validIds.length !== listingIds.length) {
+    console.warn(
+      "Admin delete request contained invalid IDs. Only valid IDs will be processed."
+    );
+    // Decide whether to proceed with valid IDs or reject the whole request
+    // For now, let's proceed with valid ones.
+  }
+
+  if (validIds.length === 0) {
+    return res.status(400).json({ message: "No valid listing IDs provided." });
+  }
+
+  try {
+    // Perform the bulk deletion
+    const deleteResult = await Property.deleteMany({
+      _id: { $in: validIds },
+    });
+
+    // Check if any documents were actually deleted
+    if (deleteResult.deletedCount === 0) {
+      console.log(
+        `Admin ${req.user.email} attempted to delete listings, but none matched the provided IDs:`,
+        validIds
+      );
+      // You might return 404 if you expect IDs to always exist,
+      // or 200 if it's okay that some might already be deleted.
+      return res
+        .status(404)
+        .json({ message: "No matching listings found to delete." });
+    }
+
+    console.log(
+      `Admin ${req.user.email} deleted ${deleteResult.deletedCount} listing(s):`,
+      validIds
+    );
+
+    res.status(200).json({
+      message: `${deleteResult.deletedCount} listing(s) deleted successfully.`,
+      deletedCount: deleteResult.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting multiple listings:", error);
+    res.status(500).json({ message: "Server error during bulk deletion." });
+  }
+};
