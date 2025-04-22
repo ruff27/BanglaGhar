@@ -2,6 +2,40 @@
 const UserProfile = require("../models/UserProfile");
 const Property = require("../models/property");
 const mongoose = require("mongoose"); // Required for ObjectId validation
+const { subDays } = require("date-fns");
+
+// --- NEW: Get Dashboard Statistics ---
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const sevenDaysAgo = subDays(new Date(), 7); // Calculate date 7 days ago
+
+    // Parallel execution for efficiency
+    const [
+      totalActiveListings,
+      pendingUsersCount,
+      totalUsersCount,
+      recentListingsCount, // Optional: Listings added in last 7 days
+      recentUsersCount, // Optional: Users registered in last 7 days
+    ] = await Promise.all([
+      Property.countDocuments({ isHidden: { $ne: true } }), // Active listings are not hidden
+      UserProfile.countDocuments({ approvalStatus: "pending" }),
+      UserProfile.countDocuments({}),
+      Property.countDocuments({ createdAt: { $gte: sevenDaysAgo } }), // Listings created >= 7 days ago
+      UserProfile.countDocuments({ createdAt: { $gte: sevenDaysAgo } }), // Users created >= 7 days ago
+    ]);
+
+    res.status(200).json({
+      totalActiveListings,
+      pendingUsersCount,
+      totalUsersCount,
+      recentListingsCount,
+      recentUsersCount,
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    res.status(500).json({ message: "Server error fetching dashboard stats." });
+  }
+};
 
 // Get users pending approval
 exports.getPendingApprovals = async (req, res) => {
@@ -151,7 +185,7 @@ exports.getAllUsers = async (req, res) => {
 
     // Get paginated, sorted, and filtered users
     const users = await UserProfile.find(filterQuery)
-      .select("name email createdAt isAdmin approvalStatus _id") // Ensure _id is included
+      .select("name email createdAt isAdmin approvalStatus accountStatus _id")
       .sort(sortObject)
       .skip(skip)
       .limit(limit);
@@ -177,7 +211,7 @@ exports.getAllUsers = async (req, res) => {
 
 exports.updateUserStatus = async (req, res) => {
   const { userId } = req.params;
-  const { isAdmin, approvalStatus } = req.body; // Get updates from request body
+  const { isAdmin, approvalStatus, accountStatus } = req.body; // Get updates from request body
 
   // Validate userId
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -194,6 +228,13 @@ exports.updateUserStatus = async (req, res) => {
     ["not_started", "pending", "approved", "rejected"].includes(approvalStatus)
   ) {
     updates.approvalStatus = approvalStatus;
+  }
+
+  if (
+    accountStatus &&
+    ["active", "blocked"].includes(accountStatus) // Validate accountStatus
+  ) {
+    updates.accountStatus = accountStatus;
   }
 
   // Check if there are any valid fields to update
@@ -226,6 +267,18 @@ exports.updateUserStatus = async (req, res) => {
           message: "Cannot change your own admin status using this control.",
         });
       }
+      // Prevent admin from blocking themselves via this interface
+      if (
+        updates.hasOwnProperty("accountStatus") &&
+        updates.accountStatus === "blocked"
+      ) {
+        console.warn(
+          `Admin ${req.user.email} attempted to block their own account via admin update route.`
+        );
+        return res.status(403).json({
+          message: "You cannot block your own account.",
+        });
+      }
       // Can potentially allow changing own approval status if needed, otherwise add similar check
     }
 
@@ -242,7 +295,7 @@ exports.updateUserStatus = async (req, res) => {
 
     // Return the updated user profile (select relevant fields)
     const responseProfile = await UserProfile.findById(userId).select(
-      "name email createdAt isAdmin approvalStatus _id"
+      "name email createdAt isAdmin approvalStatus accountStatus _id"
     );
 
     res.status(200).json({
@@ -477,12 +530,10 @@ exports.deleteMultipleListings = async (req, res) => {
 
   // Basic validation
   if (!Array.isArray(listingIds) || listingIds.length === 0) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "Invalid request: Listing IDs must be provided as a non-empty array.",
-      });
+    return res.status(400).json({
+      message:
+        "Invalid request: Listing IDs must be provided as a non-empty array.",
+    });
   }
 
   // Validate each ID (optional but recommended)

@@ -28,6 +28,12 @@ const userProfileSchema = new mongoose.Schema({
     enum: ["not_started", "pending", "approved", "rejected"],
     default: "not_started",
   },
+  accountStatus: {
+    type: String,
+    enum: ["active", "blocked"],
+    default: "active", // Users are active by default
+    index: true,
+  },
   govtIdUrl: {
     type: String,
     default: null,

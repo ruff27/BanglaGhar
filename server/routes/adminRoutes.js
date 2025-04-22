@@ -24,6 +24,13 @@ router.put(
   adminController.updateUserStatus // Linked to the new controller function
 );
 
+// Get Dashboard Overview
+router.get(
+  "/stats", // Make sure this path is exactly "/stats"
+  requireAdmin,
+  adminController.getDashboardStats // Ensure adminController.getDashboardStats exists in your controller
+);
+
 // Get users pending approval
 router.get(
   "/pending-approvals",

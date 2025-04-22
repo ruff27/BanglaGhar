@@ -8,6 +8,7 @@ import PendingApprovalsPage from "./pages/PendingApprovalsPage";
 // Import the page components from their separate files
 import ManageUsersPage from "./pages/ManageUsersPage";
 import ManageListingsPage from "./pages/ManageListingsPage";
+import DashboardOverview from "./pages/DashboardOverview";
 
 // --- Ensure the inline const definitions below are DELETED ---
 
@@ -17,13 +18,14 @@ const AdminRoutes = () => {
     <Routes>
       <Route element={<AdminLayout />}>
         {/* Define specific admin routes */}
+        <Route path="dashboard" element={<DashboardOverview />} />
         <Route path="pending-approvals" element={<PendingApprovalsPage />} />
         <Route path="users" element={<ManageUsersPage />} />{" "}
         {/* Use imported component */}
         <Route path="listings" element={<ManageListingsPage />} />{" "}
         {/* Use imported component */}
         {/* Default route for "/admin" -> redirect to pending approvals */}
-        <Route index element={<Navigate to="pending-approvals" replace />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
         {/* Optional: Catch-all for invalid /admin paths */}
         {/* <Route path="*" element={<AdminNotFoundPage />} /> */}
       </Route>

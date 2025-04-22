@@ -27,6 +27,7 @@ import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
 const drawerWidth = 240;
 
@@ -40,12 +41,17 @@ const AdminLayout = () => {
   const handleLogout = () => logout();
 
   const adminNavItems = [
+    // dashboard
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard" },
+    // pending approvals
     {
       text: "Pending Approvals",
       icon: <PendingActionsIcon />,
       path: "/admin/pending-approvals",
     },
+    // manage users
     { text: "Manage Users", icon: <PeopleIcon />, path: "/admin/users" },
+    // manage listings
     { text: "Manage Listings", icon: <ListAltIcon />, path: "/admin/listings" },
   ];
 

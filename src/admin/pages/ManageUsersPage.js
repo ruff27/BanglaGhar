@@ -26,9 +26,11 @@ import {
   FormControl,
   IconButton,
   Tooltip,
-  InputLabel, // Added InputLabel
+  InputLabel,
+  Badge,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import BlockIcon from "@mui/icons-material/Block";
 import { format } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
 
@@ -47,6 +49,12 @@ const headCells = [
     label: "Registered",
   },
   { id: "isAdmin", numeric: false, disablePadding: false, label: "Admin?" },
+  {
+    id: "accountStatus",
+    numeric: false,
+    disablePadding: false,
+    label: "Account Status",
+  },
   {
     id: "approvalStatus",
     numeric: false,
@@ -185,6 +193,10 @@ const ManageUsersPage = () => {
       setError("You cannot change your own admin status from this interface.");
       return;
     }
+    if (field === "accountStatus" && value === "blocked") {
+      setError("You cannot block your own account.");
+      return;
+    }
 
     setActionLoading((prev) => ({ ...prev, [userId]: true }));
     setError(null);
@@ -239,6 +251,25 @@ const ManageUsersPage = () => {
       case "not_started":
       default:
         return "default";
+    }
+  };
+
+  // Helper function for account status chip color
+  const getAccountStatusChip = (status) => {
+    switch (status) {
+      case "active":
+        return <Chip label="Active" color="success" size="small" />;
+      case "blocked":
+        return (
+          <Chip
+            label="Blocked"
+            color="error"
+            size="small"
+            icon={<BlockIcon fontSize="small" />}
+          />
+        );
+      default:
+        return <Chip label="Unknown" size="small" />;
     }
   };
 
@@ -344,6 +375,17 @@ const ManageUsersPage = () => {
                             color: "primary.contrastText !important",
                           },
                         }}
+                        // active={orderBy === headCell.id}
+                        // direction={orderBy === headCell.id ? order : "asc"}
+                        // onClick={(event) =>
+                        //   handleRequestSort(event, headCell.id)
+                        // }
+                        // sx={{
+                        //   "&.Mui-active": { color: "primary.contrastText" },
+                        //   "& .MuiTableSortLabel-icon": {
+                        //     color: "primary.contrastText !important",
+                        //   },
+                        // }}
                       >
                         {headCell.label}
                       </TableSortLabel>
@@ -379,16 +421,31 @@ const ManageUsersPage = () => {
                 users.map((user) => {
                   const isCurrentUser = loggedInUser?.email === user.email;
                   const isLoadingAction = actionLoading[user._id];
+                  const isBlocked = user.accountStatus === "blocked";
 
                   return (
                     <TableRow
                       hover
                       key={user._id}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                        ...(isBlocked && {
+                          backgroundColor: (theme) =>
+                            theme.palette.error.lighter + "60",
+                        }),
+                      }}
                     >
                       {/* Cells for name, email, createdAt */}
                       <TableCell component="th" scope="row">
-                        {user.name || "N/A"}
+                        <Badge
+                          badgeContent={
+                            isBlocked ? (
+                              <BlockIcon fontSize="small" color="error" />
+                            ) : null
+                          }
+                        >
+                          {user.name || "N/A"}
+                        </Badge>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{formatDate(user.createdAt)}</TableCell>
@@ -419,6 +476,10 @@ const ManageUsersPage = () => {
                             />
                           </span>
                         </Tooltip>
+                      </TableCell>
+                      {/* Account Status Cell (Display Chip) */}
+                      <TableCell>
+                        {getAccountStatusChip(user.accountStatus)}
                       </TableCell>
                       {/* Approval Status Cell (Display) */}
                       <TableCell>
@@ -461,6 +522,32 @@ const ManageUsersPage = () => {
                             <MenuItem value="rejected">Rejected</MenuItem>
                           </Select>
                         </FormControl>
+
+                        {/* Block/Unblock Switch */}
+                        <Tooltip
+                          title={
+                            isBlocked ? "Unblock User" : "Block User Account"
+                          }
+                        >
+                          <span>
+                            <Switch
+                              checked={isBlocked}
+                              onChange={(e) =>
+                                handleUserUpdate(
+                                  user._id,
+                                  "accountStatus",
+                                  e.target.checked ? "blocked" : "active"
+                                )
+                              }
+                              disabled={isCurrentUser || isLoadingAction}
+                              color="error" // Use error color for blocking action
+                              size="small"
+                              inputProps={{
+                                "aria-label": "Block/Unblock User",
+                              }}
+                            />
+                          </span>
+                        </Tooltip>
                         {isLoadingAction && (
                           <CircularProgress
                             size={20}
