@@ -31,5 +31,5 @@ yarn-error.log*
 .res.py
 
 
-./node_modules
-./server/node_modules
+node_modules
+server/node_modules
