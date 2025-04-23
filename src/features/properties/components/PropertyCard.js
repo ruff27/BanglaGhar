@@ -17,7 +17,7 @@ import BedIcon from "@mui/icons-material/Bed";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
-import WishlistButton from "./WishlistButton";
+import WishlistButton from "./WishlistButton"; // Ensure this path is correct
 
 const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
   const theme = useTheme();
@@ -89,28 +89,25 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
         }}
       >
         <Box sx={{ position: "relative", width: "100%" }}>
-          {/* Add stopPropagation to WishlistButton onClick */}
+          {/* Render WishlistButton only if onWishlistToggle is provided */}
           {onWishlistToggle && (
             <WishlistButton
               isWishlisted={isWishlisted}
-              onClick={(e) => {
-                e.preventDefault(); // Prevent default link behavior
-                e.stopPropagation(); // Stop click from reaching RouterLink
-                onWishlistToggle();
-              }}
+              // --- CORRECTED onClick ---
+              // Simply call onWishlistToggle. preventDefault/stopPropagation are handled inside WishlistButton.
+              onClick={onWishlistToggle}
+              // --- END CORRECTION ---
               sx={{ position: "absolute", top: 8, right: 8, zIndex: 2 }}
             />
           )}
           {/* --- Use Aspect Ratio for Image --- */}
           <CardMedia
             component="img"
-            // height="200" // <-- REMOVED fixed height
             image={imgSrc}
             alt={property.title || "Property image"}
             onError={handleImageError}
             sx={{
               objectFit: "cover",
-              // Use aspect ratio for responsive height
               aspectRatio: "16/9", // Common ratio, adjust e.g., '3/2', '4/3' if needed
               width: "100%", // Ensure it takes full width
             }}
@@ -144,7 +141,6 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
             flexDirection: "column",
             width: "100%",
             p: 2, // Ensure consistent padding
-            // Remove padding bottom if Divider has margin: pb: 0
           }}
         >
           {/* Top details */}
