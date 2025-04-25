@@ -22,8 +22,8 @@ const fetchJWKs = async () => {
   isFetchingJWKs = true;
   console.log("[JWK Fetch] Attempting to fetch JWKs..."); // Moved log inside
 
-  const userPoolId = process.env.COGNITO_USER_POOL_ID;
-  const region = process.env.AWS_REGION;
+  const userPoolId = process.env.REACT_APP_USERPOOLID;
+  const region = process.env.REACT_AWS_REGION;
 
   // Re-check variables inside the function when it's called
   console.log("[DEBUG fetchJWKs] AWS_REGION:", `"${region}"`);
