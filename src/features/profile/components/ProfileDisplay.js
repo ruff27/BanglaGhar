@@ -21,7 +21,7 @@ const ProfileDisplay = ({ profileData }) => {
   if (!profileData) return null;
 
   const isVerified = profileData.email_verified === "true";
-
+  console.log("ProfileDisplay profileData:", profileData); // Debug log
   return (
     <Paper
       elevation={0}
@@ -46,7 +46,7 @@ const ProfileDisplay = ({ profileData }) => {
           <ListItemText
             primary={t("Display Name")} // Consider using a specific translation key
             // Show displayName, fallback to Cognito name, then placeholder
-            secondary={profileData.displayName || profileData.name || "-"}
+            secondary={profileData.displayName|| profileData.name || "-"}
           />
         </ListItem>
         <Divider component="li" />

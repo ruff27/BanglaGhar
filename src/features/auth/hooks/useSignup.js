@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
 
-/**
+/** 
  * @hook useSignup
  * Handles the state and logic for the user signup process.
  * @returns {object} - Signup state, handlers, form data, and validation status.
@@ -41,7 +41,7 @@ const useSignup = () => {
       hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd), // Match Cognito special chars
       hasUppercase: /[A-Z]/.test(pwd),
       hasLowercase: /[a-z]/.test(pwd),
-      hasMinLength: pwd.length >= 8,
+      hasMinLength: pwd.length >= 8, 
     });
   }, []);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { CognitoUserAttribute } from "amazon-cognito-identity-js";
-import { userPool } from "../../../aws/CognitoConfig"; // Adjust path as needed
+import { userPool } from "../../../aws/CognitoConfig"; // Adjust path as needed 
 import { useAuth } from "../../../context/AuthContext"; // Adjust path as needed
 import axios from "axios"; // <<< ADDED for API calls
 
@@ -28,7 +28,7 @@ const useProfileManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false); // For async operations (updates, delete)
-  const [dialogError, setDialogError] = useState(""); // For errors within dialogs
+  const [dialogError, setDialogError] = useState(""); // For errors within dialogs 
 
   // Dialog states
   const [editNameOpen, setEditNameOpen] = useState(false);

@@ -94,7 +94,7 @@ const Signup = () => {
           username={username}
           password={password}
           confirmPass={confirmPass}
-          passwordValidation={passwordValidation} // Pass validation state
+          passwordValidation = {passwordValidation}
           isPasswordValid={isPasswordValid} // Pass overall validity
           onEmailChange={handleEmailChange}
           onUsernameChange={handleUsernameChange}

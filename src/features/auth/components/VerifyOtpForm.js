@@ -40,6 +40,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
  * @param {function} props.onOtpChange - Handler for OTP input changes
  * @param {function} props.onSubmit - Handler for form submission
  * @param {boolean} props.isSubmitting - Indicates if the form is currently submitting
+ * 
  */
 const VerifyOtpForm = ({ otp, onOtpChange, onSubmit, isSubmitting }) => {
   const { t } = useTranslation(); // Initialize translation
