@@ -165,7 +165,6 @@ const Navbar = () => {
               >
                 BanglaGhor
               </Typography>
-
               {/* Desktop Nav */}
               <Box
                 sx={{
@@ -201,22 +200,45 @@ const Navbar = () => {
                   </Button>
                 )}
               </Box>
-
-              {/* Mobile Nav Trigger & Actions */}
+              {/* // Mobile Nav Trigger & Actions */}
               <Box
                 sx={{
                   display: { xs: "flex", md: "none" },
                   alignItems: "center",
+                  gap: 0.5, // Add some gap if needed
                 }}
               >
                 <LanguageToggle />
-                {isLoggedIn && <ProfileMenu handleLogout={handleLogout} />}
+                {isLoggedIn ? (
+                  // If logged in, show ProfileMenu
+                  <ProfileMenu handleLogout={handleLogout} />
+                ) : (
+                  // If not logged in, show Login button
+                  <Button
+                    component={RouterLink}
+                    to="/login"
+                    size="small" // Adjust size for mobile if needed
+                    sx={{
+                      color: "text.primary",
+                      // ml: 1, // Use gap in Box instead of margin if preferred
+                      textTransform: "none",
+                      borderRadius: "8px",
+                      "&:hover": { bgcolor: "action.hover" },
+                      // Add padding if needed for better touch target
+                      // p: 1
+                    }}
+                  >
+                    {t("nav_login")}
+                  </Button>
+                )}
+                {/* Keep the MenuIcon to open the drawer */}
                 <IconButton
                   size="large"
                   aria-label="open drawer"
                   edge="end"
                   onClick={handleDrawerToggle}
                   color="inherit"
+                  sx={{ ml: "auto" }} // Push icon to the right if Login button is present
                 >
                   <MenuIcon />
                 </IconButton>
