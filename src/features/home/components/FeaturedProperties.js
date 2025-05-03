@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Container,
+  Container, // Using standard Container (no disableGutters)
   Typography,
-  Grid2,
+  Grid,
   Button,
   CircularProgress,
 } from "@mui/material";
@@ -12,8 +12,8 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
-import PropertyCard from "../../properties/components/PropertyCard"; // Path verified
+import { useAuth } from "../../../context/AuthContext";
+import PropertyCard from "../../properties/components/PropertyCard"; // Using the original reverted version
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -30,40 +30,29 @@ const FeaturedProperties = () => {
   // --- Fetch featured properties ---
   useEffect(() => {
     const fetchFeatured = async () => {
-      setLoading(true); // Reset loading state
-      setError(null); // Reset error state
+      setLoading(true);
+      setError(null);
       console.log(
-        // Keep your helpful log
         "FeaturedProperties: Attempting to fetch featured listings..."
       );
       try {
-        // --- Ensure correct URL ---
-        console.log(
-          // Keep your helpful log
-          "Requesting URL:",
-          `${API_BASE_URL}/properties?featured=true&limit=25`
-        );
         const response = await axios.get(
           `${API_BASE_URL}/properties?featured=true&limit=25`
         );
         console.log(
-          // Keep your helpful log
           "FeaturedProperties: API Response Received:",
           response.data
         );
         setProperties(response.data || []);
       } catch (err) {
         console.error("Error fetching featured properties:", err);
-        setError("Failed to load featured properties."); // Set user-friendly error
+        setError("Failed to load featured properties.");
       } finally {
         setLoading(false);
       }
     };
     fetchFeatured();
-    // Keep dependency array based on your version
-    // If t() is used ONLY for static text like headers, it might not strictly be needed here.
-    // If t() is used within error messages set in state, include it. Let's keep it for safety.
-  }, [t]);
+  }, [t]); // Keep t if used in error strings potentially
 
   // Fetch user's wishlist if logged in
   useEffect(() => {
@@ -82,7 +71,7 @@ const FeaturedProperties = () => {
       }
     };
     fetchWishlist();
-  }, [isLoggedIn, user]); // Dependencies look correct
+  }, [isLoggedIn, user]);
 
   // Function to handle wishlist toggle
   const toggleWishlist = async (propertyId) => {
@@ -91,7 +80,7 @@ const FeaturedProperties = () => {
       return;
     }
     const isInWishlist = wishlist.includes(propertyId);
-    const username = user.email; // Use email as username based on fetch URL
+    const username = user.email;
     try {
       let updatedWishlist;
       if (isInWishlist) {
@@ -111,27 +100,27 @@ const FeaturedProperties = () => {
     }
   };
 
-  // Function to handle viewing property details - Keep your version
+  // Function to handle viewing property details
   const handleViewDetails = (property) => {
-    const mode = property.listingType || "rent"; // Default to rent if undefined
-    navigate(`/properties/${mode}?open=${property._id}`); // Use query param strategy
+    const mode = property.listingType || "rent";
+    navigate(`/properties/${mode}?open=${property._id}`);
   };
 
   return (
     // Section container
     <Box sx={{ py: 6, bgcolor: "rgba(43, 123, 140, 0.03)" }}>
-      {/* Main content container - ADD disableGutters */}
-      <Container maxWidth="lg" disableGutters>
-        {/* Header Box - ADD manual padding */}
+      {/* Standard Container - let it handle its default padding */}
+      <Container maxWidth="lg">
+        {/* Header Box - No manual padding needed */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 4,
+            mb: 4, // Margin bottom before the grid
             flexWrap: "wrap",
             gap: 2,
-            px: { xs: 2, sm: 3 }, // Manual padding: 16px mobile, 24px tablet+
+            // Removed manual px padding
           }}
         >
           <Box>
@@ -151,7 +140,7 @@ const FeaturedProperties = () => {
             variant="outlined"
             color="primary"
             endIcon={<ArrowForwardIcon />}
-            onClick={() => navigate("/properties/rent")} // Navigate to default properties page
+            onClick={() => navigate("/properties/rent")}
             sx={{ borderRadius: "8px", textTransform: "none" }}
           >
             {t("view_all_properties")}
@@ -164,57 +153,54 @@ const FeaturedProperties = () => {
             <CircularProgress />
           </Box>
         )}
-        {/* Error Message - ADD manual padding */}
+        {/* Error Message - No manual padding needed */}
         {error && (
-          <Box sx={{ px: { xs: 2, sm: 3 } }}>
-            {" "}
-            {/* Add padding */}
-            <Typography color="error" sx={{ textAlign: "center", my: 5 }}>
-              {error}
-            </Typography>
-          </Box>
+          // <Box sx={{ px: { xs: 2, sm: 3 } }}> Removed padding wrapper
+          <Typography color="error" sx={{ textAlign: "center", my: 5 }}>
+            {error}
+          </Typography>
+          // </Box>
         )}
 
-        {/* Property Grid2 */}
+        {/* Property Grid - Use simpler responsive spacing */}
         {!loading && !error && properties.length > 0 && (
-          <Grid2
+          <Grid
             container
-            // --- Use Row and Column Spacing ---
-            rowSpacing={{ xs: 3, sm: 3 }} // Vertical space: xs=24px, sm+=24px (Adjust xs as needed: 2=16px, 3=24px)
-            columnSpacing={{ xs: 0, sm: 3 }} // Horizontal space: xs=0, sm+=24px
-            // --- End Spacing ---
-            sx={{
-              // Apply horizontal padding manually only on xs
-              px: { xs: 2, sm: 0 }, // 16px horizontal padding on mobile only
-            }}
+            spacing={{ xs: 0, sm: 3 }} // xs=0 removes ALL grid spacing/padding on mobile
+            // Removed manual px padding from sx prop here
           >
             {properties.map((property) => (
-              <Grid2 item xs={12} sm={6} md={4} lg={3} key={property._id}>
+              // Add Bottom Margin to Grid Item for mobile vertical spacing
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                lg={3}
+                key={property._id}
+                sx={{ mb: { xs: 3, sm: 0 } }} // Add margin-bottom: 24px (3*8px) on xs only
+                // Adjust the '3' value for more/less space
+              >
                 {/* Render the original PropertyCard */}
                 <PropertyCard
                   property={property}
                   isWishlisted={wishlist.includes(property._id)}
                   onWishlistToggle={() => toggleWishlist(property._id)}
-                  // onViewDetails is not a prop received by the original PropertyCard
-                  // The RouterLink wrapping the card handles navigation
-                  // onViewDetails={() => handleViewDetails(property)} // This prop isn't used by the card
                 />
-              </Grid2>
+              </Grid>
             ))}
-          </Grid2>
+          </Grid>
         )}
 
-        {/* No Properties Message - ADD manual padding */}
+        {/* No Properties Message - No manual padding needed */}
         {!loading && !error && properties.length === 0 && (
-          <Box sx={{ px: { xs: 2, sm: 3 } }}>
-            {" "}
-            {/* Add padding */}
-            <Typography
-              sx={{ textAlign: "center", my: 5, color: "text.secondary" }}
-            >
-              No featured properties available at the moment.
-            </Typography>
-          </Box>
+          // <Box sx={{ px: { xs: 2, sm: 3 } }}> Removed padding wrapper
+          <Typography
+            sx={{ textAlign: "center", my: 5, color: "text.secondary" }}
+          >
+            No featured properties available at the moment.
+          </Typography>
+          // </Box>
         )}
       </Container>
     </Box>
