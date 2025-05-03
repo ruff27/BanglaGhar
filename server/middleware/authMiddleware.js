@@ -23,10 +23,10 @@ const fetchJWKs = async () => {
   console.log("[JWK Fetch] Attempting to fetch JWKs..."); // Moved log inside
 
   const userPoolId = process.env.COGNITO_USER_POOL_ID;
-  const region = process.env.AWS_REGION;
+  const region = process.env.APP_AWS_REGION;
 
   // Re-check variables inside the function when it's called
-  console.log("[DEBUG fetchJWKs] AWS_REGION:", `"${region}"`);
+  console.log("[DEBUG fetchJWKs] APP_AWS_REGION:", `"${region}"`);
   console.log("[DEBUG fetchJWKs] COGNITO_USER_POOL_ID:", `"${userPoolId}"`);
 
   if (!userPoolId || !region) {
@@ -112,12 +112,10 @@ const authMiddleware = async (req, res, next) => {
         console.error(
           "[Auth Middleware] Failed to fetch/refresh JWKs. Denying request."
         );
-        return res
-          .status(500)
-          .json({
-            message:
-              "Failed to fetch authentication keys. Please try again later.",
-          });
+        return res.status(500).json({
+          message:
+            "Failed to fetch authentication keys. Please try again later.",
+        });
       }
     }
     // --- End JWK Fetch Check ---
@@ -137,11 +135,9 @@ const authMiddleware = async (req, res, next) => {
         `[Auth Middleware] No PEM found for kid: ${kid}. Token might be invalid or JWKs outdated.`
       );
       // Optionally try one more fetch here? Or just reject. Let's reject for now.
-      return res
-        .status(401)
-        .json({
-          message: `Cannot verify token: Unknown key ID. Please try again.`,
-        });
+      return res.status(401).json({
+        message: `Cannot verify token: Unknown key ID. Please try again.`,
+      });
     }
 
     // 3. Verify the token signature
@@ -176,12 +172,10 @@ const authMiddleware = async (req, res, next) => {
       "[Auth Middleware] Unexpected error:",
       error.message || error
     );
-    return res
-      .status(500)
-      .json({
-        message: "Internal server error during authentication.",
-        error: error.message,
-      });
+    return res.status(500).json({
+      message: "Internal server error during authentication.",
+      error: error.message,
+    });
   }
 };
 

@@ -31,6 +31,13 @@ router.get("/stats", adminController.getDashboardStats);
 // GET /api/admin/pending-approvals
 router.get("/pending-approvals", adminController.getPendingApprovals);
 
+router.get(
+  "/get-signed-id-url/:userId", // New distinct path
+  authMiddleware, // MUST be authenticated
+  isAdminMiddleware, // MUST be admin
+  adminController.getSignedIdUrlForAdmin // Use the new controller function
+);
+
 // PUT /api/admin/users/:userId/approve
 router.put(
   "/users/:userId/approve",

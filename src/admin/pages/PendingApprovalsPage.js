@@ -15,7 +15,6 @@ import {
   TableHead,
   TableRow,
   Button,
-  IconButton,
   Link,
   Snackbar, // Added Link, Snackbar
 } from "@mui/material";
@@ -39,6 +38,7 @@ const PendingApprovalsPage = () => {
     message: "",
     severity: "info",
   });
+  const [viewIdLoading, setViewIdLoading] = useState({});
 
   // Function to fetch pending users
   const fetchPendingUsers = useCallback(async () => {
@@ -129,6 +129,51 @@ const PendingApprovalsPage = () => {
     }
   };
 
+  const handleViewIdClick = async (userId) => {
+    if (!idToken) {
+      setSnackbar({
+        open: true,
+        message: "Authentication token not found.",
+        severity: "error",
+      });
+      return;
+    }
+    setViewIdLoading((prev) => ({ ...prev, [userId]: true })); // Set loading for this button
+
+    try {
+      const response = await axios.get(
+        // 👇👇👇 THIS IS THE CORRECTED LINE 👇👇👇
+        `${API_BASE_URL}/admin/get-signed-id-url/${userId}`,
+        // 👆👆👆 THIS IS THE CORRECTED LINE 👆👆👆
+        {
+          headers: { Authorization: `Bearer ${idToken}` },
+        }
+      );
+
+      // Open the received S3 URL in a new tab
+      if (response.data && response.data.signedUrl) {
+        window.open(response.data.signedUrl, "_blank", "noopener,noreferrer");
+      } else {
+        setSnackbar({
+          open: true,
+          message: "Could not retrieve file URL.",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      // Updated error logging from previous step:
+      console.error(
+        `Error fetching signed URL for user ${userId}. Requested URL: ${API_BASE_URL}/admin/get-signed-id-url/${userId}`,
+        err.response?.data || err.message
+      );
+      const errorMsg =
+        err.response?.data?.message || "Failed to get viewable link for ID.";
+      setSnackbar({ open: true, message: errorMsg, severity: "error" });
+    } finally {
+      setViewIdLoading((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
+
   // --- Render Logic ---
 
   if (isLoading) {
@@ -200,14 +245,23 @@ const PendingApprovalsPage = () => {
                     })}
                   </TableCell>
                   <TableCell sx={{ wordBreak: "break-all" }}>
-                    {/* Displaying path only - Admin needs server access */}
-                    {user.govtIdUrl ? user.govtIdUrl : "Not Provided"}
-                    {/* Example of a link if you create a secure download endpoint later */}
-                    {/* {user.govtIdUrl && (
-                                            <Link href={`/api/admin/download-id/${user._id}`} target="_blank" rel="noopener noreferrer">
-                                                View ID
-                                            </Link>
-                                        )} */}
+                    {user.govtIdUrl ? (
+                      <Button
+                        variant="outlined" // Or "text"
+                        size="small"
+                        onClick={() => handleViewIdClick(user._id)} // Call the handler
+                        disabled={viewIdLoading[user._id]} // Disable while loading this specific ID's URL
+                        startIcon={
+                          viewIdLoading[user._id] ? (
+                            <CircularProgress size={14} />
+                          ) : null
+                        }
+                      >
+                        View ID
+                      </Button>
+                    ) : (
+                      "Not Provided"
+                    )}
                   </TableCell>
                   <TableCell align="center">
                     <Box
