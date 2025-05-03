@@ -4,7 +4,7 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
+  Grid2,
   Button,
   CircularProgress,
 } from "@mui/material";
@@ -30,35 +30,39 @@ const FeaturedProperties = () => {
   // --- Fetch featured properties ---
   useEffect(() => {
     const fetchFeatured = async () => {
-      // ... setLoading, setError ...
+      setLoading(true); // Reset loading state
+      setError(null); // Reset error state
       console.log(
-        // <-- You added this log - good!
+        // Keep your helpful log
         "FeaturedProperties: Attempting to fetch featured listings..."
       );
       try {
-        // --- CORRECTED URL ---
+        // --- Ensure correct URL ---
         console.log(
-          // <-- You added this log - good!
+          // Keep your helpful log
           "Requesting URL:",
           `${API_BASE_URL}/properties?featured=true&limit=25`
         );
         const response = await axios.get(
-          // <-- This now correctly uses featured=true
           `${API_BASE_URL}/properties?featured=true&limit=25`
         );
         console.log(
-          // <-- You added this log - good!
+          // Keep your helpful log
           "FeaturedProperties: API Response Received:",
           response.data
         );
         setProperties(response.data || []);
       } catch (err) {
-        /* ... error handling ... */
+        console.error("Error fetching featured properties:", err);
+        setError("Failed to load featured properties."); // Set user-friendly error
       } finally {
         setLoading(false);
       }
     };
     fetchFeatured();
+    // Keep dependency array based on your version
+    // If t() is used ONLY for static text like headers, it might not strictly be needed here.
+    // If t() is used within error messages set in state, include it. Let's keep it for safety.
   }, [t]);
 
   // Fetch user's wishlist if logged in
@@ -78,7 +82,7 @@ const FeaturedProperties = () => {
       }
     };
     fetchWishlist();
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user]); // Dependencies look correct
 
   // Function to handle wishlist toggle
   const toggleWishlist = async (propertyId) => {
@@ -87,7 +91,7 @@ const FeaturedProperties = () => {
       return;
     }
     const isInWishlist = wishlist.includes(propertyId);
-    const username = user.email;
+    const username = user.email; // Use email as username based on fetch URL
     try {
       let updatedWishlist;
       if (isInWishlist) {
@@ -107,16 +111,18 @@ const FeaturedProperties = () => {
     }
   };
 
-  // Function to handle viewing property details
+  // Function to handle viewing property details - Keep your version
   const handleViewDetails = (property) => {
-    const mode = property.listingType || "rent"; // Use listingType from property model
-    navigate(`/properties/${mode}?open=${property._id}`);
+    const mode = property.listingType || "rent"; // Default to rent if undefined
+    navigate(`/properties/${mode}?open=${property._id}`); // Use query param strategy
   };
 
   return (
+    // Section container
     <Box sx={{ py: 6, bgcolor: "rgba(43, 123, 140, 0.03)" }}>
-      <Container maxWidth="lg">
-        {/* Header Box */}
+      {/* Main content container - ADD disableGutters */}
+      <Container maxWidth="lg" disableGutters>
+        {/* Header Box - ADD manual padding */}
         <Box
           sx={{
             display: "flex",
@@ -125,6 +131,7 @@ const FeaturedProperties = () => {
             mb: 4,
             flexWrap: "wrap",
             gap: 2,
+            px: { xs: 2, sm: 3 }, // Manual padding: 16px mobile, 24px tablet+
           }}
         >
           <Box>
@@ -144,47 +151,70 @@ const FeaturedProperties = () => {
             variant="outlined"
             color="primary"
             endIcon={<ArrowForwardIcon />}
-            onClick={() => navigate("/properties/rent")}
+            onClick={() => navigate("/properties/rent")} // Navigate to default properties page
             sx={{ borderRadius: "8px", textTransform: "none" }}
           >
             {t("view_all_properties")}
           </Button>
         </Box>
 
-        {/* Loading / Error */}
+        {/* Loading Indicator */}
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", my: 5 }}>
             <CircularProgress />
           </Box>
         )}
+        {/* Error Message - ADD manual padding */}
         {error && (
-          <Typography color="error" sx={{ textAlign: "center", my: 5 }}>
-            {error}
-          </Typography>
+          <Box sx={{ px: { xs: 2, sm: 3 } }}>
+            {" "}
+            {/* Add padding */}
+            <Typography color="error" sx={{ textAlign: "center", my: 5 }}>
+              {error}
+            </Typography>
+          </Box>
         )}
 
-        {/* Property Grid */}
+        {/* Property Grid2 */}
         {!loading && !error && properties.length > 0 && (
-          <Grid container spacing={3}>
+          <Grid2
+            container
+            // --- Use Row and Column Spacing ---
+            rowSpacing={{ xs: 3, sm: 3 }} // Vertical space: xs=24px, sm+=24px (Adjust xs as needed: 2=16px, 3=24px)
+            columnSpacing={{ xs: 0, sm: 3 }} // Horizontal space: xs=0, sm+=24px
+            // --- End Spacing ---
+            sx={{
+              // Apply horizontal padding manually only on xs
+              px: { xs: 2, sm: 0 }, // 16px horizontal padding on mobile only
+            }}
+          >
             {properties.map((property) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={property._id}>
+              <Grid2 item xs={12} sm={6} md={4} lg={3} key={property._id}>
+                {/* Render the original PropertyCard */}
                 <PropertyCard
                   property={property}
                   isWishlisted={wishlist.includes(property._id)}
                   onWishlistToggle={() => toggleWishlist(property._id)}
-                  onViewDetails={() => handleViewDetails(property)}
+                  // onViewDetails is not a prop received by the original PropertyCard
+                  // The RouterLink wrapping the card handles navigation
+                  // onViewDetails={() => handleViewDetails(property)} // This prop isn't used by the card
                 />
-              </Grid>
+              </Grid2>
             ))}
-          </Grid>
+          </Grid2>
         )}
-        {/* No Properties Message */}
+
+        {/* No Properties Message - ADD manual padding */}
         {!loading && !error && properties.length === 0 && (
-          <Typography
-            sx={{ textAlign: "center", my: 5, color: "text.secondary" }}
-          >
-            No featured properties available at the moment.
-          </Typography>
+          <Box sx={{ px: { xs: 2, sm: 3 } }}>
+            {" "}
+            {/* Add padding */}
+            <Typography
+              sx={{ textAlign: "center", my: 5, color: "text.secondary" }}
+            >
+              No featured properties available at the moment.
+            </Typography>
+          </Box>
         )}
       </Container>
     </Box>
