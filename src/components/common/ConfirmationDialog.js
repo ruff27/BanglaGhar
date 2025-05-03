@@ -7,6 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import PropTypes from "prop-types";
+import { color } from "framer-motion";
 
 /**
  * A reusable confirmation dialog component.
@@ -34,7 +35,11 @@ const ConfirmationDialog = ({
       <DialogContent>
         {/* Allow message to be a string or custom React node */}
         {typeof message === "string" ? (
-          <DialogContentText id="confirmation-dialog-description">
+          <DialogContentText
+            id="confirmation-dialog-description"
+            // Explicitly set color to text.primary for max contrast in light/dark modes
+            sx={{ color: "text.primary" }}
+          >
             {message}
           </DialogContentText>
         ) : (

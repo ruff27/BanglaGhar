@@ -1,6 +1,6 @@
 // src/features/listing/ListPropertyPage.js
 
-import React, { useEffect } from "react"; // Keep useEffect if needed elsewhere, otherwise remove
+import React, { useEffect, useState } from "react"; // Keep useEffect if needed elsewhere, otherwise remove
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -30,6 +30,7 @@ import Step_Bangladesh_Details from "./components/Step_Bangladesh_Details";
 import Step4_Images from "./components/Step4_Images";
 import Step_Description from "./components/Step_Description";
 import Step5_Review from "./components/Step5_Review";
+import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 
 // Styled components (keep as is)
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -51,6 +52,7 @@ const ListPropertyPage = () => {
   const { t } = useTranslation();
   // const { user, isLoggedIn } = useAuth(); // isLoggedIn is no longer needed here
   const navigate = useNavigate(); // Keep navigate if used elsewhere
+  const [isCancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   const {
     activeStep,
@@ -73,9 +75,18 @@ const ListPropertyPage = () => {
     handleCloseSnackbar,
   } = useListingForm();
 
-  // --- REMOVED Login Enforcement ---
-  // The useEffect hook that checked isLoggedIn and redirected is removed.
-  // ---
+  const handleCancelListing = () => {
+    setCancelConfirmOpen(true); // Open the dialog instead of navigating directly
+  };
+
+  const confirmCancelListing = () => {
+    setCancelConfirmOpen(false); // Close the dialog
+    navigate("/home"); // Navigate to the home page or dashboard
+  };
+
+  const closeCancelConfirmDialog = () => {
+    setCancelConfirmOpen(false);
+  };
 
   // --- Function to render the content for the current step - Updated ---
   const getStepContent = (step) => {
@@ -182,15 +193,38 @@ const ListPropertyPage = () => {
 
         <Box sx={{ mb: 4 }}>{getStepContent(activeStep)}</Box>
 
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mt: 4,
+          }}
+        >
+          {/* Back Button - Outlined Primary */}
           <Button
             disabled={activeStep === 0 || loadingSubmit}
             onClick={handleBack}
             variant="outlined"
+            // Use primary color outline for better visibility
+            color="primary"
             sx={{ borderRadius: "8px", textTransform: "none" }}
           >
             {t("back", "Back")}
           </Button>
+
+          {/* Cancel Button - Outlined Error */}
+          <Button
+            variant="outlined"
+            color="error" // Keep error color for this action
+            onClick={handleCancelListing}
+            disabled={loadingSubmit || loadingAI}
+            sx={{ borderRadius: "8px", textTransform: "none", mx: 2 }}
+          >
+            {t("cancel_listing", "Cancel Listing")}
+          </Button>
+
+          {/* Continue/Submit Button - Contained Primary */}
           <StyledButton
             variant="contained"
             color="primary"
@@ -198,6 +232,7 @@ const ListPropertyPage = () => {
             onClick={
               activeStep === steps.length - 1 ? handleSubmit : handleNext
             }
+            sx={{ ml: "auto" }} // Push to the right
           >
             {loadingSubmit ? (
               <CircularProgress size={24} color="inherit" />
@@ -224,6 +259,19 @@ const ListPropertyPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmationDialog
+        open={isCancelConfirmOpen}
+        onClose={closeCancelConfirmDialog} // Closes dialog without action
+        onConfirm={confirmCancelListing} // Performs the cancel action
+        title="Cancel Property Listing"
+        message="Are you sure you want to cancel listing this property? Any progress will be lost."
+        confirmText="Yes, Cancel Listing"
+        cancelText="No, Continue Editing"
+        confirmButtonProps={{ color: "error" }} // Make confirm button red
+        cancelButtonProps={{ color: "primary" }}
+        isConfirming={false} // Not typically needed for cancel, but available
+      />
     </Container>
   );
 };
