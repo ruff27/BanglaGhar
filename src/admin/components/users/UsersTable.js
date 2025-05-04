@@ -23,7 +23,7 @@ import { format } from "date-fns";
 
 // Keep headCells definition consistent with original
 const headCells = [
-  { id: "name", numeric: false, disablePadding: false, label: "Name" },
+  { id: "displayName", numeric: false, disablePadding: false, label: "Name" },
   { id: "email", numeric: false, disablePadding: false, label: "Email" },
   {
     id: "createdAt",
@@ -185,7 +185,7 @@ const UsersTable = ({
                 return (
                   <TableRow
                     hover
-                    key={user._id}
+                    key={user.displayName}
                     sx={{
                       "&:last-child td, &:last-child th": { border: 0 },
                       ...(isBlocked && {
@@ -203,7 +203,7 @@ const UsersTable = ({
                           ) : null
                         }
                       >
-                        {user.name || "N/A"}
+                        {user.displayName || user.name}
                       </Badge>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>

@@ -271,12 +271,13 @@ exports.rejectUser = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     // --- Query Parameters ---
-    const page = parseInt(req.query.page) || 1; // Default to page 1
-    const limit = parseInt(req.query.limit) || 25; // Default to 25 users per page
-    const sortField = req.query.sort || "name"; // Default sort by name
-    const sortOrder = req.query.order === "desc" ? -1 : 1; // Default asc (1)
-    const searchTerm = req.query.search || ""; // Search term for name/email
-    const statusFilter = req.query.status || ""; // Filter by approvalStatus
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    // --- MODIFICATION 1: Default sort field ---
+    const sortField = req.query.sort || "displayName"; // Default sort by displayName
+    const sortOrder = req.query.order === "desc" ? -1 : 1;
+    const searchTerm = req.query.search || "";
+    const statusFilter = req.query.status || "";
 
     // --- Calculate Skip ---
     const skip = (page - 1) * limit;
@@ -284,9 +285,13 @@ exports.getAllUsers = async (req, res) => {
     // --- Build Filter Query ---
     let filterQuery = {};
     if (searchTerm) {
-      // Case-insensitive search on name and email
       const regex = new RegExp(searchTerm, "i");
-      filterQuery.$or = [{ name: regex }, { email: regex }];
+      // --- MODIFICATION 2: Include displayName in search ---
+      filterQuery.$or = [
+        { name: regex }, // Keep searching 'name' if it still exists/is relevant
+        { displayName: regex }, // Add search by displayName
+        { email: regex },
+      ];
     }
     if (
       statusFilter &&
@@ -294,23 +299,23 @@ exports.getAllUsers = async (req, res) => {
     ) {
       filterQuery.approvalStatus = statusFilter;
     }
-    // Add other filters as needed (e.g., isAdmin: req.query.isAdmin === 'true')
 
     // --- Build Sort Object ---
     const sortObject = {};
     sortObject[sortField] = sortOrder;
-    // Add a secondary sort key for consistency if primary keys are equal (optional)
     if (sortField !== "_id") {
-      sortObject["_id"] = 1; // Ascending by ID
+      sortObject["_id"] = 1;
     }
 
     // --- Fetch Data ---
-    // Get total count matching the filter *before* pagination
     const totalUsers = await UserProfile.countDocuments(filterQuery);
 
     // Get paginated, sorted, and filtered users
     const users = await UserProfile.find(filterQuery)
-      .select("name email createdAt isAdmin approvalStatus accountStatus _id")
+      // --- MODIFICATION 3: Add displayName to select() ---
+      .select(
+        "name displayName email createdAt isAdmin approvalStatus accountStatus _id"
+      ) // Added displayName
       .sort(sortObject)
       .skip(skip)
       .limit(limit);
@@ -420,7 +425,7 @@ exports.updateUserStatus = async (req, res) => {
 
     // Return the updated user profile (select relevant fields)
     const responseProfile = await UserProfile.findById(userId).select(
-      "name email createdAt isAdmin approvalStatus accountStatus _id"
+      "name email createdAt displayName isAdmin approvalStatus accountStatus _id "
     );
 
     res.status(200).json({
