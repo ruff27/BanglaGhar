@@ -12,11 +12,22 @@ import {
   Step,
   StepLabel,
   Snackbar,
+  useMediaQuery,
+  alpha,
   Alert,
+  useTheme,
   CircularProgress, // Keep if used for loadingSubmit/loadingAI
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+
+import InfoIcon from "@mui/icons-material/Info"; // Example for Basic Info
+import LocationOnIcon from "@mui/icons-material/LocationOn"; // Example for Location
+import ListAltIcon from "@mui/icons-material/ListAlt"; // Example for Features
+import DescriptionIcon from "@mui/icons-material/Description"; // Example for Description
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary"; // Example for Images
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; // Example for Review
+import ArticleIcon from "@mui/icons-material/Article"; // Example for Specific Details
 
 // Import Auth Hook - Still needed to get user info for the form hook
 import { useAuth } from "./../../context/AuthContext";
@@ -36,9 +47,21 @@ import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   borderRadius: "16px",
-  boxShadow: "0 8px 24px rgba(43, 123, 140, 0.1)",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)", // Adjusted shadow slightly
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
+
+  // --- Apply New Background & Border ---
+  backgroundColor: "#D9F2F0", // Soft Teal / Pale Blue-Green (Choose one, e.g., D9F2F0)
+  // Or use the other option:rgb(237, 246, 245)
+
+  border: `1px solid #A0DAD6`, // Slightly darker teal border
+
+  // Remove previous background styles if any
+  background: "none", // Override potential gradients/images
+  "&::before": {
+    display: "none", // Ensure pseudo-element background is off
+  },
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -52,6 +75,9 @@ const ListPropertyPage = () => {
   const { t } = useTranslation();
   // const { user, isLoggedIn } = useAuth(); // isLoggedIn is no longer needed here
   const navigate = useNavigate(); // Keep navigate if used elsewhere
+  const theme = useTheme();
+  // Check if screen is small breakpoint ('sm') or smaller
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [isCancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   const {
@@ -74,6 +100,25 @@ const ListPropertyPage = () => {
     handleSubmit,
     handleCloseSnackbar,
   } = useListingForm();
+
+  const currentStepLabel =
+    activeStep >= 0 && activeStep < steps.length ? steps[activeStep] : "";
+
+  const currentStepTitle = t(
+    `step_${currentStepLabel.toLowerCase().replace(/ /g, "_")}`,
+    currentStepLabel // Fallback text is the raw label
+  );
+
+  const stepIcons = [
+    InfoIcon, // Step 0: Basic Info
+    LocationOnIcon, // Step 1: Location
+    ListAltIcon, // Step 2: Features
+    ArticleIcon, // Step 3: Specific Details
+    PhotoLibraryIcon, // Step 4: Upload Photos
+    DescriptionIcon, // Step 5: Description
+    CheckCircleOutlineIcon, // Step 6: Review
+  ];
+  const CurrentStepIcon = stepIcons[activeStep] || InfoIcon;
 
   const handleCancelListing = () => {
     setCancelConfirmOpen(true); // Open the dialog instead of navigating directly
@@ -174,22 +219,62 @@ const ListPropertyPage = () => {
   return (
     <Container maxWidth="md">
       <StyledPaper>
-        <Typography component="h1" variant="h4" align="center" gutterBottom>
+        <Typography
+          component="h1"
+          variant="h4"
+          align="center"
+          gutterBottom
+          sx={{
+            color: "#2C3E50", // Deep Teal or Charcoal
+            fontWeight: 700,
+          }}
+        >
           {t("list_your_property")}
         </Typography>
-        <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
-          {steps.map((label, index) => {
-            const stepProps = {};
-            const labelProps = {};
-            return (
-              <Step key={label} {...stepProps}>
-                <StepLabel {...labelProps}>
-                  {t(`step_${label.toLowerCase().replace(" ", "_")}`, label)}
-                </StepLabel>
-              </Step>
-            );
-          })}
-        </Stepper>
+        {isMobile ? (
+          // --- Mobile View: Updated Icon & Title ---
+          <Box
+            sx={{
+              my: 3, // Vertical margin
+              display: "flex",
+              flexDirection: "column", // Stack icon/title
+              alignItems: "center",
+              gap: 0.5, // Space between icon and title
+            }}
+          >
+            {/* Icon: Use a contrasting color, maybe the border teal? */}
+            <CurrentStepIcon
+              sx={{ fontSize: "2rem", color: "primary.main" }}
+            />{" "}
+            {/* Slightly darker teal icon */}
+            {/* Title: Use the Header/Text color for readability */}
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                fontWeight: 600,
+                color: "#2C3E50", // Deep Teal / Charcoal text color
+              }}
+            >
+              {currentStepTitle}
+            </Typography>
+            {/* REMOVED the "Step X / Y" Typography */}
+          </Box>
+        ) : (
+          // --- Desktop View: Unchanged Standard Horizontal Stepper ---
+          <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
+            {steps.map((label) => {
+              // ... unchanged desktop stepper map ...
+              return (
+                <Step key={label}>
+                  <StepLabel>
+                    {t(`step_${label.toLowerCase().replace(/ /g, "_")}`, label)}
+                  </StepLabel>
+                </Step>
+              );
+            })}
+          </Stepper>
+        )}
 
         <Box sx={{ mb: 4 }}>{getStepContent(activeStep)}</Box>
 

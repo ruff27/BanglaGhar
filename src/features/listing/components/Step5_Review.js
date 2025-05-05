@@ -56,9 +56,9 @@ const Step5_Review = ({ formData, features, images }) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         {t("step_review", "Review Your Listing")}
-      </Typography>
+      </Typography> */}
       <Paper
         elevation={0}
         sx={{ p: 3, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 2 }}
