@@ -179,7 +179,7 @@ const FeaturedProperties = () => {
                 lg={3}
                 key={property._id}
                 sx={{ mb: { xs: 3, sm: 0 } }} // Add margin-bottom: 24px (3*8px) on xs only
-                // Adjust the '3' value for more/less space
+                                               // Adjust the '3' value for more/less space
               >
                 {/* Render the original PropertyCard */}
                 <PropertyCard
