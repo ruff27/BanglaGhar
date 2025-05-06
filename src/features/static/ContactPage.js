@@ -141,20 +141,7 @@ const ContactPage = () => {
               <Paper
                 elevation={3}
                 sx={{ borderRadius: "12px", overflow: "hidden" }}
-              >
-                <MapContainer>
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3650.833519939074!2d90.4069779153943!3d23.78899069321744!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c70b540e2a9f%3A0x3a5fca6ac96a40b0!2sBanani%20Model%20Town%2C%20Dhaka%201213!5e0!3m2!1sen!2sbd!4v1678886400000!5m2!1sen!2sbd" // REPLACE with correct embed URL
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen=""
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="BanglaGhor Office Location"
-                  ></iframe>
-                </MapContainer>
-              </Paper>
+              ></Paper>
             </Box>
           </Grid>
         </Grid>
