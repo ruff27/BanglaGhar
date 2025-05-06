@@ -7,8 +7,8 @@ require("dotenv").config({
 });
 
 // just for debugging purposes:
-// console.log("------------------------------------------");
-// console.log("[DEBUG Server Start] Loading environment variables...");
+console.log("------------------------------------------");
+console.log("[DEBUG Server Start] Loading environment variables...");
 // console.log("[DEBUG Server Start] AWS_REGION:", process.env.AWS_REGION);
 // console.log(
 //   "[DEBUG Server Start] COGNITO_USER_POOL_ID:",
@@ -17,6 +17,10 @@ require("dotenv").config({
 console.log(
   "[DEBUG Server Start] MONGO_URI:",
   process.env.MONGO_URI ? "Loaded successfully" : "!!! MONGO_URI NOT LOADED !!!"
+);
+console.log(
+  "[DEBUG Server Start] OPENCAGE_API_KEY:", 
+  process.env.OPENCAGE_API_KEY ? "Loaded successfully" : "!!! OPENCAGE_API_KEY NOT LOADED !!!"
 );
 console.log("------------------------------------------");
 
