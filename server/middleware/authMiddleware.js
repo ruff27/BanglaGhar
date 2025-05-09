@@ -22,6 +22,7 @@ const fetchJWKs = async () => {
   isFetchingJWKs = true;
   console.log("[JWK Fetch] Attempting to fetch JWKs..."); // Moved log inside
 
+
   const userPoolId = process.env.COGNITO_USER_POOL_ID;
   const region = process.env.APP_AWS_REGION;
 

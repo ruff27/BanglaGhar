@@ -19,7 +19,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main,
   boxShadow: "0 4px 10px rgba(43, 123, 140, 0.2)",
   "&:hover": {
-    backgroundColor: "#236C7D",
+    backgroundColor: "#236C7D", 
     boxShadow: "0 6px 14px rgba(43, 123, 140, 0.3)",
     transform: "translateY(-2px)",
   },
@@ -40,6 +40,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
  * @param {function} props.onOtpChange - Handler for OTP input changes
  * @param {function} props.onSubmit - Handler for form submission
  * @param {boolean} props.isSubmitting - Indicates if the form is currently submitting
+ * 
  */
 const VerifyOtpForm = ({ otp, onOtpChange, onSubmit, isSubmitting }) => {
   const { t } = useTranslation(); // Initialize translation

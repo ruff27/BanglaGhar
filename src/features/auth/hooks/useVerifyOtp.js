@@ -19,35 +19,32 @@ const useVerifyOtp = () => {
   // State for feedback and loading
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [openSnackbar, setOpenSnackbar] = useState(false); // For success message
+  const [isResending, setIsResending] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   // Get email from location state on component mount
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
     } else {
-      // Handle case where email is missing (e.g., direct navigation)
       console.warn("Email not found in location state for OTP verification.");
       setError(
         "Email address not provided. Please go back and try signing up again."
       );
-      // Optionally navigate back or show a more prominent error
-      // navigate('/signup');
     }
-  }, [location.state]); // Re-run if location state changes (though unlikely needed)
+  }, [location.state]);
 
   /**
    * Handles changes in the OTP input field.
    */
   const handleOtpChange = useCallback(
     (event) => {
-      // Allow only digits and limit length if desired (e.g., 6 digits)
-      const value = event.target.value.replace(/\D/g, ""); // Remove non-digits
+      const value = event.target.value.replace(/\D/g, "");
       if (value.length <= 6) {
-        // Example length limit
         setOtp(value);
       }
-      if (error) setError(""); // Clear error on input change
+      if (error) setError("");
     },
     [error]
   );
@@ -59,14 +56,13 @@ const useVerifyOtp = () => {
   const handleOtpSubmit = useCallback(
     (e) => {
       e.preventDefault();
-      setError(""); // Clear previous errors
+      setError("");
 
       if (!email) {
         setError("Cannot verify OTP without an email address.");
         return;
       }
       if (!otp || otp.length < 6) {
-        // Check if OTP seems valid (e.g., length)
         setError("Please enter a valid 6-digit OTP.");
         return;
       }
@@ -78,14 +74,12 @@ const useVerifyOtp = () => {
         Pool: userPool,
       });
 
-      console.log(`Attempting OTP verification for: ${email} with OTP: ${otp}`); // Debug log
+      console.log(`Attempting OTP verification for: ${email} with OTP: ${otp}`);
 
-      // Assuming this is for confirming registration after signup
       cognitoUser.confirmRegistration(otp, true, (err, result) => {
-        setIsSubmitting(false); // Reset loading state regardless of outcome
+        setIsSubmitting(false);
         if (err) {
           console.error("OTP verification error:", err);
-          // Provide user-friendly messages
           if (err.code === "CodeMismatchException") {
             setError(
               "Invalid verification code. Please check the code and try again."
@@ -94,25 +88,63 @@ const useVerifyOtp = () => {
             setError(
               "Verification code has expired. Please request a new one."
             );
-            // Optionally add a resend OTP button/logic here
           } else if (err.code === "UserNotFoundException") {
-            setError("User not found. Please sign up again."); // Should ideally not happen if email comes from signup
+            setError("User not found. Please sign up again.");
           } else {
             setError(err.message || "Failed to verify OTP. Please try again.");
           }
           return;
         }
-        // Success
         console.log("OTP verification successful:", result);
-        setOpenSnackbar(true); // Show success message
-        // Navigate to login after delay
+        setSnackbarMessage("Email verified successfully! Redirecting to login...");
+        setOpenSnackbar(true);
         setTimeout(() => {
           navigate("/login");
         }, 1500);
       });
     },
     [email, otp, navigate]
-  ); // Dependencies
+  );
+
+  /**
+   * Handles resending the OTP for account confirmation.
+   */
+  const handleResendOtp = useCallback(() => {
+    if (!email) {
+      setError("Cannot resend OTP without an email address.");
+      return;
+    }
+
+    setIsResending(true);
+    setError("");
+
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: userPool,
+    });
+
+    console.log(`Attempting to resend OTP for: ${email}`);
+
+    cognitoUser.resendConfirmationCode((err, result) => {
+      setIsResending(false);
+      if (err) {
+        console.error("Resend OTP error:", err);
+        if (err.code === "LimitExceededException") {
+          setError(
+            "Attempt limit exceeded. Please try again after some time."
+          );
+        } else if (err.code === "UserNotFoundException") {
+          setError("User not found. Please sign up again.");
+        } else {
+          setError(err.message || "Failed to resend OTP. Please try again.");
+        }
+        return;
+      }
+      console.log("OTP resent successfully:", result);
+      setSnackbarMessage("New OTP sent successfully!");
+      setOpenSnackbar(true);
+    });
+  }, [email]);
 
   /**
    * Handles closing the success snackbar.
@@ -127,12 +159,15 @@ const useVerifyOtp = () => {
   // Return state and handlers needed by the component
   return {
     otp,
-    email, // Return email to display on the page
+    email,
     error,
     isSubmitting,
+    isResending,
     openSnackbar,
+    snackbarMessage,
     handleOtpChange,
     handleOtpSubmit,
+    handleResendOtp,
     handleCloseSnackbar,
   };
 };

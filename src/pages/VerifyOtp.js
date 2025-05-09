@@ -1,5 +1,4 @@
 import React from "react";
-// Removed Link as there are no direct links on this page in the original
 import {
   Container,
   Paper,
@@ -9,6 +8,8 @@ import {
   Snackbar,
   Avatar,
   styled,
+  Button,
+  CircularProgress,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
@@ -16,7 +17,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import useVerifyOtp from "../features/auth/hooks/useVerifyOtp"; // Adjust path
 import VerifyOtpForm from "../features/auth/components/VerifyOtpForm"; // Adjust path
 
-// --- Styled Components (Copied from original - Page structure specific) ---
+// --- Styled Components ---
 const VerifyOtpPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
@@ -35,7 +36,24 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   height: 56,
 }));
 
-// --- Main Page Component ---
+const ResendButton = styled(Button)(({ theme }) => ({
+  margin: theme.spacing(2, 0, 0),
+  padding: theme.spacing(1),
+  borderRadius: "8px",
+  textTransform: "none",
+  fontSize: "0.9rem",
+  fontWeight: 500,
+  color: theme.palette.primary.main,
+  "&:hover": {
+    backgroundColor: theme.palette.primary.light,
+    transform: "translateY(-1px)",
+  },
+  "&:disabled": {
+    backgroundColor: theme.palette.action.disabledBackground,
+    color: theme.palette.action.disabled,
+    cursor: "not-allowed",
+  },
+}));
 
 /**
  * VerifyOtp Page Component
@@ -46,12 +64,15 @@ const VerifyOtp = () => {
   // Use the custom hook to get state and handlers
   const {
     otp,
-    email, // Get email from hook to display
+    email,
     error,
     isSubmitting,
+    isResending,
     openSnackbar,
+    snackbarMessage,
     handleOtpChange,
     handleOtpSubmit,
+    handleResendOtp,
     handleCloseSnackbar,
   } = useVerifyOtp();
 
@@ -110,8 +131,19 @@ const VerifyOtp = () => {
           />
         )}
 
-        {/* Optionally add a Resend OTP button here if needed */}
-        {/* <Button disabled={isSubmitting}>Resend OTP</Button> */}
+        {/* Resend OTP Button */}
+        {email && (
+          <ResendButton
+            variant="text"
+            onClick={handleResendOtp}
+            disabled={isSubmitting || isResending}
+            startIcon={
+              isResending ? <CircularProgress size={16} color="inherit" /> : null
+            }
+          >
+            {isResending ? "Resending..." : "Resend OTP"}
+          </ResendButton>
+        )}
       </VerifyOtpPaper>
 
       {/* Snackbar for success message */}
@@ -127,7 +159,7 @@ const VerifyOtp = () => {
           variant="filled"
           sx={{ width: "100%", borderRadius: "8px" }}
         >
-          Email verified successfully! Redirecting to login...
+          {snackbarMessage}
         </Alert>
       </Snackbar>
     </Container>

@@ -23,6 +23,7 @@ import MyListingsPage from "./pages/MyListingsPage";
 import Login from "./pages/Login";
 import ListProperty from "./features/listing/ListPropertyPage";
 import Signup from "./pages/Signup";
+import ChangePassword from "./pages/ChangePassword";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 import PropertiesPage from "./features/properties/PropertiesPage";
@@ -110,6 +111,7 @@ function App() {
               {/* Routes using the BlankLayout (No Navbar/Footer) */}
               <Route element={<BlankLayout />}>
                 <Route path="/login" element={<Login />} />
+                <Route path="/change-password" element={<ChangePassword />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
