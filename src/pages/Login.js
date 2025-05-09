@@ -109,11 +109,12 @@ const Login = () => {
             </Link>
           </Typography>
           <Typography variant="body2">
+          Don’t have an account? {" "}
             <Link
               to="/signup"
               style={{ color: "#2B7B8C", textDecoration: "none" }}
             >
-              Don’t have an account? Sign Up
+             Sign Up
             </Link>
           </Typography>
         </Box>
