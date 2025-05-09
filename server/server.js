@@ -2,7 +2,7 @@ const path = require("path");
 
 // 1) load exactly the .env you intend
 require("dotenv").config({
-  path: path.resolve(__dirname, "../.env"), // Updated to point to root directory
+  path: path.resolve(__dirname, "./.env"), // Updated to point to root directory
 });
 
 // just for debugging purposes:
