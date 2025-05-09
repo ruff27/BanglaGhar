@@ -30,18 +30,16 @@ const fetchUserProfileMiddleware = async (req, res, next) => {
       console.log(
         `[FetchProfile] Access denied for blocked user: ${req.user.email}`
       );
-      return res
-        .status(403)
-        .json({
-          message: "Your account has been suspended. Please contact support.",
-        });
+      return res.status(403).json({
+        message: "Your account has been suspended. Please contact support.",
+      });
     }
     // --- END Check ---
 
     // Attach the fetched profile to the request object for subsequent middleware/controllers
     req.userProfile = userProfile;
     console.log(
-      `[FetchProfile] Profile fetched for user: ${req.user.email}, isAdmin: ${userProfile.isAdmin}, status: ${userProfile.accountStatus}`
+      `[FetchProfile] Profile fetched for user: ${req.user.email}, isAdmin: ${userProfile.isAdmin}, status: ${userProfile.accountStatus}, displayName: ${userProfile.displayName}}`
     );
 
     next(); // Proceed to the next middleware (e.g., isAdminMiddleware or the controller)

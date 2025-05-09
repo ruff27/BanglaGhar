@@ -49,9 +49,9 @@ const Step3_Features = ({ features, handleFeatureChange, formData }) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         {t("step_features", "Features")}
-      </Typography>
+      </Typography> */}
       <FormGroup>
         <Grid container spacing={1}>
           {/* Checkbox Features */}

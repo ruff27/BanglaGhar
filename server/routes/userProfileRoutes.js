@@ -1,38 +1,25 @@
 // server/routes/userProfileRoutes.js
 const express = require("express");
 const router = express.Router();
-const path = require("path"); // Needed for path resolution
-const fs = require("fs"); // Needed for directory creation
+const path = require("path"); // Keep path if needed for extension checking, etc.
+// const fs = require("fs"); // Removed: No longer needed for directory creation
 const multer = require("multer"); // Import multer
 const userProfileController = require("../controllers/userProfileController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 // --- Multer Configuration ---
-const UPLOAD_DIR = path.resolve(__dirname, "../uploads/govt_ids"); // Absolute path
+// REMOVED: const UPLOAD_DIR = path.resolve(__dirname, "../uploads/govt_ids");
 
-// Ensure upload directory exists
-if (!fs.existsSync(UPLOAD_DIR)) {
-  console.log(`Creating upload directory: ${UPLOAD_DIR}`);
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+// REMOVED: Ensure upload directory exists block
+// if (!fs.existsSync(UPLOAD_DIR)) {
+//   console.log(`Creating upload directory: ${UPLOAD_DIR}`);
+//   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// }
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, UPLOAD_DIR); // Use absolute path
-  },
-  filename: function (req, file, cb) {
-    // Ensure unique filenames using user identifier + timestamp
-    const userIdentifier = req.user?.sub || req.user?.email || "unknownuser"; // Use sub or email
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    // Keep original extension
-    const extension = path.extname(file.originalname);
-    // Sanitize userIdentifier if needed (replace characters invalid in filenames)
-    const safeIdentifier = userIdentifier.replace(/[^a-zA-Z0-9_-]/g, "_");
-    cb(null, `${safeIdentifier}-${uniqueSuffix}${extension}`);
-  },
-});
+// CHANGED: Use memoryStorage instead of diskStorage
+const storage = multer.memoryStorage(); // Store file in memory as a Buffer
 
-// Optional: File filter (example: accept only images/PDF)
+// Optional: File filter (example: accept only images/PDF) - Keep this
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype === "image/jpeg" ||
@@ -45,8 +32,9 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// Configure multer with memory storage and previous limits/filter
 const upload = multer({
-  storage: storage,
+  storage: storage, // Use memory storage
   limits: {
     fileSize: 1024 * 1024 * 5, // 5MB limit (adjust as needed)
   },
@@ -65,16 +53,12 @@ router.put(
   userProfileController.updateMyProfile // Uses the new controller function
 );
 
-// NEW: Route to upload government ID
-// Applying middlewares:
-// 1. authMiddleware: Verifies token, attaches req.user
-// 2. upload.single('govtId'): Handles single file upload from form field named 'govtId', attaches req.file
-// 3. userProfileController.uploadGovtId: Processes the request and updates DB
+// Route to upload government ID - Multer middleware now uses memory storage
 router.post(
   "/me/upload-id",
   authMiddleware,
-  upload.single("govtId"), // 'govtId' must match the name attribute of your file input field in the frontend form
-  userProfileController.uploadGovtId
+  upload.single("govtId"), // 'govtId' must match the name attribute of your file input field
+  userProfileController.uploadGovtId // Controller needs to handle req.file.buffer
 );
 
 // GET /api/user-profiles/me/listings - Fetch properties listed by current user
@@ -84,8 +68,7 @@ router.get(
   userProfileController.getMyListings // Use the new controller function
 );
 
-// --- Multer Error Handling Middleware ---
-// This should be placed after routes that use multer
+// --- Multer Error Handling Middleware --- (Keep this as is)
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     // A Multer error occurred when uploading.
@@ -112,8 +95,5 @@ router.use((error, req, res, next) => {
   // Everything went fine.
   next();
 });
-
-// Add routes for updating profile, etc., later if needed
-// router.put('/me', authMiddleware, userProfileController.updateMyProfile);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Keep Link for navigation
+import { Link, useNavigate } from "react-router-dom"; // Keep Link for navigation
 import {
   Container,
   Paper,
@@ -8,7 +8,8 @@ import {
   Alert,
   Snackbar,
   Avatar,
-  styled, // Keep styled if using styled components here
+  styled,
+  Button, // Keep styled if using styled components here
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
@@ -44,6 +45,8 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
  */
 const Login = () => {
   // Use the custom hook to get state and handlers
+  const navigate = useNavigate();
+
   const {
     email,
     password,
@@ -55,6 +58,10 @@ const Login = () => {
     handleLoginSubmit,
     handleCloseSnackbar,
   } = useLogin();
+
+  const handleCancel = () => {
+    navigate("/home"); // Navigate to the home page
+  };
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
@@ -117,6 +124,24 @@ const Login = () => {
              Sign Up
             </Link>
           </Typography>
+        </Box>
+        <Box
+          sx={{
+            width: "100%",
+            mt: 3,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            variant="outlined"
+            // Use primary color for outline - more visible & professional than inherit grey
+            color="primary"
+            onClick={handleCancel}
+            sx={{ textTransform: "none", borderRadius: "8px" }}
+          >
+            Cancel & Go Home
+          </Button>
         </Box>
       </LoginPaper>
 

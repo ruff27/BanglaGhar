@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -9,6 +9,7 @@ import {
   Snackbar,
   Avatar,
   styled,
+  Button,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
@@ -43,6 +44,7 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
  * Handles displaying errors and success messages from the useSignup hook.
  */
 const Signup = () => {
+  const navigate = useNavigate();
   // Use the custom hook to get state and handlers
   const {
     email,
@@ -61,6 +63,10 @@ const Signup = () => {
     handleSignupSubmit,
     handleCloseSnackbar,
   } = useSignup();
+
+  const handleCancel = () => {
+    navigate("/home"); // Navigate to the home page
+  };
 
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
@@ -114,6 +120,25 @@ const Signup = () => {
             Log in
           </Link>
         </Typography>
+
+        <Box
+          sx={{
+            width: "100%",
+            mt: 3,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            variant="outlined"
+            // Use primary color for outline - more visible & professional than inherit grey
+            color="primary"
+            onClick={handleCancel}
+            sx={{ textTransform: "none", borderRadius: "8px" }}
+          >
+            Cancel & Go Home
+          </Button>
+        </Box>
       </SignupPaper>
 
       {/* Snackbar for success message */}

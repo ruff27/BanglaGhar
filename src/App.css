@@ -1,25 +1,72 @@
-/* App.css - Basic styling to complement the Navbar */
+/* src/App.css */
+
+/* Force base elements to viewport width and prevent overflow */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw; /* Use viewport width unit */
+  box-sizing: border-box;
+  overflow-x: hidden; /* Prevent horizontal scrollbars */
+}
+
+/* Apply box-sizing globally for consistency */
+*,
+*::before,
+*::after {
+  box-sizing: inherit; /* Inherit from html */
+}
+
+html {
+  box-sizing: border-box;
+}
 
 .App {
   text-align: center;
   min-height: 100vh;
+  /* Make .App fill its container (body/#root) */
+  width: 100%;
+  max-width: 100%; /* Inherit max-width */
+  display: flex; /* From inline style */
+  flex-direction: column; /* From inline style */
+  /* Ensure box-sizing is applied here too */
+  box-sizing: border-box;
 }
 
 .content {
-  padding: 2rem 1rem;
+  /* Apply padding for content spacing */
+  padding: 2rem 1rem; /* 32px top/bottom, 16px left/right */
+
+  /* Limit width on large screens and center */
   max-width: 1200px;
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
+
+  /* Ensure it takes parent width and includes padding in calculation */
+  width: 100%;
+  box-sizing: border-box;
+
+  /* Style from inline style for vertical flex */
+  flex-grow: 1;
 }
 
+/* Keep h1, p styles */
 h1 {
-  color: #0B1F23;
+  color: #0b1f23;
   margin-bottom: 1.5rem;
+  box-sizing: border-box; /* Add for safety */
 }
 
 p {
-  color: #0B1F23;
+  color: #0b1f23;
   font-size: 1.1rem;
   line-height: 1.6;
+  box-sizing: border-box; /* Add for safety */
 }
 
-/* Additional styling for pages if needed */
+/* Optional: Add a safety net for direct children of .content */
+/* .content > * {
+  max-width: 100%;
+} */

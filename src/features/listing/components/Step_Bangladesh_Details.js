@@ -26,9 +26,9 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         {t("step_specific_details", "Specific Property Details")}
-      </Typography>
+      </Typography> */}
       <Grid container spacing={3}>
         {/* --- Property Condition --- */}
         <Grid item xs={12} sm={6}>

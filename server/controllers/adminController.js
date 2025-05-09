@@ -1,9 +1,19 @@
 // server/controllers/adminController.js
-const UserProfile = require("../models/UserProfile");
+const UserProfile = require("../models/UserProfile"); // Adjust path if needed
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const Property = require("../models/property");
 const mongoose = require("mongoose"); // Required for ObjectId validation
 const { subDays } = require("date-fns");
 
+const s3Client = new S3Client({
+  region: process.env.APP_AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+  },
+});
+const S3_BUCKET = process.env.S3_BUCKET_NAME;
 // --- NEW: Get Dashboard Statistics ---
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -37,6 +47,70 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
+exports.viewUserGovtId = async (req, res) => {
+  const { userId } = req.params; // Get user ID from URL parameter
+
+  if (!S3_BUCKET || !process.env.APP_AWS_REGION) {
+    console.error("Server S3 configuration error viewing ID.");
+    return res.status(500).json({ message: "Server configuration error." });
+  }
+
+  try {
+    // Find the user profile by their MongoDB _id
+    const userProfile = await UserProfile.findById(userId).select("govtIdUrl"); // Only need the URL
+
+    if (!userProfile) {
+      return res.status(404).json({ message: "User profile not found." });
+    }
+
+    if (!userProfile.govtIdUrl) {
+      return res
+        .status(404)
+        .json({ message: "Government ID not uploaded for this user." });
+    }
+
+    // Extract the S3 Key from the stored URL [cite: 1]
+    // Assumes URL format: https://BUCKET.s3.REGION.amazonaws.com/KEY
+    const urlParts = userProfile.govtIdUrl.split(".amazonaws.com/");
+    if (urlParts.length < 2 || !urlParts[1]) {
+      console.error(
+        `Could not parse S3 key from URL: ${userProfile.govtIdUrl}`
+      );
+      return res.status(500).send("Error processing file location.");
+    }
+    const s3Key = decodeURIComponent(urlParts[1]); // Decode potential URL encoding in the key
+
+    console.log(
+      `Generating signed URL for Key: ${s3Key} in Bucket: ${S3_BUCKET}`
+    );
+
+    // Prepare the command for getSignedUrl
+    const command = new GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: s3Key,
+    });
+
+    // Generate the pre-signed URL (expires in 5 minutes)
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+
+    // Redirect the admin's browser to the temporary S3 URL
+    res.redirect(signedUrl);
+  } catch (error) {
+    console.error(`Error generating signed URL for user ${userId}:`, error);
+    if (error.name === "NoSuchKey") {
+      res.status(404).send("File not found in storage.");
+    } else if (error.name === "NotFound") {
+      // Or other S3 errors
+      res.status(404).send("File not found.");
+    } else if (error.name === "CastError") {
+      // If userId is invalid format
+      res.status(400).send("Invalid user ID format.");
+    } else {
+      res.status(500).send("Server error retrieving file.");
+    }
+  }
+};
+
 // Get users pending approval
 exports.getPendingApprovals = async (req, res) => {
   try {
@@ -53,6 +127,57 @@ exports.getPendingApprovals = async (req, res) => {
   }
 };
 
+exports.getSignedIdUrlForAdmin = async (req, res) => {
+  const { userId } = req.params;
+
+  if (!S3_BUCKET) {
+    // Add necessary checks
+    console.error("Server S3 configuration error getting signed URL.");
+    return res.status(500).json({ message: "Server configuration error." });
+  }
+
+  try {
+    const userProfile = await UserProfile.findById(userId).select("govtIdUrl");
+    if (!userProfile || !userProfile.govtIdUrl) {
+      return res
+        .status(404)
+        .json({ message: "Government ID not found for this user." });
+    }
+
+    // Extract S3 Key (same logic as before)
+    const urlParts = userProfile.govtIdUrl.split(".amazonaws.com/");
+    if (urlParts.length < 2 || !urlParts[1]) {
+      console.error(
+        `Could not parse S3 key from URL: ${userProfile.govtIdUrl}`
+      );
+      return res
+        .status(500)
+        .json({ message: "Error processing file location." });
+    }
+    const s3Key = decodeURIComponent(urlParts[1]);
+
+    console.log(`Generating signed URL for Key: ${s3Key} (request by admin)`);
+
+    const command = new GetObjectCommand({ Bucket: S3_BUCKET, Key: s3Key });
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 }); // 5 minute expiry
+
+    // *** RETURN THE URL AS JSON ***
+    res.status(200).json({ signedUrl: signedUrl });
+  } catch (error) {
+    console.error(
+      `Error generating signed URL for user ${userId} (admin request):`,
+      error
+    );
+    // Handle errors appropriately (NoSuchKey, CastError etc.)
+    if (error.name === "NoSuchKey" || error.name === "NotFound") {
+      res.status(404).json({ message: "File not found in storage." });
+    } else if (error.name === "CastError") {
+      res.status(400).json({ message: "Invalid user ID format." });
+    } else {
+      res.status(500).json({ message: "Server error generating file URL." });
+    }
+  }
+};
 // Approve a user's listing request
 exports.approveUser = async (req, res) => {
   const { userId } = req.params; // Get userId from URL parameter
@@ -146,12 +271,13 @@ exports.rejectUser = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     // --- Query Parameters ---
-    const page = parseInt(req.query.page) || 1; // Default to page 1
-    const limit = parseInt(req.query.limit) || 25; // Default to 25 users per page
-    const sortField = req.query.sort || "name"; // Default sort by name
-    const sortOrder = req.query.order === "desc" ? -1 : 1; // Default asc (1)
-    const searchTerm = req.query.search || ""; // Search term for name/email
-    const statusFilter = req.query.status || ""; // Filter by approvalStatus
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    // --- MODIFICATION 1: Default sort field ---
+    const sortField = req.query.sort || "displayName"; // Default sort by displayName
+    const sortOrder = req.query.order === "desc" ? -1 : 1;
+    const searchTerm = req.query.search || "";
+    const statusFilter = req.query.status || "";
 
     // --- Calculate Skip ---
     const skip = (page - 1) * limit;
@@ -159,9 +285,13 @@ exports.getAllUsers = async (req, res) => {
     // --- Build Filter Query ---
     let filterQuery = {};
     if (searchTerm) {
-      // Case-insensitive search on name and email
       const regex = new RegExp(searchTerm, "i");
-      filterQuery.$or = [{ name: regex }, { email: regex }];
+      // --- MODIFICATION 2: Include displayName in search ---
+      filterQuery.$or = [
+        { name: regex }, // Keep searching 'name' if it still exists/is relevant
+        { displayName: regex }, // Add search by displayName
+        { email: regex },
+      ];
     }
     if (
       statusFilter &&
@@ -169,23 +299,23 @@ exports.getAllUsers = async (req, res) => {
     ) {
       filterQuery.approvalStatus = statusFilter;
     }
-    // Add other filters as needed (e.g., isAdmin: req.query.isAdmin === 'true')
 
     // --- Build Sort Object ---
     const sortObject = {};
     sortObject[sortField] = sortOrder;
-    // Add a secondary sort key for consistency if primary keys are equal (optional)
     if (sortField !== "_id") {
-      sortObject["_id"] = 1; // Ascending by ID
+      sortObject["_id"] = 1;
     }
 
     // --- Fetch Data ---
-    // Get total count matching the filter *before* pagination
     const totalUsers = await UserProfile.countDocuments(filterQuery);
 
     // Get paginated, sorted, and filtered users
     const users = await UserProfile.find(filterQuery)
-      .select("name email createdAt isAdmin approvalStatus accountStatus _id")
+      // --- MODIFICATION 3: Add displayName to select() ---
+      .select(
+        "name displayName email createdAt isAdmin approvalStatus accountStatus _id"
+      ) // Added displayName
       .sort(sortObject)
       .skip(skip)
       .limit(limit);
@@ -295,7 +425,7 @@ exports.updateUserStatus = async (req, res) => {
 
     // Return the updated user profile (select relevant fields)
     const responseProfile = await UserProfile.findById(userId).select(
-      "name email createdAt isAdmin approvalStatus accountStatus _id"
+      "name email createdAt displayName isAdmin approvalStatus accountStatus _id "
     );
 
     res.status(200).json({

@@ -23,9 +23,9 @@ const Step_Description = ({
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         {t("step_description", "Property Description")}
-      </Typography>
+      </Typography> */}
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <TextField

@@ -7,9 +7,9 @@ const Step2_Location = ({ formData, errors, handleChange }) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         {t("step_location", "Location Details")}
-      </Typography>
+      </Typography> */}
       <Grid container spacing={3}>
         {/* Address Line 1 (House/Road/Village/Area) */}
         <Grid item xs={12}>

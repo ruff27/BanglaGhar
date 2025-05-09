@@ -113,9 +113,9 @@ const Step4_Images = ({
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         {t("step_upload_photos", "Upload Photos")}
-      </Typography>
+      </Typography> */}
       <Button
         variant="outlined"
         component="label"

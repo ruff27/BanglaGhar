@@ -23,9 +23,9 @@ const Step1_Details = ({ formData, errors, handleChange }) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         {t("step_basic_info", "Basic Information")}
-      </Typography>
+      </Typography> */}
       <Grid container spacing={3}>
         {/* Property Type */}
         <Grid item xs={12} sm={6}>
