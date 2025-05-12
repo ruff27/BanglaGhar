@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
+import { divisionCenters } from "../../../constants/divisionCenters";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5001/api";
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 const DEFAULT_CENTER = [23.8103, 90.4125]; // Dhaka coordinates
 const DEFAULT_ZOOM = 7;
 
@@ -13,25 +15,25 @@ const DEFAULT_ZOOM = 7;
 const normalizePosition = (position) => {
   // Handle array format [lat, lng]
   if (Array.isArray(position) && position.length === 2) {
-    if (typeof position[0] === 'number' && typeof position[1] === 'number') {
+    if (typeof position[0] === "number" && typeof position[1] === "number") {
       return [
         parseFloat(position[0].toFixed(6)),
-        parseFloat(position[1].toFixed(6))
+        parseFloat(position[1].toFixed(6)),
       ];
     }
     return null;
   }
-  
+
   // Handle object format {lat, lng}
-  if (position && typeof position === 'object') {
-    if (typeof position.lat === 'number' && typeof position.lng === 'number') {
+  if (position && typeof position === "object") {
+    if (typeof position.lat === "number" && typeof position.lng === "number") {
       return {
         lat: parseFloat(position.lat.toFixed(6)),
-        lng: parseFloat(position.lng.toFixed(6))
+        lng: parseFloat(position.lng.toFixed(6)),
       };
     }
   }
-  
+
   return null;
 };
 
@@ -42,20 +44,24 @@ const normalizePosition = (position) => {
  */
 const hasValidPosition = (property) => {
   if (!property) return false;
-  
+
   // Check position.lat/lng format
-  if (property.position && 
-      typeof property.position.lat === 'number' && 
-      typeof property.position.lng === 'number') {
+  if (
+    property.position &&
+    typeof property.position.lat === "number" &&
+    typeof property.position.lng === "number"
+  ) {
     return true;
   }
-  
+
   // Check latitude/longitude format
-  if (typeof property.latitude === 'number' && 
-      typeof property.longitude === 'number') {
+  if (
+    typeof property.latitude === "number" &&
+    typeof property.longitude === "number"
+  ) {
     return true;
   }
-  
+
   return false;
 };
 
@@ -66,26 +72,47 @@ const hasValidPosition = (property) => {
  */
 const getPropertyPosition = (property) => {
   if (!property) return null;
-  
-  // First try position.lat/lng format
-  if (property.position && 
-      typeof property.position.lat === 'number' && 
-      typeof property.position.lng === 'number') {
+
+  // ✅ Primary: position.lat/lng
+  if (
+    property.position &&
+    typeof property.position.lat === "number" &&
+    typeof property.position.lng === "number"
+  ) {
     return {
       lat: property.position.lat,
-      lng: property.position.lng
+      lng: property.position.lng,
     };
   }
-  
-  // Then try latitude/longitude format
-  if (typeof property.latitude === 'number' && 
-      typeof property.longitude === 'number') {
+
+  // ✅ Secondary: latitude/longitude fields
+  if (
+    typeof property.latitude === "number" &&
+    typeof property.longitude === "number"
+  ) {
     return {
       lat: property.latitude,
-      lng: property.longitude
+      lng: property.longitude,
     };
   }
-  
+
+  // 🧭 Fallback: use division center if known
+  const lowerDistrict = property.district?.toLowerCase() || "";
+  const lowerDivision = property.division?.toLowerCase() || "";
+
+  const fallbackKey = Object.keys(divisionCenters).find(
+    (key) => lowerDistrict.includes(key) || lowerDivision.includes(key)
+  );
+
+  if (fallbackKey) {
+    property.locationAccuracy = "district-level"; // so popup will say 📍 Approximate
+    return {
+      lat: divisionCenters[fallbackKey][0],
+      lng: divisionCenters[fallbackKey][1],
+    };
+  }
+
+  // ❌ No valid data
   return null;
 };
 
@@ -102,7 +129,7 @@ const useMapData = (propertyCode = null) => {
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
   const [selectedProperty, setSelectedProperty] = useState(null); // Holds the currently selected property object
-  
+
   // Refs to track changes and prevent unnecessary updates
   const prevSelectedRef = useRef(null);
   const isNavigatingRef = useRef(false);
@@ -119,23 +146,23 @@ const useMapData = (propertyCode = null) => {
 
     // Create a stable copy to prevent mutations
     const stableProperty = { ...property };
-    
+
     // Get position data in consistent format
     const positionData = getPropertyPosition(property);
-    
+
     if (positionData) {
       // Normalize position
       const normalizedPosition = {
         lat: parseFloat(positionData.lat.toFixed(6)),
-        lng: parseFloat(positionData.lng.toFixed(6))
+        lng: parseFloat(positionData.lng.toFixed(6)),
       };
-      
+
       // Update both formats for consistency
       stableProperty.position = normalizedPosition;
       stableProperty.latitude = normalizedPosition.lat;
       stableProperty.longitude = normalizedPosition.lng;
     }
-    
+
     return stableProperty;
   }, []);
 
@@ -144,85 +171,97 @@ const useMapData = (propertyCode = null) => {
    * @param {Array} propertiesArray - Array of property objects
    * @returns {Array} - New array of properties with stable positions
    */
-  const createStableProperties = useCallback((propertiesArray) => {
-    if (!Array.isArray(propertiesArray)) return [];
-    
-    return propertiesArray
-      .filter(p => p && p._id) // Filter out invalid properties
-      .map(createStableProperty);
-  }, [createStableProperty]);
+  const createStableProperties = useCallback(
+    (propertiesArray) => {
+      if (!Array.isArray(propertiesArray)) return [];
+
+      return propertiesArray
+        .filter((p) => p && p._id) // Filter out invalid properties
+        .map(createStableProperty);
+    },
+    [createStableProperty]
+  );
 
   /**
    * Fetch a specific property by code
    * Enhanced with position normalization for stability
    */
-  const fetchPropertyByCode = useCallback(async (code) => {
-    if (!code) return null;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await axios.get(`${API_BASE_URL}/properties/${code}`);
-      const property = response.data;
-      
-      if (!property) {
-        setError(`Property with code ${code} not found.`);
-        return null;
-      }
-      
-      // Check if property has valid coordinates
-      if (!hasValidPosition(property)) {
-        setError(`Property with code ${code} has invalid location data.`);
-        return null;
-      }
-      
-      // Create a stable property with normalized position
-      const stableProperty = createStableProperty(property);
-      
-      // Set this property as the selected one
-      setSelectedProperty(stableProperty);
-      
-      // Get position data in array format for map center
-      const positionData = getPropertyPosition(stableProperty);
-      const normalizedCenter = [positionData.lat, positionData.lng];
-      
-      setMapCenter(normalizedCenter);
-      setMapZoom(15); // Zoom in to property level
-      
-      // Mark as navigating to prevent interference from other updates
-      isNavigatingRef.current = true;
-      specificPropertyLoadedRef.current = true;
-      
-      // Store previous selection
-      prevSelectedRef.current = stableProperty._id;
-      
-      // Add this property to the properties array if it's not already there
-      setProperties(prev => {
-        const exists = prev.some(p => p._id === stableProperty._id);
-        if (exists) {
-          // Update the existing property to ensure position consistency
-          return prev.map(p => p._id === stableProperty._id ? stableProperty : p);
+  const fetchPropertyByCode = useCallback(
+    async (code) => {
+      if (!code) return null;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/properties/${code}`);
+        const property = response.data;
+
+        if (!property) {
+          setError(`Property with code ${code} not found.`);
+          return null;
         }
-        return [...prev, stableProperty];
-      });
-      
-      console.log(`Property loaded: ${stableProperty._id}, position: ${JSON.stringify(stableProperty.position)}`);
-      
-      // Reset navigation flag after a short delay
-      setTimeout(() => {
-        isNavigatingRef.current = false;
-      }, 300);
-      
-      return stableProperty;
-    } catch (err) {
-      console.error(`Error fetching property ${code}:`, err);
-      setError(`Failed to load property: ${err.message}`);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [createStableProperty]);
+
+        // Check if property has valid coordinates
+        if (!hasValidPosition(property)) {
+          setError(`Property with code ${code} has invalid location data.`);
+          return null;
+        }
+
+        // Create a stable property with normalized position
+        const stableProperty = createStableProperty(property);
+
+        // Set this property as the selected one
+        setSelectedProperty(stableProperty);
+
+        // Get position data in array format for map center
+        const positionData = getPropertyPosition(stableProperty);
+        const normalizedCenter = [positionData.lat, positionData.lng];
+
+        setMapCenter(normalizedCenter);
+        setMapZoom(15); // Zoom in to property level
+
+        // Mark as navigating to prevent interference from other updates
+        isNavigatingRef.current = true;
+        specificPropertyLoadedRef.current = true;
+
+        // Store previous selection
+        prevSelectedRef.current = stableProperty._id;
+
+        // Add this property to the properties array if it's not already there
+        setProperties((prev) => {
+          const exists = prev.some((p) => p._id === stableProperty._id);
+          if (exists) {
+            // Update the existing property to ensure position consistency
+            return prev.map((p) =>
+              p._id === stableProperty._id ? stableProperty : p
+            );
+          }
+          return [...prev, stableProperty];
+        });
+
+        console.log(
+          `Property loaded: ${stableProperty._id}, position: ${JSON.stringify(
+            stableProperty.position
+          )}`
+        );
+
+        // Reset navigation flag after a short delay
+        setTimeout(() => {
+          isNavigatingRef.current = false;
+        }, 300);
+
+        return stableProperty;
+      } catch (err) {
+        console.error(`Error fetching property ${code}:`, err);
+        setError(`Failed to load property: ${err.message}`);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [createStableProperty]
+  );
 
   /**
    * Fetch properties - either all properties or just the specific one
@@ -236,24 +275,30 @@ const useMapData = (propertyCode = null) => {
       const fetchMapProperties = async () => {
         // Skip if we're currently navigating to a specific property
         if (isNavigatingRef.current) return;
-        
+
         setLoading(true);
         setError(null);
         try {
           const response = await axios.get(`${API_BASE_URL}/properties`);
-          
+
           // Filter properties that have valid coordinates
-          const validProperties = (response.data || []).filter(hasValidPosition);
-          
+          const validProperties = (response.data || []).filter(
+            hasValidPosition
+          );
+
           if (validProperties.length < response.data.length) {
-            console.warn(`Filtered out ${response.data.length - validProperties.length} properties with invalid coordinates`);
+            console.warn(
+              `Filtered out ${
+                response.data.length - validProperties.length
+              } properties with invalid coordinates`
+            );
           }
-          
+
           // Create stable copies with normalized positions
           const stableProperties = createStableProperties(validProperties);
-          
+
           setProperties(stableProperties);
-          
+
           console.log(`Loaded ${stableProperties.length} properties for map`);
         } catch (err) {
           console.error("Error fetching map properties:", err);
@@ -263,7 +308,7 @@ const useMapData = (propertyCode = null) => {
           setLoading(false);
         }
       };
-      
+
       fetchMapProperties();
     }
   }, [propertyCode, fetchPropertyByCode, createStableProperties]);
@@ -276,24 +321,24 @@ const useMapData = (propertyCode = null) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          
+
           // Normalize coordinates for consistency
           const normalizedLocation = normalizePosition([latitude, longitude]);
-          
+
           setUserLocation(normalizedLocation);
-          
+
           // Only center map on user if not viewing a specific property
           if (!specificPropertyLoadedRef.current) {
             setMapCenter(normalizedLocation);
             setMapZoom(13); // Zoom in closer
-            
+
             // Clear selection only if not looking at a specific property
             if (!propertyCode) {
               setSelectedProperty(null);
               prevSelectedRef.current = null;
             }
           }
-          
+
           console.log("User located:", normalizedLocation);
         },
         (err) => {
@@ -314,43 +359,51 @@ const useMapData = (propertyCode = null) => {
    * Handler for selecting a property (e.g., when marker is clicked)
    * Enhanced with position stability and selection tracking
    */
-  const handleSelectProperty = useCallback((property) => {
-    if (!property || !property._id) return;
-    
-    // Prevent reselection of the same property
-    if (prevSelectedRef.current === property._id) {
-      console.log("Property already selected, skipping update:", property._id);
-      return;
-    }
-    
-    console.log("Selecting property:", property._id);
-    prevSelectedRef.current = property._id;
-    
-    // Create a stable copy with normalized position
-    const stableProperty = createStableProperty(property);
-    
-    // Update selected property with stable position
-    setSelectedProperty(stableProperty);
-    
-    // Mark as navigating to prevent interference
-    isNavigatingRef.current = true;
-    
-    // Center the map on the selected property with stable coordinates
-    const positionData = getPropertyPosition(stableProperty);
-    if (positionData) {
-      const normalizedCenter = [positionData.lat, positionData.lng];
-      
-      setMapCenter(normalizedCenter);
-      setMapZoom(15); // Zoom in closer
-      
-      console.log(`Centered map on property: ${JSON.stringify(normalizedCenter)}`);
-    }
-    
-    // Reset navigation flag after a short delay
-    setTimeout(() => {
-      isNavigatingRef.current = false;
-    }, 300);
-  }, [createStableProperty]);
+  const handleSelectProperty = useCallback(
+    (property) => {
+      if (!property || !property._id) return;
+
+      // Prevent reselection of the same property
+      if (prevSelectedRef.current === property._id) {
+        console.log(
+          "Property already selected, skipping update:",
+          property._id
+        );
+        return;
+      }
+
+      console.log("Selecting property:", property._id);
+      prevSelectedRef.current = property._id;
+
+      // Create a stable copy with normalized position
+      const stableProperty = createStableProperty(property);
+
+      // Update selected property with stable position
+      setSelectedProperty(stableProperty);
+
+      // Mark as navigating to prevent interference
+      isNavigatingRef.current = true;
+
+      // Center the map on the selected property with stable coordinates
+      const positionData = getPropertyPosition(stableProperty);
+      if (positionData) {
+        const normalizedCenter = [positionData.lat, positionData.lng];
+
+        setMapCenter(normalizedCenter);
+        setMapZoom(15); // Zoom in closer
+
+        console.log(
+          `Centered map on property: ${JSON.stringify(normalizedCenter)}`
+        );
+      }
+
+      // Reset navigation flag after a short delay
+      setTimeout(() => {
+        isNavigatingRef.current = false;
+      }, 300);
+    },
+    [createStableProperty]
+  );
 
   /**
    * Handler to clear selected property
@@ -368,15 +421,15 @@ const useMapData = (propertyCode = null) => {
   const handleMapMove = useCallback((center, zoom) => {
     // Skip updates if we're currently navigating to a property
     if (isNavigatingRef.current) return;
-    
+
     // Normalize coordinates for consistency
     const normalizedCenter = normalizePosition(center);
-    
+
     if (normalizedCenter) {
       setMapCenter(normalizedCenter);
     }
-    
-    if (typeof zoom === 'number' && !isNaN(zoom)) {
+
+    if (typeof zoom === "number" && !isNaN(zoom)) {
       setMapZoom(zoom);
     }
   }, []);
