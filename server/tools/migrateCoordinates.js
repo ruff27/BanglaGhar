@@ -1,6 +1,6 @@
 // migration-fix-coordinates.js
 const mongoose = require("mongoose");
-const Property = require("./models/property");
+const Property = require("../models/property");
 const axios = require("axios");
 require("dotenv").config();
 

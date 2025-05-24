@@ -1,5 +1,5 @@
 // src/features/map/MapPage.js
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -180,79 +180,18 @@ const MapPage = () => {
   } = useMapData();
 
   // --- Filtered Properties based on local controls ---
-  const filteredMapProperties = React.useMemo(() => {
-    const divisions = [
-      "dhaka",
-      "chattogram",
-      "khulna",
-      "rajshahi",
-      "barisal",
-      "sylhet",
-      "rangpur",
-      "mymensingh",
-    ];
+  const filteredMapProperties = useMemo(() => {
+    return properties.filter((p) =>
+      propertyTypeFilter === "all" || p.listingType === propertyTypeFilter
+    );
+  }, [properties, propertyTypeFilter]);
 
-    const lowerQuery = searchQuery.toLowerCase();
-
-    //  Set zoom/center if query matches a division
-    if (divisionCenters[lowerQuery]) {
-      setDivisionZoomOverride({
-        center: divisionCenters[lowerQuery],
-        zoom: 10,
-      });
-    } else {
-      setDivisionZoomOverride({ center: null, zoom: null });
-    }
-
-    return properties
-      .map((p) => {
-        const typeMatch =
-          propertyTypeFilter === "all" || p.listingType === propertyTypeFilter;
-
-        const lowerQuery = searchQuery.toLowerCase();
-        const searchMatch =
-          !searchQuery ||
-          p.title?.toLowerCase().includes(lowerQuery) ||
-          p.addressLine1?.toLowerCase().includes(lowerQuery) ||
-          p.cityTown?.toLowerCase().includes(lowerQuery) ||
-          p.district?.toLowerCase().includes(lowerQuery) ||
-          (p.division &&
-            typeof p.division === "string" &&
-            (p.division.toLowerCase().includes(lowerQuery) ||
-              divisions.includes(lowerQuery)));
-
-        if (!typeMatch || !searchMatch) return null;
-
-        const hasCoords =
-          typeof p.latitude === "number" && typeof p.longitude === "number";
-
-        if (hasCoords) {
-          return p; // ✅ Already has exact coordinates
-        }
-
-        const fallback = getFallbackPosition(p);
-        if (fallback) {
-          return {
-            ...p,
-            latitude: fallback.lat,
-            longitude: fallback.lng,
-            position: fallback,
-            locationAccuracy: "district-level",
-          };
-        }
-
-        return null; //  Can't show anything without at least district
-      })
-      .filter(Boolean); // Remove any null entries
-  }, [properties, propertyTypeFilter, searchQuery]);
 
   // Track if we've loaded a specific property
   const [specificPropertyLoaded, setSpecificPropertyLoaded] = useState(false);
 
   // --- Handlers for Page Controls ---
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
+  const handleSearchChange = (e) => setSearchQuery(e.target.value);
 
   const handlePropertyTypeChange = (event, newType) => {
     if (newType !== null) {
@@ -337,7 +276,6 @@ const MapPage = () => {
                   positionData
                 );
 
-                // ✅ Add this block to inject usable coords
                 property.position = positionData;
                 property.latitude = positionData.lat;
                 property.longitude = positionData.lng;
@@ -399,8 +337,7 @@ const MapPage = () => {
               showNotification(
                 t(
                   "property_loaded",
-                  `Property '${
-                    enhancedProperty.title || "Unnamed Property"
+                  `Property '${enhancedProperty.title || "Unnamed Property"
                   }' loaded`
                 ),
                 "success"
@@ -431,9 +368,7 @@ const MapPage = () => {
   ]);
 
   // Handle filter changes
-  const handleFilterChange = (newFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  };
+  const handleFilterChange = (newFilters) => setFilters((prev) => ({ ...prev, ...newFilters }));
 
   // Reset filters
   const handleResetFilters = () => {
@@ -533,11 +468,11 @@ const MapPage = () => {
       <Paper
         elevation={2}
         sx={{
-          p: 1.5,
+          p: 1,
           m: 2,
           mb: 0,
           display: "flex",
-          gap: 1.5,
+          justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
           borderRadius: "12px",
@@ -545,83 +480,49 @@ const MapPage = () => {
           zIndex: 1100,
         }}
       >
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBack}
-          variant="outlined"
-          size="small"
-        >
-          {t("back", "Back")}
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBack}
+            variant="outlined"
+            size="small"
+          >
+            {t("back", "Back")}
+          </Button>
 
-        <TextField
-          placeholder={t("search_property", "Search title or location...")}
-          variant="outlined"
-          size="small"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            sx: { borderRadius: "8px" },
-          }}
-          sx={{ flexGrow: 1, minWidth: "200px" }}
-        />
+          <ToggleButtonGroup
+            value={propertyTypeFilter}
+            exclusive
+            onChange={handlePropertyTypeChange}
+            aria-label="property type filter"
+            size="small"
+          >
+            <ToggleButton value="all">{t("all_types", "All Types")}</ToggleButton>
+            <ToggleButton value="rent">{t("nav_rent", "Rent")}</ToggleButton>
+            <ToggleButton value="buy">{t("nav_buy", "Buy")}</ToggleButton>
+            <ToggleButton value="sold">{t("nav_sold", "Sold")}</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
 
-        <ToggleButtonGroup
-          value={propertyTypeFilter}
-          exclusive
-          onChange={handlePropertyTypeChange}
-          aria-label="property type filter"
-          size="small"
-        >
-          {/* Translate labels, keep values */}
-          <ToggleButton value="all" aria-label="all types">
-            {t("all_types", "All Types")}
-          </ToggleButton>
-          <ToggleButton value="rent" aria-label="for rent">
-            {t("nav_rent", "Rent")}
-          </ToggleButton>
-          <ToggleButton value="buy" aria-label="for sale">
-            {t("nav_buy", "Buy")}
-          </ToggleButton>
-          <ToggleButton value="sold" aria-label="sold">
-            {t("nav_sold", "Sold")}
-          </ToggleButton>
-        </ToggleButtonGroup>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Tooltip title={t("locate_me", "Locate Me")}>
+            <IconButton onClick={handleLocateUser} color="primary">
+              <MyLocationIcon />
+            </IconButton>
+          </Tooltip>
 
-        <Tooltip title={t("locate_me", "Locate Me")}>
-          <IconButton onClick={handleLocateUser} color="primary">
-            <MyLocationIcon />
-          </IconButton>
-        </Tooltip>
+          <Tooltip title={t("location_accuracy_info", "Location Accuracy Info")}>
+            <IconButton onClick={toggleLocationInfo} color="info">
+              <InfoIcon />
+            </IconButton>
+          </Tooltip>
 
-        <Tooltip title={t("location_accuracy_info", "Location Accuracy Info")}>
-          <IconButton onClick={toggleLocationInfo} color="info">
-            <InfoIcon />
-          </IconButton>
-        </Tooltip>
-
-        <Button
-          onClick={clearSearchAndFilters}
-          size="small"
-          sx={{ textTransform: "none" }}
-        >
-          {t("clear", "Clear")}
-        </Button>
-
-        <Button
-          startIcon={<FilterListIcon />}
-          onClick={() => setFiltersOpen(true)}
-          variant="outlined"
-          size="small"
-        >
-          {t("filters", "Filters")}
-        </Button>
+          <Button onClick={clearSearchAndFilters} size="small">
+            {t("clear", "Clear")}
+          </Button>
+        </Box>
       </Paper>
+
 
       {/* Error alert */}
       {error && (

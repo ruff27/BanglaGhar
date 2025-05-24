@@ -201,7 +201,7 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
       console.error("Cannot navigate - property ID is missing");
       return;
     }
-    navigate(`/properties/${selectedProperty._id}`);
+    navigate(`/properties/details/${selectedProperty._id}`);
   };
 
   // Get directions handler with position validation

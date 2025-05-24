@@ -10,6 +10,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import InfoIcon from "@mui/icons-material/Info";
 import DirectionsIcon from "@mui/icons-material/Directions";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Helper function to format price with consistent handling
@@ -18,9 +19,8 @@ const formatPrice = (price, listingType) => {
   if (price === null || price === undefined) return "N/A";
   const numericPrice = Number(price);
   if (isNaN(numericPrice)) return "Invalid Price";
-  return `৳ ${numericPrice.toLocaleString()}${
-    listingType === "rent" ? "/mo" : ""
-  }`;
+  return `৳ ${numericPrice.toLocaleString()}${listingType === "rent" ? "/mo" : ""
+    }`;
 };
 
 /**
@@ -97,22 +97,6 @@ const MapPopup = ({ property, onViewDetails }) => {
   const isLandOrCommercial =
     property.propertyType === "land" || property.propertyType === "commercial";
 
-  // Handle view details click with consistent context
-  const handleViewDetails = () => {
-    if (onViewDetails) {
-      // Create a stable copy of property before passing it to handler
-      const stableProperty = {
-        ...property,
-        position: property.position
-          ? {
-              lat: parseFloat(property.position.lat.toFixed(6)),
-              lng: parseFloat(property.position.lng.toFixed(6)),
-            }
-          : property.position,
-      };
-      onViewDetails(stableProperty);
-    }
-  };
 
   // Handle directions click
   const handleGetDirections = () => {

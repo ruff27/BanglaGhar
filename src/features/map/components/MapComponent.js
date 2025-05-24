@@ -6,6 +6,8 @@ import "@maplibre/maplibre-gl-leaflet";
 import { Box, Typography, Alert, CircularProgress } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { divisionCenters } from "../../../constants/divisionCenters";
+import { MapContainer, TileLayer } from "react-leaflet";
+import MapMarker from "./MapMarker";
 // Default center coordinates (Dhaka)
 const DEFAULT_CENTER = [23.8103, 90.4125];
 const DEFAULT_ZOOM = 7;
@@ -104,26 +106,7 @@ const MapComponent = ({
 
     const bounds = [];
 
-    // Add property markers and collect their positions
-    validProperties.forEach((property) => {
-      console.log("📌 Adding marker for:", {
-        title: property.title,
-        pos: normalizePositionArray(property),
-        raw: property,
-      });
-      const position = normalizePositionArray(property);
-      if (!position) return;
-      console.log("📍 Adding marker:", {
-        title: property.title,
-        position: normalizePositionArray(property),
-        division: property.division,
-        district: property.district,
-      });
 
-      const marker = L.marker(position).addTo(map);
-      marker.bindPopup(`<b>${property.title || "Property"}</b>`);
-      bounds.push(position);
-    });
 
     // Fit bounds if there are markers
     if (bounds.length > 0) {
@@ -140,12 +123,33 @@ const MapComponent = ({
 
   return (
     <Box sx={{ position: "relative", height: "100%", width: "100%" }}>
-      <div
-        ref={mapRef}
+      <MapContainer
+        center={normalizedCenter}
+        zoom={normalizedZoom}
+        maxBounds={[
+          [20.5, 87],
+          [26.7, 92],
+        ]}
         style={{ height: "100%", width: "100%", borderRadius: "inherit" }}
-      />
+      >
+        <TileLayer
+          attribution='© OpenStreetMap contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {validProperties.map((property) => (
+          <MapMarker
+            key={property._id}
+            property={property}
+            isSelected={selectedProperty?._id === property._id}
+            onClick={() => console.log("Clicked property:", property.title)}
+            showPrice
+          />
+        ))}
+      </MapContainer>
     </Box>
   );
+
 };
 
 // Loading state (optional)
