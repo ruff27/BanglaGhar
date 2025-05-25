@@ -5,211 +5,258 @@ const propertyController = require("../controllers/propertyController");
 const {
   handleValidationErrors,
 } = require("../middleware/ValidationMiddleware");
-const authMiddleware = require("../middleware/authMiddleware"); // Optional: Apply if needed for specific routes
+const authMiddleware = require("../middleware/authMiddleware"); //
+
+// NEW IMPORT for fetchUserProfileMiddleware
+const fetchUserProfileMiddleware = require("../middleware/fetchUserProfileMiddleware");
 
 // Assuming you might need mongoose for custom validation or reference
-const mongoose = require("mongoose");
+const mongoose = require("mongoose"); //
 
 const router = express.Router();
 
 // POST /api/properties - Create Property
 router.post(
   "/",
-  authMiddleware, // Example: Protect property creation
+  authMiddleware, // First, authenticate
+  fetchUserProfileMiddleware, // THEN, fetch the user profile <<<< ADD THIS MIDDLEWARE
   [
     // --- Basic Info ---
-    body("title").notEmpty().trim().escape().withMessage("Title is required."), // [cite: 4]
-    body("price").isNumeric().withMessage("Price must be a number.").toFloat(), // [cite: 4] Convert to float after validation
+    body("title").notEmpty().trim().escape().withMessage("Title is required."), //
+    body("price").isNumeric().withMessage("Price must be a number.").toFloat(), //
 
-    // --- Location (Based on property.js) --- [cite: 4]
-    body("addressLine1")
+    // --- Location (Based on property.js) ---
+    body("addressLine1") //
       .notEmpty()
       .trim()
       .escape()
       .withMessage("Address Line 1 is required."),
-    body("addressLine2").optional().trim().escape(),
-    body("cityTown")
+    body("addressLine2").optional().trim().escape(), //
+    body("cityTown") //
       .notEmpty()
       .trim()
       .escape()
       .withMessage("City/Town is required."),
-    body("upazila")
+    body("upazila") //
       .notEmpty()
       .trim()
       .escape()
       .withMessage("Upazila is required."),
-    body("district")
+    body("district") //
       .notEmpty()
       .trim()
       .escape()
       .withMessage("District is required."),
-    body("postalCode")
+    body("postalCode") //
       .notEmpty()
       .trim()
       .escape()
       .withMessage("Postal Code is required."),
 
-    // --- Property & Listing Type --- [cite: 4]
-    body("propertyType")
+    // --- Property & Listing Type ---
+    body("propertyType") //
       .isIn(["apartment", "house", "condo", "land", "commercial"])
       .withMessage("Invalid property type."),
-    body("listingType")
+    body("listingType") //
       .isIn(["rent", "buy", "sold"])
       .withMessage("Invalid listing type."),
 
-    // --- Details --- [cite: 4]
-    body("bedrooms")
+    // --- Details ---
+    body("bedrooms") //
       .optional()
       .isInt({ min: 0 })
       .withMessage("Bedrooms must be a non-negative integer.")
       .toInt(),
-    body("bathrooms")
+    body("bathrooms") //
       .optional()
       .isInt({ min: 0 })
       .withMessage("Bathrooms must be a non-negative integer.")
       .toInt(),
-    body("area")
+    body("area") //
       .optional()
       .isNumeric()
       .withMessage("Area must be a number.")
       .toFloat(),
 
-    // --- Features --- [cite: 4] (Validate boolean fields)
-    body("features.parking")
+    // --- Features --- (Validate boolean fields)
+    body("features.parking") //
       .optional()
       .isBoolean()
       .withMessage("Parking must be true or false."),
-    body("features.garden")
+    body("features.garden") //
       .optional()
       .isBoolean()
       .withMessage("Garden must be true or false."),
-    body("features.airConditioning")
+    body("features.airConditioning") //
       .optional()
       .isBoolean()
       .withMessage("Air Conditioning must be true or false."),
-    body("features.furnished")
+    body("features.furnished") //
       .optional()
       .isIn(["no", "semi", "full"])
       .withMessage("Invalid furnished status."),
-    body("features.pool")
+    body("features.pool") //
       .optional()
       .isBoolean()
       .withMessage("Pool must be true or false."),
 
-    // --- Bangladesh Specific Details (Example subset) --- [cite: 4]
-    body("bangladeshDetails.propertyCondition")
+    // --- Bangladesh Specific Details (Example subset) ---
+    body("bangladeshDetails.backupPower")
+      .optional() // Make it optional if 'none' is a valid non-choice or if it can be omitted
+      .isIn(["ips", "generator", "solar", "none"]) // Enum from property.js
+      .withMessage("Invalid backup power option."),
+    body("bangladeshDetails.sewerSystem")
       .optional()
-      .isIn(["new", "under_construction", "resale"])
-      .withMessage("Invalid property condition."),
-    body("bangladeshDetails.floodProne")
+      .isIn(["covered", "open", "septic_tank", "none"]) // Enum from property.js
+      .withMessage("Invalid sewer system option."),
+    body("bangladeshDetails.parkingType")
       .optional()
-      .isIn(["yes", "no", "sometimes"])
-      .withMessage("Invalid flood prone value."),
-    // ... add validation for other bangladeshDetails fields as needed ...
+      .isIn(["dedicated", "street", "garage", "none"]) // Enum from property.js
+      .withMessage("Invalid parking type option."),
 
-    // --- Other Fields ---
-    body("description").optional().trim().escape(),
-    body("images").optional().isArray().withMessage("Images must be an array."),
-    body("images.*")
-      .optional()
-      .isURL()
-      .withMessage("Each image must be a valid URL."), // Validate each item in the array
-    body("createdBy")
+    // Also, ensure other enum fields from bangladeshDetails are validated if they are mandatory
+    // or have specific enum constraints you want to check early.
+    // For example, propertyCondition is required in your Step_Bangladesh_Details.js
+    body("bangladeshDetails.propertyCondition")
       .notEmpty()
-      .trim()
-      .escape()
-      .withMessage("Created By is required."), // [cite: 4] Should likely be set server-side based on logged-in user
+      .withMessage("Property condition is required.") // If it's truly required
+      .isIn(["new", "under_construction", "resale"]) // Enum from property.js
+      .withMessage("Invalid property condition."),
+    body("bangladeshDetails.waterSource")
+      .notEmpty()
+      .withMessage("Water source is required.") // If it's truly required
+      .isIn(["wasa", "deep_tube_well", "both", "other"]) // Enum from property.js
+      .withMessage("Invalid water source."),
+    body("bangladeshDetails.gasSource")
+      .notEmpty()
+      .withMessage("Gas source is required.") // If it's truly required
+      .isIn(["piped", "cylinder", "none"]) // Enum from property.js
+      .withMessage("Invalid gas source."),
+    body("bangladeshDetails.gasLineInstalled")
+      .optional() // Assuming 'no' is a valid default and can be overridden
+      .isIn(["yes", "no", "na"]) // Enum from property.js
+      .withMessage("Invalid gas line installation status."),
+    body("bangladeshDetails.floodProne")
+      .optional() // Assuming 'no' is a valid default
+      .isIn(["yes", "no", "sometimes"]) // Enum from property.js
+      .withMessage("Invalid flood prone status."),
+    body("bangladeshDetails.securityFeatures.*") // For array elements
+      .optional()
+      .isIn(["gated", "guards", "cctv"]) // Enum from property.js
+      .withMessage("Invalid security feature selected."),
+    body("bangladeshDetails.earthquakeResistance")
+      .optional() // Assuming 'unknown' is a valid default
+      .isIn(["yes", "no", "unknown"]) // Enum from property.js
+      .withMessage("Invalid earthquake resistance status."),
+    body("bangladeshDetails.balcony")
+      .optional() // Assuming 'no' is a valid default
+      .isIn(["yes", "no"]) // Enum from property.js
+      .withMessage("Invalid balcony status."),
+    body("bangladeshDetails.rooftopAccess")
+      .optional() // Assuming 'no' is a valid default
+      .isIn(["yes", "no"]) // Enum from property.js
+      .withMessage("Invalid rooftop access status."),
+    body("bangladeshDetails.ownershipPapers")
+      .optional() // Assuming 'unknown' is a valid default
+      .isIn(["clear", "pending", "issue", "unknown"]) // Enum from property.js
+      .withMessage("Invalid ownership papers status."),
+    body("bangladeshDetails.propertyTenure")
+      .optional()
+      .isIn(["freehold", "leasehold", ""]) // Allow empty string if it's truly optional and not selected
+      .withMessage("Invalid property tenure."),
   ],
-  handleValidationErrors,
-  propertyController.createProperty
+  handleValidationErrors, //
+  propertyController.createProperty //
 );
 
-// GET /api/properties - Get All Properties
+// GET /api/properties - Get All Properties (remains the same)
 router.get(
   "/",
   [
-    // Validate query parameters [cite: 3]
-    query("random")
+    query("random") //
       .optional()
       .isBoolean()
       .withMessage("Random must be true or false."),
-    query("featured")
+    query("featured") //
       .optional()
       .isBoolean()
       .withMessage("Featured must be true or false."),
-    query("limit")
+    query("limit") //
       .optional()
       .isInt({ min: 1 })
       .withMessage("Limit must be a positive integer."),
-    query("listingType")
+    query("listingType") //
       .optional()
       .isIn(["rent", "buy", "sold"])
-      .withMessage("Invalid listing type filter."), // [cite: 4]
+      .withMessage("Invalid listing type filter."),
   ],
-  handleValidationErrors,
-  propertyController.getAllProperties
+  handleValidationErrors, //
+  propertyController.getAllProperties //
 );
 
-// GET /api/properties/:id - Get Property by ID
+// GET /api/properties/:id - Get Property by ID (remains the same)
 router.get(
   "/:id",
   [
-    param("id").isMongoId().withMessage("Invalid property ID format."), // Validate id in params [cite: 3]
+    param("id").isMongoId().withMessage("Invalid property ID format."), //
   ],
-  handleValidationErrors,
-  propertyController.getPropertyById
+  handleValidationErrors, //
+  propertyController.getPropertyById //
 );
 
 // PUT /api/properties/:id - Update Property
+// Add fetchUserProfileMiddleware here as well if updateProperty needs req.userProfile
+// and to ensure user can only update their own properties (logic for that check would be in controller)
 router.put(
   "/:id",
-  authMiddleware, // Example: Protect property updates
+  authMiddleware, //
+  fetchUserProfileMiddleware, // <<<< ADD THIS if updates depend on user profile or for ownership checks
   [
-    param("id").isMongoId().withMessage("Invalid property ID format."), // Validate id in params [cite: 3]
-    // Add optional validation for any fields allowed in the update body
-    // Re-use validations from the POST route but make them optional()
-    body("title")
+    param("id").isMongoId().withMessage("Invalid property ID format."), //
+    body("title") //
       .optional()
       .notEmpty()
       .trim()
       .escape()
       .withMessage("Title cannot be empty if provided."),
-    body("price")
+    body("price") //
       .optional()
       .isNumeric()
       .withMessage("Price must be a number.")
       .toFloat(),
-    body("addressLine1")
+    body("addressLine1") //
       .optional()
       .notEmpty()
       .trim()
       .escape()
       .withMessage("Address Line 1 cannot be empty if provided."),
-    body("cityTown")
+    body("cityTown") //
       .optional()
       .notEmpty()
       .trim()
       .escape()
       .withMessage("City/Town cannot be empty if provided."),
-    // ... add optional validation for all other updatable fields ...
-    body("isHidden")
+    body("isHidden") //
       .optional()
       .isBoolean()
-      .withMessage("isHidden must be true or false."), // Allow updating isHidden via this route too? Or only admin route?
+      .withMessage("isHidden must be true or false."),
   ],
-  handleValidationErrors,
-  propertyController.updateProperty // Assumes updateProperty handles partial updates [cite: 3]
+  handleValidationErrors, //
+  propertyController.updateProperty //
 );
 
 // DELETE /api/properties/:id - Delete Property
+// Add fetchUserProfileMiddleware here as well if deleteProperty needs req.userProfile
+// and to ensure user can only delete their own properties (logic for that check would be in controller)
 router.delete(
   "/:id",
-  authMiddleware, // Example: Protect property deletion
+  authMiddleware, //
+  fetchUserProfileMiddleware, // <<<< ADD THIS if deletes depend on user profile or for ownership checks
   [
-    param("id").isMongoId().withMessage("Invalid property ID format."), // Validate id in params [cite: 3]
+    param("id").isMongoId().withMessage("Invalid property ID format."), //
   ],
-  handleValidationErrors,
-  propertyController.deleteProperty
+  handleValidationErrors, //
+  propertyController.deleteProperty //
 );
 
 module.exports = router;

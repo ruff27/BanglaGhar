@@ -1,27 +1,26 @@
 // src/features/Properties/PropertyDetailPage.js
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import {
-  Container,
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  Grid,
-  CardMedia,
-  Chip,
-  Divider,
-  Paper,
-  Snackbar,
-  Button,
-  IconButton,
-  Tooltip,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
-// Existing Icons
+  useParams,
+  useNavigate,
+  Link as RouterLink,
+  useLocation,
+} from "react-router-dom";
+
+import Container from "@mui/material/Container";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import CardMedia from "@mui/material/CardMedia";
+import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
+import Paper from "@mui/material/Paper";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import BedIcon from "@mui/icons-material/Bed";
 import BathtubIcon from "@mui/icons-material/Bathtub";
@@ -30,26 +29,31 @@ import HomeWorkIcon from "@mui/icons-material/HomeWork";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import WaterIcon from "@mui/icons-material/Water";
+import GasMeterIcon from "@mui/icons-material/GasMeter";
+import BoltIcon from "@mui/icons-material/Bolt";
+import SecurityIcon from "@mui/icons-material/Security";
+import SchoolIcon from "@mui/icons-material/School";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import BalconyIcon from "@mui/icons-material/Balcony";
+import GavelIcon from "@mui/icons-material/Gavel";
+import BuildIcon from "@mui/icons-material/Build";
+import ParkIcon from "@mui/icons-material/Park";
+import AcUnitIcon from "@mui/icons-material/AcUnit";
+import DeckIcon from "@mui/icons-material/Deck";
+import PoolIcon from "@mui/icons-material/Pool";
+import ElevatorIcon from "@mui/icons-material/Elevator";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import { CircularProgress, Alert, Snackbar, Button } from "@mui/material";
+
 // New Icons (Examples - Use appropriate icons)
-import WaterIcon from "@mui/icons-material/Water"; // Water source
-import GasMeterIcon from "@mui/icons-material/GasMeter"; // Gas source
-import BoltIcon from "@mui/icons-material/Bolt"; // Backup power
-import SecurityIcon from "@mui/icons-material/Security"; // Security
-import SchoolIcon from "@mui/icons-material/School"; // Nearby Schools
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital"; // Nearby Hospitals
-import StorefrontIcon from "@mui/icons-material/Storefront"; // Nearby Markets
-import BalconyIcon from "@mui/icons-material/Balcony"; // Balcony
-import GavelIcon from "@mui/icons-material/Gavel"; // Legal
-import BuildIcon from "@mui/icons-material/Build"; // Condition
-import ParkIcon from "@mui/icons-material/Park"; // Garden/Park
-import AcUnitIcon from "@mui/icons-material/AcUnit"; // AC
-import DeckIcon from "@mui/icons-material/Deck"; // Furnished status
-import PoolIcon from "@mui/icons-material/Pool"; // Pool
-import ElevatorIcon from "@mui/icons-material/Elevator"; // Lift (Example)
 
 import axios from "axios";
 import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
 import useWishlist from "./../hooks/useWishlist"; // Adjust path if needed
+import { initiateOrGetConversation } from "../../chat/services/chatService";
+import { useSnackbar } from "../../../context/SnackbarContext"; //
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -111,7 +115,10 @@ const DetailListItem = ({ icon, primary, secondary }) => {
 const PropertyDetailPage = () => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, idToken, isLoggedIn, isLoading: isAuthLoading } = useAuth(); //
+  const location = useLocation(); // Get location for redirect state
+  const { showSnackbar } = useSnackbar(); //
+  const [contactLoading, setContactLoading] = useState(false);
   const { wishlistIds, toggleWishlist, loadingWishlist } = useWishlist();
 
   const [property, setProperty] = useState(null);
@@ -157,16 +164,78 @@ const PropertyDetailPage = () => {
   const handleWishlistToggle = () => {
     if (!property || !property._id) return;
     toggleWishlist(property._id, (message, severity) => {
-      setSnackbar({ open: true, message, severity });
+      // setSnackbar({ open: true, message, severity });
+      showSnackbar(message, severity);
     });
   };
-  const handleCloseSnackbar = (event, reason) => {
-    if (reason === "clickaway") return;
-    setSnackbar((prev) => ({ ...prev, open: false }));
+  const handleContactAdvertiser = async () => {
+    if (!isLoggedIn || !idToken || !user || !user.cognitoSub) {
+      //
+      showSnackbar("Please log in to contact the advertiser.", "warning");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+
+    // IMPORTANT: Adjust 'property.createdBy._id' if your property data structure is different.
+    // This assumes 'createdBy' is an object with an '_id' field, or 'createdBy' is the ID string itself.
+    // For example, it could be property.ownerId or property.user._id etc.
+    const advertiserId = property?.createdBy?._id || property?.createdBy;
+
+    if (!advertiserId) {
+      showSnackbar(
+        "Advertiser information is missing for this property.",
+        "error"
+      );
+      console.error(
+        "Advertiser ID (property.createdBy._id or property.createdBy) not found in property data:",
+        property
+      );
+      return;
+    }
+
+    // Ensure user._id (MongoDB ID) is available from AuthContext
+    if (user._id && user._id.toString() === advertiserId.toString()) {
+      showSnackbar(
+        "You cannot start a conversation about your own listing.",
+        "info"
+      );
+      return;
+    }
+
+    setContactLoading(true);
+    try {
+      console.log(
+        `Initiating chat with advertiser: ${advertiserId} for property: ${property._id}`
+      );
+      const conversation = await initiateOrGetConversation(
+        idToken,
+        advertiserId,
+        property._id
+      );
+      console.log("Conversation initiated/retrieved:", conversation);
+      showSnackbar(
+        `Chat ready! ID: ${conversation._id}. Navigating...`,
+        "success"
+      );
+
+      // Navigate to a chat page/interface.
+      // We will create /chat route later. It can use route state to open specific conversation.
+      navigate("/chat", {
+        state: {
+          conversationId: conversation._id,
+          initialConversationData: conversation,
+        },
+      });
+    } catch (err) {
+      console.error("Error contacting advertiser:", err);
+      showSnackbar(err.message || "Could not start conversation.", "error");
+    } finally {
+      setContactLoading(false);
+    }
   };
 
   // --- Render Logic ---
-  if (loading)
+  if (loading || isAuthLoading)
     return (
       <Container sx={{ py: 4, textAlign: "center" }}>
         <CircularProgress />
@@ -229,6 +298,34 @@ const PropertyDetailPage = () => {
   const features = property.features || {};
   const isLandOrCommercial =
     property.propertyType === "land" || property.propertyType === "commercial";
+
+  console.log("[PropertyDetailPage DEBUG]");
+  console.log("isAuthLoading:", isAuthLoading);
+  console.log("isLoggedIn:", isLoggedIn);
+  console.log("user:", user); // Check if user and user._id are available
+  console.log("property object:", property); // Inspect the whole property object
+  console.log("property.createdBy:", property?.createdBy); // Specifically check the createdBy field
+  console.log("Is button disabled due to contactLoading?:", contactLoading);
+  console.log(
+    "Is button disabled due to !property?.createdBy?:",
+    !property?.createdBy
+  );
+
+  const isOwnListing =
+    isLoggedIn &&
+    property?.createdBy &&
+    user?._id &&
+    ((property.createdBy._id && property.createdBy._id === user._id) ||
+      property.createdBy === user._id);
+  console.log("Is this the user's own listing?:", isOwnListing);
+
+  // This log will show exactly what the disabled condition evaluates to for the button itself
+  if (!isAuthLoading && isLoggedIn && !isOwnListing) {
+    console.log(
+      'Button "disabled" prop will be:',
+      contactLoading || !property?.createdBy
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -614,33 +711,52 @@ const PropertyDetailPage = () => {
               <Box sx={{ mt: "auto", pt: 2 }}>
                 <Divider sx={{ mb: 2 }} />
                 <Typography variant="h6" gutterBottom>
-                  Contact Owner/Agent
+                  Contact Advertiser
                 </Typography>
-                {/* TODO: Add actual contact display/button logic */}
-                <Button variant="contained" fullWidth>
-                  Show Contact Info
-                </Button>
+                {isAuthLoading ? (
+                  <CircularProgress size={24} />
+                ) : isLoggedIn &&
+                  property?.createdBy &&
+                  user?._id &&
+                  (property.createdBy._id === user._id ||
+                    property.createdBy === user._id) ? (
+                  <Typography variant="body2" color="text.secondary">
+                    This is your listing. You cannot message yourself.
+                  </Typography>
+                ) : isLoggedIn ? (
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    startIcon={
+                      contactLoading ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        <MailOutlineIcon />
+                      )
+                    }
+                    onClick={handleContactAdvertiser}
+                    disabled={contactLoading || !property?.createdBy} // Also disable if advertiser info is somehow missing
+                  >
+                    {contactLoading ? "Processing..." : "Message Advertiser"}
+                  </Button>
+                ) : (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    Please{" "}
+                    <RouterLink to="/login" state={{ from: location.pathname }}>
+                      log in
+                    </RouterLink>{" "}
+                    to contact the advertiser.
+                  </Typography>
+                )}
               </Box>
             </Box>
           </Grid>
         </Grid>
       </Paper>
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };

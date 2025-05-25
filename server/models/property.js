@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
 const propertySchema = new mongoose.Schema(
   {
@@ -95,7 +96,11 @@ const propertySchema = new mongoose.Schema(
         type: String,
         enum: ["clear", "pending", "issue", "unknown"],
       },
-      propertyTenure: { type: String, enum: ["freehold", "leasehold"] },
+      propertyTenure: {
+        type: String,
+        enum: ["freehold", "leasehold", "unknown"],
+        default: "unknown",
+      },
       recentRenovations: { type: String },
       nearbyDevelopments: { type: String },
       reasonForSelling: { type: String },
@@ -118,7 +123,12 @@ const propertySchema = new mongoose.Schema(
     images: [{ type: String }], // Store image URLs or keys
 
     // Ownership & Timestamps
-    createdBy: { type: String, required: true }, // Keep as String (stores user email)
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "UserProfile", // This links it to your UserProfile model
+      required: true,
+      index: true, // Good for performance if you query properties by user
+    }, // Keep as String (stores user email)
     // Consider adding ref to User model if you have one:
     // createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   },

@@ -24,59 +24,64 @@ const steps = [
 
 // --- Initial Form State ---
 const initialFormData = {
-  title: "",
-  propertyType: "apartment",
-  listingType: "rent",
-  price: "",
-  area: "",
-  bedrooms: "",
-  bathrooms: "",
-  addressLine1: "",
-  addressLine2: "",
-  cityTown: "",
-  upazila: "",
-  district: "",
-  postalCode: "",
-  description: "",
+  title: "", //
+  propertyType: "apartment", //
+  listingType: "rent", //
+  price: "", //
+  area: "", //
+  bedrooms: "", //
+  bathrooms: "", //
+  addressLine1: "", //
+  addressLine2: "", //
+  cityTown: "", //
+  upazila: "", //
+  district: "", //
+  postalCode: "", //
+  description: "", //
   bangladeshDetails: {
-    propertyCondition: "",
-    proximityToMainRoad: "",
-    publicTransport: "",
-    floodProne: "no",
-    waterSource: "",
-    gasSource: "",
-    gasLineInstalled: "no",
-    backupPower: "",
-    sewerSystem: "",
-    nearbySchools: "",
-    nearbyHospitals: "",
-    nearbyMarkets: "",
-    nearbyReligiousPlaces: "",
-    nearbyOthers: "",
-    securityFeatures: [],
-    earthquakeResistance: "unknown",
-    roadWidth: "",
-    parkingType: "",
-    floorNumber: "",
-    totalFloors: "",
-    balcony: "no",
-    rooftopAccess: "no",
-    naturalLight: "",
-    ownershipPapers: "unknown",
-    propertyTenure: "",
-    recentRenovations: "",
-    nearbyDevelopments: "",
-    reasonForSelling: "",
+    propertyCondition: "", // From your Step_Bangladesh_Details, this has options like "new", "under_construction", "resale". Default to "" or "new".
+    proximityToMainRoad: "", //
+    publicTransport: "", //
+    floodProne: "no", // Defaulted to "no"
+    waterSource: "", // Has enum ["wasa", "deep_tube_well", "both", "other"]. Default to "" or "wasa".
+    gasSource: "", // Has enum ["piped", "cylinder", "none"]. Default to "" or "none".
+    gasLineInstalled: "no", // Defaulted to "no"
+
+    // Corrected defaults based on your property.js schema
+    backupPower: "none", // Valid enum value from ['ips', 'generator', 'solar', 'none']
+    sewerSystem: "none", // Valid enum value from ['covered', 'open', 'septic_tank', 'none']
+    parkingType: "none", // Valid enum value from ['dedicated', 'street', 'garage', 'none']
+
+    nearbySchools: "", //
+    nearbyHospitals: "", //
+    nearbyMarkets: "", //
+    nearbyReligiousPlaces: "", //
+    nearbyOthers: "", //
+    securityFeatures: [], //
+    earthquakeResistance: "unknown", // Defaulted to "unknown"
+    roadWidth: "", //
+    floorNumber: "", //
+    totalFloors: "", //
+    balcony: "no", // Defaulted to "no"
+    rooftopAccess: "no", // Defaulted to "no"
+    naturalLight: "", //
+    ownershipPapers: "unknown", // Defaulted to "unknown"
+    propertyTenure: "", // Has enum ["freehold", "leasehold"]. Default to "" or "freehold".
+    recentRenovations: "", //
+    nearbyDevelopments: "", //
+    reasonForSelling: "", //
+    propertyTenure: "unknown", // Defaulted to "unknown"
   },
-  createdBy: "",
+  createdBy: "", //
 };
 
 const initialFeatures = {
-  parking: false,
-  garden: false,
-  airConditioning: false,
-  furnished: "no",
-  pool: false,
+  //
+  parking: false, //
+  garden: false, //
+  airConditioning: false, //
+  furnished: "no", // Defaulted to "no"
+  pool: false, //
 };
 
 const initialImages = [];

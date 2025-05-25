@@ -32,6 +32,7 @@ import Saved from "./pages/Saved";
 import UserProfilePage from "./features/profile/UserProfilePage";
 import AdminRoutes from "./admin/AdminRoutes"; // Import the file defining admin routes
 import AdminProtectedRoute from "./components/common/AdminProtectedRoute"; // Import the guard
+import ChatPage from "./features/chat/ChatPage";
 
 // Theme and Context
 import { theme } from "./styles/theme"; // Adjust path if needed
@@ -39,6 +40,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider } from "./context/AuthContext"; // Adjust path if needed
 import { SnackbarProvider } from "./context/SnackbarContext"; // Adjust path if needed
+import { ChatProvider } from "./features/chat/context/ChatContext";
 
 // --- Create Layout Components ---
 
@@ -88,58 +90,65 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <SnackbarProvider>
-          <Router>
-            {/* Routes are defined here */}
-            <Routes>
-              {/* Routes using the MainLayout (Navbar/Footer) */}
-              <Route element={<MainLayout />}>
-                <Route index element={<Home />} /> {/* Default route */}
-                <Route path="/home" element={<Home />} />
-                <Route path="/properties/:mode" element={<PropertiesPage />} />
-                <Route
-                  path="/properties/details/:propertyId"
-                  element={<PropertyDetailPage />}
-                />
-                <Route path="/about" element={<AboutUs />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/saved" element={<Saved />} />
-                <Route path="/my-listings" element={<MyListingsPage />} />
-                <Route path="/user-profile" element={<UserProfilePage />} />
-                {/* Add other main pages here */}
-              </Route>
+          <ChatProvider>
+            <Router>
+              {/* Routes are defined here */}
+              <Routes>
+                {/* Routes using the MainLayout (Navbar/Footer) */}
+                <Route element={<MainLayout />}>
+                  <Route index element={<Home />} /> {/* Default route */}
+                  <Route path="/home" element={<Home />} />
+                  <Route
+                    path="/properties/:mode"
+                    element={<PropertiesPage />}
+                  />
+                  <Route
+                    path="/properties/details/:propertyId"
+                    element={<PropertyDetailPage />}
+                  />
+                  <Route path="/about" element={<AboutUs />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/saved" element={<Saved />} />
+                  <Route path="/my-listings" element={<MyListingsPage />} />
+                  <Route path="/user-profile" element={<UserProfilePage />} />
+                  <Route path="/chat" element={<ChatPage />} />
+                  <Route path="/chat/:conversationId" element={<ChatPage />} />
+                  {/* Add other main pages here */}
+                </Route>
 
-              {/* Routes using the BlankLayout (No Navbar/Footer) */}
-              <Route element={<BlankLayout />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/change-password" element={<ChangePassword />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/verify-otp" element={<VerifyOtp />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/list-property" element={<ListProperty />} />
-                {/* Add other full-page routes without main nav/footer here */}
-              </Route>
+                {/* Routes using the BlankLayout (No Navbar/Footer) */}
+                <Route element={<BlankLayout />}>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/change-password" element={<ChangePassword />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/verify-otp" element={<VerifyOtp />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/list-property" element={<ListProperty />} />
+                  {/* Add other full-page routes without main nav/footer here */}
+                </Route>
 
-              {/* --- Admin Routes --- */}
-              {/* Wrap the admin routes in the protective component */}
-              <Route element={<AdminProtectedRoute />}>
-                {/* Render the AdminRoutes component for any path starting with /admin */}
-                {/* AdminRoutes itself contains the AdminLayout and specific admin page routes */}
-                {/* Wrap AdminRoutes with SnackbarProvider */}
-                <Route
-                  path="/admin/*"
-                  element={
-                    <SnackbarProvider>
-                      <AdminRoutes />
-                    </SnackbarProvider>
-                  }
-                />
-              </Route>
-              {/* --- End Admin Routes --- */}
+                {/* --- Admin Routes --- */}
+                {/* Wrap the admin routes in the protective component */}
+                <Route element={<AdminProtectedRoute />}>
+                  {/* Render the AdminRoutes component for any path starting with /admin */}
+                  {/* AdminRoutes itself contains the AdminLayout and specific admin page routes */}
+                  {/* Wrap AdminRoutes with SnackbarProvider */}
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <SnackbarProvider>
+                        <AdminRoutes />
+                      </SnackbarProvider>
+                    }
+                  />
+                </Route>
+                {/* --- End Admin Routes --- */}
 
-              {/* Optional: Catch-all 404 Not Found Route */}
-              {/* <Route path="*" element={<NotFoundPage />} /> */}
-            </Routes>
-          </Router>
+                {/* Optional: Catch-all 404 Not Found Route */}
+                {/* <Route path="*" element={<NotFoundPage />} /> */}
+              </Routes>
+            </Router>
+          </ChatProvider>
         </SnackbarProvider>
         {/* Optional: Add a global Snackbar or Toast component here if needed */}
         {/* <SnackbarComponent /> */}

@@ -5,24 +5,24 @@ const mongoose = require("mongoose"); // Ensure mongoose is required if not alre
 // Example for Create Property (remains the same):
 exports.createProperty = async (req, res) => {
   // Ensure user is authenticated and req.user exists
-  if (!req.user || !req.user.email) {
-    // This check depends on your authMiddleware populating req.user
-    console.error(
-      "Create Property Error: User not authenticated or email missing."
-    );
+  if (!req.userProfile || !req.userProfile._id) {
     return res
       .status(401)
-      .json({ error: "Authentication required to list property." });
+      .json({ message: "Authentication required to create listing." });
   }
 
   try {
     const newProperty = new Property({
       ...req.body, // Spread the data from the frontend form
-      createdBy: req.user.email, // <<< Set createdBy from authenticated user's email
+      createdBy: req.userProfile._id, // <<< Set createdBy from authenticated user's email
       // Make sure other required fields (title, price, etc.) are present in req.body
     });
     await newProperty.save();
-    res.status(201).json(newProperty);
+    const populatedProperty = await Property.findById(newProperty._id).populate(
+      "createdBy",
+      "_id displayName email cognitoSub profilePictureUrl"
+    );
+    res.status(201).json(populatedProperty || newProperty);
   } catch (err) {
     console.error("Create property error:", err); // Log error
     // Provide more specific error messages if possible
@@ -51,38 +51,55 @@ exports.getAllProperties = async (req, res) => {
     let properties;
     let query;
 
+    const userFieldsToPopulate =
+      "_id displayName email cognitoSub profilePictureUrl";
+
     if (isRandom && limit > 0) {
-      // Random logic
       properties = await Property.aggregate([
         { $match: baseFilter },
         { $sample: { size: limit } },
       ]);
+      // Note: .populate() doesn't work directly with .aggregate().
+      // For random properties, if you need createdBy populated, you'd do a separate lookup
+      // or adjust the aggregation pipeline, which is more complex.
+      // For simplicity, if populated createdBy is critical here, consider fetching IDs then populating.
+      // Or, fetch more than needed and then populate + limit in JS (less efficient).
+      // For now, this branch will return unpopulated createdBy for random items.
+      // If you need them populated, this section would need a more significant rewrite.
+      // One common way:
+      // const randomProperties = await Property.aggregate([...]);
+      // const propertyIds = randomProperties.map(p => p._id);
+      // properties = await Property.find({ '_id': { $in: propertyIds } }).populate('createdBy', userFieldsToPopulate);
+
       console.log(
-        `Fetched ${properties.length} random, visible properties (limit: ${limit})`
+        `Workspaceed ${properties.length} random, visible properties (limit: ${limit})`
       );
     } else if (isFeatured) {
-      // <<<--- Logic for featured
-      console.log(`Fetching featured listings (limit: ${limit})`);
-      query = Property.find({ ...baseFilter, featuredAt: { $ne: null } }).sort({
-        featuredAt: -1,
-      });
+      console.log(`Workspaceing featured listings (limit: ${limit})`); //
+      query = Property.find({ ...baseFilter, featuredAt: { $ne: null } })
+        .populate("createdBy", userFieldsToPopulate) // Added populate
+        .sort({ featuredAt: -1 }); //
       if (limit > 0) {
-        query.limit(limit);
+        //
+        query.limit(limit); //
       }
-      properties = await query.exec();
-      console.log(`Fetched ${properties.length} featured properties.`);
+      properties = await query.exec(); //
+      console.log(`Workspaceed ${properties.length} featured properties.`); //
     } else {
-      // Standard logic
-      const queryFilters = { ...baseFilter };
+      const queryFilters = { ...baseFilter }; //
       if (req.query.listingType)
-        queryFilters.listingType = req.query.listingType;
-      query = Property.find(queryFilters).sort({ createdAt: -1 });
+        //
+        queryFilters.listingType = req.query.listingType; //
+      query = Property.find(queryFilters)
+        .populate("createdBy", userFieldsToPopulate) // Added populate
+        .sort({ createdAt: -1 }); //
       if (limit > 0) {
-        query.limit(limit);
+        //
+        query.limit(limit); //
       }
-      properties = await query.exec();
+      properties = await query.exec(); //
       console.log(
-        `Fetched ${properties.length} visible properties with filters/limit.`
+        `Workspaceed ${properties.length} visible properties with filters/limit.`
       );
     }
     res.json(properties);
@@ -98,8 +115,11 @@ exports.getPropertyById = async (req, res) => {
     // --- Use findOne with isHidden check ---
     const property = await Property.findOne({
       _id: req.params.id,
-      isHidden: { $ne: true }, // <<<--- ADDED: Ensure property is not hidden
-    });
+      isHidden: { $ne: true }, //
+    }).populate(
+      "createdBy",
+      "_id displayName email cognitoSub profilePictureUrl"
+    );
     // ---------------------------------------
 
     if (!property) {
@@ -122,7 +142,10 @@ exports.updateProperty = async (req, res) => {
     const updatedProperty = await Property.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true } // Return the updated doc and run validators
+      { new: true, runValidators: true }
+    ).populate(
+      "createdBy",
+      "_id displayName email cognitoSub profilePictureUrl"
     );
     if (!updatedProperty) {
       return res.status(404).json({ error: "Property not found" });

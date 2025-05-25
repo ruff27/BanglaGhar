@@ -22,6 +22,7 @@ const propertyRoutes = require("./routes/propertyRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const userProfileRoutes = require("./routes/userProfileRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 
 // 2) imports
 const express = require("express");
@@ -37,7 +38,8 @@ app.use("/api", aiRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/users/:username/wishlist", wishlistRoutes);
 app.use("/api/user-profiles", userProfileRoutes);
-app.use("/api/admin", adminRoutes); // Mount admin routes under /api/admin
+app.use("/api/admin", adminRoutes);
+app.use("/api/chat", chatRoutes);
 
 // 4) Connect to DB
 const uri = process.env.MONGO_URI;

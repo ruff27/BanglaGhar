@@ -5,6 +5,7 @@ import HomeSearchBar from "./components/HomeSearchBar";
 import FeaturedProperties from "./components/FeaturedProperties";
 import HomeMapPreview from "./components/HomeMapPreview";
 import CallToAction from "./components/CallToAction";
+import AblyConnectionStatus from "../chat/components/AblyConnectionStatus";
 
 /**
  * HomePage Component
@@ -32,6 +33,8 @@ const HomePage = () => {
 
       {/* Render the Call To Action section */}
       <CallToAction />
+
+      <AblyConnectionStatus />
     </Box>
   );
 };

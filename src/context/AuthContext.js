@@ -53,6 +53,7 @@ export const AuthProvider = ({ children }) => {
           ...userProfileData, // (e.g., approvalStatus, govtIdUrl, isAdmin from MongoDB)
           // Ensure key fields like email aren't overwritten if they exist in both
           email: cognitoUserAttributes.email || userProfileData.email, // Prioritize Cognito email
+          cognitoSub: cognitoUserAttributes.sub || userProfileData.cognitoSub,
         };
 
         setUser(mergedUserData);
@@ -133,6 +134,7 @@ export const AuthProvider = ({ children }) => {
           const cognitoData = {
             name: userAttributes.name,
             email: userAttributes.email,
+            sub: userAttributes.sub,
             // Add sub if needed: sub: userAttributes.sub
           };
 
@@ -211,6 +213,7 @@ export const AuthProvider = ({ children }) => {
             const cognitoData = {
               name: userAttributes.name,
               email: userAttributes.email,
+              sub: userAttributes.sub,
             };
 
             // Fetch profile and update state

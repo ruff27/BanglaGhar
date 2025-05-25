@@ -621,8 +621,8 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
               label={t("property_tenure", "Property Tenure")}
               onChange={handleChange}
             >
-              <MenuItem value="">
-                {t("select_optional", "Select (Optional)")}
+              <MenuItem value="unknown">
+                {t("tenure_unknown", "Unknown / Not Specified")}
               </MenuItem>
               <MenuItem value="freehold">
                 {t("tenure_freehold", "Freehold")}
