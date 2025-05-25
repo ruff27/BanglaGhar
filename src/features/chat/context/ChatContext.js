@@ -18,29 +18,44 @@ export const ChatProvider = ({ children }) => {
   const { showSnackbar } = useSnackbar(); // Get showSnackbar function
 
   const [activeConversationId, setActiveConversationId] = useState(null);
+  const [activeConversationData, setActiveConversationData] = useState(null);
   // You might also want to store activeConversationData here if needed globally by other components
   // const [activeConversationData, setActiveConversationData] = useState(null);
 
-  const selectConversation = useCallback((conversationData) => {
-    if (conversationData && conversationData._id) {
-      console.log(
-        "[ChatContext] Setting active conversationId:",
-        conversationData._id
-      );
-      setActiveConversationId(conversationData._id);
-      // setActiveConversationData(conversationData); // Optionally store full data
-    } else if (conversationData === null) {
-      // Allow explicitly clearing active conversation
-      console.log("[ChatContext] Clearing active conversationId");
-      setActiveConversationId(null);
-      // setActiveConversationData(null);
-    } else {
-      console.warn(
-        "[ChatContext] Attempted to select invalid conversation:",
-        conversationData
-      );
-    }
-  }, []);
+  const selectConversation = useCallback(
+    (conversationData) => {
+      if (conversationData && conversationData._id) {
+        console.log(
+          "[ChatContext] Setting active conversation:",
+          conversationData
+        );
+        setActiveConversationId(conversationData._id);
+        setActiveConversationData(conversationData); // Store the whole object
+      } else if (conversationData === null) {
+        console.log("[ChatContext] Clearing active conversation.");
+        setActiveConversationId(null);
+        setActiveConversationData(null); // Clear the object too
+      } else {
+        // This case might occur if only an ID is passed, but ChatPage now tries to pass the object.
+        // If conversationData is just an ID string (e.g., from URL param not yet resolved to full object):
+        if (typeof conversationData === "string" && conversationData) {
+          // Check if it's just an ID string
+          console.log(
+            "[ChatContext] Setting active conversationId by ID string:",
+            conversationData
+          );
+          setActiveConversationId(conversationData);
+          setActiveConversationData(null); // Full data would need to be fetched by ChatWindow/ConversationList
+        } else {
+          console.warn(
+            "[ChatContext] Attempted to select invalid or incomplete conversation data:",
+            conversationData
+          );
+        }
+      }
+    },
+    [activeConversationId]
+  );
 
   // This function will be called by useAblyClient when a notification arrives
   const handleIncomingMessageNotification = useCallback(
@@ -77,6 +92,7 @@ export const ChatProvider = ({ children }) => {
         isAblyConnected,
         ablyError,
         activeConversationId, // Provide activeConversationId
+        activeConversationData,
         // activeConversationData, // Provide if you store it here
         selectConversation, // Provide function to set active conversation
         handleIncomingMessageNotification, // Provide handler for Ably hook
