@@ -153,19 +153,6 @@ const MobileDrawer = ({
               </ListItem>
             )
         )}
-        {/* Chat Link */}
-        <ListItem disablePadding>
-          <DrawerItem
-            selected={location.pathname.startsWith("/chat")} // Highlight if on /chat
-            onClick={() => handleLinkClick("/chat")}
-          >
-            <ListItemIcon>
-              <ChatIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("nav_chat", "Chat")} />{" "}
-            {/* Add translation key */}
-          </DrawerItem>
-        </ListItem>
         <Divider sx={{ my: 1 }} /> {/* */}
         <Typography //
           variant="caption" //
