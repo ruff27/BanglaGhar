@@ -39,12 +39,10 @@ exports.generateAblyToken = async (req, res) => {
       `[Ably Auth Error] Error generating Ably token for clientId ${clientId}:`,
       error
     );
-    res
-      .status(500)
-      .json({
-        message: "Failed to generate Ably token.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Failed to generate Ably token.",
+      error: error.message,
+    });
   }
 };
 
@@ -107,12 +105,10 @@ exports.initiateOrGetConversation = async (req, res) => {
     res.status(200).json(conversation);
   } catch (error) {
     console.error("Error initiating or getting conversation:", error);
-    res
-      .status(500)
-      .json({
-        message: "Server error processing conversation request.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Server error processing conversation request.",
+      error: error.message,
+    });
   }
 };
 
@@ -196,11 +192,12 @@ exports.postMessageToConversation = async (req, res) => {
       };
 
       conversation.participants.forEach((participant) => {
-        // Don't send notification to the sender of the message
         if (participant._id.toString() !== senderId.toString()) {
-          // Use participant's MongoDB _id or cognitoSub for their unique notification channel
           const userNotificationChannelName = `user-notifications-${participant._id.toString()}`;
           const channel = ably.channels.get(userNotificationChannelName);
+          console.log(
+            `[Backend Notification] Attempting to publish to: ${userNotificationChannelName} for recipient ${participant._id}`
+          ); // <<< ADD THIS LOG
           channel.publish(
             "new-message-notification",
             notificationPayload,
@@ -211,8 +208,8 @@ exports.postMessageToConversation = async (req, res) => {
                 );
               } else {
                 console.log(
-                  `[Ably Notification] Published to ${userNotificationChannelName}`
-                );
+                  `[Ably Notification] Successfully published to ${userNotificationChannelName}`
+                ); // <<< CONFIRM THIS LOG
               }
             }
           );
@@ -260,12 +257,10 @@ exports.getConversationsForUser = async (req, res) => {
     res.status(200).json(conversations);
   } catch (error) {
     console.error("Error fetching conversations for user:", error);
-    res
-      .status(500)
-      .json({
-        message: "Server error fetching conversations.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Server error fetching conversations.",
+      error: error.message,
+    });
   }
 };
 
@@ -314,11 +309,9 @@ exports.getMessagesInConversation = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching messages in conversation:", error);
-    res
-      .status(500)
-      .json({
-        message: "Server error fetching messages.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Server error fetching messages.",
+      error: error.message,
+    });
   }
 };

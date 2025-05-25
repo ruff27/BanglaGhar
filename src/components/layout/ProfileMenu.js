@@ -10,117 +10,166 @@ import {
   ListItemIcon,
   Tooltip,
   ListItemText,
+  Badge, // Import Badge for future unread count
 } from "@mui/material";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import LogoutIcon from "@mui/icons-material/Logout";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings"; // Import admin icon
-// Link is not needed if using navigate directly in 'go' function
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext"; // Adjust path if needed
-import { useTranslation } from "react-i18next";
-import myListings from "../../features/profile/hooks/useMyListings"; // Adjust path if needed
-import HomeWorkIcon from "@mui/icons-material/HomeWork"; // Import icon for My Listings
+import AccountCircleIcon from "@mui/icons-material/AccountCircle"; //
+import FavoriteIcon from "@mui/icons-material/Favorite"; //
+import LogoutIcon from "@mui/icons-material/Logout"; //
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings"; //
+import ChatIcon from "@mui/icons-material/Chat"; // Import Chat icon
+import { useNavigate } from "react-router-dom"; //
+import { useAuth } from "../../context/AuthContext"; //
+import { useTranslation } from "react-i18next"; //
+// import myListings from "../../features/profile/hooks/useMyListings"; // This import seems unused in the provided ProfileMenu.js
+import HomeWorkIcon from "@mui/icons-material/HomeWork"; //
+// import { useChatContext } from '../../features/chat/context/ChatContext'; // For unread count later
 
-// Use the corrected prop name 'handleLogout'
 export default function ProfileMenu({ handleLogout }) {
-  const [anchor, setAnchor] = useState(null);
-  const navigate = useNavigate();
-  const { user } = useAuth(); // Get user info from context (includes isAdmin)
-  const { t } = useTranslation();
+  //
+  const [anchor, setAnchor] = useState(null); //
+  const navigate = useNavigate(); //
+  const { user } = useAuth(); //
+  const { t } = useTranslation(); //
+  // const { unreadMessagesCount } = useChatContext(); // Placeholder for future unread count
 
-  const handleOpen = (e) => setAnchor(e.currentTarget);
-  const handleClose = () => setAnchor(null);
+  const handleOpen = (e) => setAnchor(e.currentTarget); //
+  const handleClose = () => setAnchor(null); //
 
-  // Helper function to navigate and close menu
   const go = (path) => {
-    navigate(path);
-    handleClose();
+    //
+    navigate(path); //
+    handleClose(); //
   };
 
-  // Function to call the passed handleLogout prop and close the menu
   const triggerLogout = () => {
+    //
     if (handleLogout) {
-      handleLogout();
+      //
+      handleLogout(); //
     }
-    handleClose();
+    handleClose(); //
   };
 
   return (
     <>
       <Tooltip title="Account">
+        {" "}
+        {/* */}
         <IconButton onClick={handleOpen} sx={{ p: 0, ml: 2 }}>
-          <Avatar sx={{ bgcolor: "primary.main" }}>
-            {/* Use displayName first, fallback to name, then icon */}
-            {(
-              user?.displayName?.charAt(0) || user?.name?.charAt(0)
-            )?.toUpperCase() || <AccountCircleIcon />}
-          </Avatar>
+          {" "}
+          {/* */}
+          {/* Avatar with unread badge (badge invisible if count is 0) */}
+          <Badge
+            badgeContent={0} // Replace with unreadMessagesCount later
+            color="error"
+            overlap="circular"
+            variant="dot" // Use "dot" for a subtle indicator, or number for count
+            invisible={true} // Set to 'unreadMessagesCount < 1' later
+          >
+            <Avatar sx={{ bgcolor: "primary.main" }}>
+              {" "}
+              {/* */}
+              {//
+              (user?.displayName?.charAt(0) || user?.name?.charAt(0)) //
+                ?.toUpperCase() || <AccountCircleIcon />}{" "}
+              {/* */}
+            </Avatar>
+          </Badge>
         </IconButton>
       </Tooltip>
-      <Menu
-        anchorEl={anchor}
-        open={Boolean(anchor)}
-        onClose={handleClose}
+      <Menu //
+        anchorEl={anchor} //
+        open={Boolean(anchor)} //
+        onClose={handleClose} //
         PaperProps={{
-          elevation: 3,
+          //
+          elevation: 3, //
           sx: {
-            mt: 1.5,
-            minWidth: 180,
-            overflow: "visible",
-            "& .MuiAvatar-root": { width: 32, height: 32, ml: -0.5, mr: 1 },
+            //
+            mt: 1.5, //
+            minWidth: 200, // Increased minWidth slightly for new item with badge
+            overflow: "visible", //
+            "& .MuiAvatar-root": { width: 32, height: 32, ml: -0.5, mr: 1 }, //
           },
         }}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }} //
+        transformOrigin={{ vertical: "top", horizontal: "right" }} //
       >
-        {/* Standard User Links */}
         <MenuItem onClick={() => go("/user-profile")}>
+          {" "}
+          {/* */}
           <ListItemIcon>
-            <AccountCircleIcon fontSize="small" />
+            {" "}
+            {/* */}
+            <AccountCircleIcon fontSize="small" /> {/* */}
           </ListItemIcon>
-          <ListItemText>{t("nav_profile")}</ListItemText>
+          <ListItemText>{t("nav_profile")}</ListItemText> {/* */}
         </MenuItem>
-
         <MenuItem onClick={() => go("/my-listings")}>
+          {" "}
+          {/* */}
           <ListItemIcon>
-            <HomeWorkIcon fontSize="small" /> {/* Or other suitable icon */}
+            {" "}
+            {/* */}
+            <HomeWorkIcon fontSize="small" /> {/* */}
           </ListItemIcon>
-          <ListItemText>My Listings</ListItemText>{" "}
-          {/* Add translation key if needed */}
+          <ListItemText>{t("my_listings", "My Listings")}</ListItemText>{" "}
+          {/* Added t() for consistency */}
         </MenuItem>
-
         <MenuItem onClick={() => go("/saved")}>
+          {" "}
+          {/* */}
           <ListItemIcon>
-            <FavoriteIcon fontSize="small" />
+            {" "}
+            {/* */}
+            <FavoriteIcon fontSize="small" /> {/* */}
           </ListItemIcon>
-          <ListItemText>{t("nav_saved")}</ListItemText>
+          <ListItemText>{t("nav_saved")}</ListItemText> {/* */}
         </MenuItem>
-
-        {/* --- Conditional Admin Link --- */}
-        {user?.isAdmin && (
+        {/* New Chat/Messages Link */}
+        <MenuItem onClick={() => go("/chat")}>
+          <ListItemIcon>
+            {/* Replace 0 with actual unreadMessagesCount later */}
+            <Badge
+              badgeContent={0}
+              color="error"
+              variant="dot"
+              invisible={true}
+            >
+              <ChatIcon fontSize="small" />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText>{t("nav_chat", "Chat")}</ListItemText>{" "}
+          {/* Ensure "nav_chat" is in your i18n files */}
+        </MenuItem>
+        {user?.isAdmin && ( //
           <>
-            <Divider sx={{ my: 0.5 }} />
+            <Divider sx={{ my: 0.5 }} /> {/* */}
             <MenuItem onClick={() => go("/admin/pending-approvals")}>
               {" "}
-              {/* Link to admin section */}
+              {/* */}
               <ListItemIcon>
-                <AdminPanelSettingsIcon fontSize="small" />
+                {" "}
+                {/* */}
+                <AdminPanelSettingsIcon fontSize="small" /> {/* */}
               </ListItemIcon>
-              <ListItemText>Admin Dashboard</ListItemText>{" "}
-              {/* Or use t('nav_admin') */}
+              <ListItemText>
+                {t("admin_dashboard", "Admin Dashboard")}
+              </ListItemText>{" "}
+              {/* Added t() */}
             </MenuItem>
           </>
         )}
-        {/* --- End Conditional Admin Link --- */}
-
-        <Divider sx={{ my: 0.5 }} />
-        {/* Logout Link */}
+        <Divider sx={{ my: 0.5 }} /> {/* */}
         <MenuItem onClick={triggerLogout} sx={{ color: "error.main" }}>
+          {" "}
+          {/* */}
           <ListItemIcon>
-            <LogoutIcon fontSize="small" sx={{ color: "error.main" }} />
+            {" "}
+            {/* */}
+            <LogoutIcon fontSize="small" sx={{ color: "error.main" }} /> {/* */}
           </ListItemIcon>
-          <ListItemText>{t("nav_logout")}</ListItemText>
+          <ListItemText>{t("nav_logout")}</ListItemText> {/* */}
         </MenuItem>
       </Menu>
     </>

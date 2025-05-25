@@ -13,6 +13,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import ChatIcon from "@mui/icons-material/Chat"; // Import Chat icon
 import { styled, useTheme, alpha } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../context/AuthContext"; // Adjust path if needed
@@ -61,6 +62,12 @@ const Navbar = () => {
 
   const navLinks = [
     { id: "home", label: t("nav_home"), path: "/", icon: <HomeIcon /> },
+    // {
+    //   id: "chat",
+    //   label: t("nav_chat", "Chat"),
+    //   path: "/chat",
+    //   icon: <ChatIcon />,
+    // },
     {
       id: "properties",
       label: t("nav_properties"),

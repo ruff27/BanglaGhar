@@ -34,7 +34,7 @@ const HomePage = () => {
       {/* Render the Call To Action section */}
       <CallToAction />
 
-      <AblyConnectionStatus />
+      {/* <AblyConnectionStatus /> */}
     </Box>
   );
 };

@@ -1,11 +1,12 @@
 // src/features/chat/hooks/useAblyClient.js
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import Ably from "ably";
 import { getAblyTokenRequest } from "../services/chatService"; //
-import { useAuth } from "../../../context/AuthContext"; //
-import { useSnackbar } from "../../../context/SnackbarContext"; // NEW IMPORT
-// Assuming ChatPage is where activeConversationId is managed, or pass it down if needed for notification logic
-// import { useLocation } from 'react-router-dom'; // To check current path
+import { useAuth } from "../../../context/AuthContext";
+// REMOVE: import { useSnackbar } from '../../../context/SnackbarContext';
+
+// IMPORT ChatContext to get the notification handler
+import { ChatContext } from "./../context/ChatContext"; // Adjust path if your ChatContext.js is elsewhere
 
 let ablyClient = null; //
 
@@ -16,28 +17,25 @@ const useAblyClient = () => {
     user,
     isLoading: isAuthLoading, //
   } = useAuth();
-  const { showSnackbar } = useSnackbar(); // Initialize snackbar hook
-  // const location = useLocation(); // To check if user is currently on /chat page
+
+  console.log("[useAblyClient] User from useAuth():", user);
+  // REMOVE: const { showSnackbar } = useSnackbar();
+
+  // GET notification handler from ChatContext
+  const chatCtx = useContext(ChatContext); // Get the whole context value
 
   const [isAblyConnected, setIsAblyConnected] = useState(false); //
   const [ablyError, setAblyError] = useState(null); //
   const isInitializing = useRef(false); //
-
-  // Ref to store the notification channel
-  const notificationChannelRef = useRef(null);
-
-  // console.log('[useAblyClient] Auth State:', { //
-  //   isAuthenticated: isLoggedIn, //
-  //   hasToken: !!idToken, //
-  //   userSub: user?.cognitoSub, //
-  //   userId: user?._id, // MongoDB _id for notification channel
-  //   isAuthLoading //
-  // });
+  const notificationChannelRef = useRef(null); //
 
   useEffect(() => {
+    // This effect needs chatCtx.handleIncomingMessageNotification to be stable or included if it changes.
+    // For now, assuming it's stable as it's memoized in ChatContext.
+    const handleNotification = chatCtx?.handleIncomingMessageNotification;
+
     if (isAuthLoading) {
       //
-      // console.log('[useAblyClient] Authentication is loading. Waiting...'); //
       return; //
     }
 
@@ -53,7 +51,7 @@ const useAblyClient = () => {
         ablyClient = null; //
         setIsAblyConnected(false); //
         if (notificationChannelRef.current) {
-          notificationChannelRef.current.detach(); // Detach from notification channel
+          notificationChannelRef.current.detach();
           notificationChannelRef.current = null;
         }
       }
@@ -66,7 +64,12 @@ const useAblyClient = () => {
         //
         setIsAblyConnected(true); //
         // Ensure notification channel is subscribed if client already exists
-        if (!notificationChannelRef.current && ablyClient && user?._id) {
+        if (
+          !notificationChannelRef.current &&
+          ablyClient &&
+          user?._id &&
+          handleNotification
+        ) {
           const userNotificationChannelName = `user-notifications-${user._id}`;
           notificationChannelRef.current = ablyClient.channels.get(
             userNotificationChannelName
@@ -74,24 +77,15 @@ const useAblyClient = () => {
           notificationChannelRef.current.subscribe(
             "new-message-notification",
             (message) => {
-              console.log("[Ably User Notification] Received:", message.data);
-              // TODO: Check if the user is currently viewing this specific conversation
-              // For now, always show snackbar.
-              // const currentPath = location.pathname;
-              // const onChatPageForThisConvo = currentPath.startsWith('/chat') && activeConversationId === message.data.conversationId;
-              // if (!onChatPageForThisConvo) {
-              showSnackbar(
-                `${message.data.title || "New message"}: ${
-                  message.data.body || ""
-                }`,
-                "info"
+              console.log(
+                "[Ably User Notification] Received in useAblyClient (existing client):",
+                message.data
               );
-              // }
-              // Here you could also update a global unread message count
+              handleNotification(message.data); // Call context handler
             }
           );
           console.log(
-            `[Ably User Notification] Subscribed to ${userNotificationChannelName}`
+            `[Ably User Notification] Subscribed to ${userNotificationChannelName} (existing client)`
           );
         }
         return; //
@@ -153,37 +147,29 @@ const useAblyClient = () => {
           isInitializing.current = false; //
 
           // Subscribe to user-specific notification channel
-          if (user?._id) {
-            // Check if user._id (MongoDB ID) is available
-            const userNotificationChannelName = `user-notifications-${user._id}`;
-            // Detach from any old channel instance before getting a new one
+          if (user?._id && handleNotification) {
+            const userNotificationChannelName = `user-notifications-${user._id}`; //
             if (notificationChannelRef.current) {
-              notificationChannelRef.current.detach();
+              //
+              notificationChannelRef.current.detach(); //
             }
             notificationChannelRef.current = client.channels.get(
               userNotificationChannelName
-            );
+            ); //
             notificationChannelRef.current.subscribe(
               "new-message-notification",
               (message) => {
-                console.log("[Ably User Notification] Received:", message.data);
-                // To avoid showing notification if user is already in that chat:
-                // You'd need access to the currently activeConversationId.
-                // This might require lifting activeConversationId state or passing it to ChatContext.
-                // For now, let's show it. We can refine later.
-                // Example check: if (activeConversationId !== message.data.conversationId) { ... }
-                showSnackbar(
-                  `${message.data.title || "New Message"}: ${
-                    message.data.body || ""
-                  }`,
-                  "info" // Or 'success', or a custom type
-                );
-                // TODO: Potentially update global unread count here
+                //
+                console.log(
+                  "[Ably User Notification] Received in useAblyClient (new client):",
+                  message.data
+                ); //
+                handleNotification(message.data); // Call context handler
               }
             );
             console.log(
-              `[Ably User Notification] Subscribed to ${userNotificationChannelName}`
-            );
+              `[Ably User Notification] Subscribed to ${userNotificationChannelName} (new client)`
+            ); //
           }
         });
 
@@ -215,7 +201,7 @@ const useAblyClient = () => {
           ablyClient = null; //
           isInitializing.current = false; //
           if (notificationChannelRef.current) {
-            notificationChannelRef.current.detach(); // Detach on close
+            notificationChannelRef.current.detach();
             notificationChannelRef.current = null;
           }
         });
@@ -239,7 +225,7 @@ const useAblyClient = () => {
       //   notificationChannelRef.current = null;
       // }
     };
-  }, [idToken, isLoggedIn, user, isAuthLoading, showSnackbar]); // Added showSnackbar to dependencies
+  }, [idToken, isLoggedIn, user, isAuthLoading, chatCtx]); // Added showSnackbar to dependencies
 
   return { ably: ablyClient, isAblyConnected, ablyError }; //
 };
