@@ -52,7 +52,7 @@ const PropertiesPage = () => {
 
   // State for view mode (list only now - map redirects to MapPage)
   const [viewMode, setViewMode] = useState("list");
-  
+
   // State for location accuracy info dialog
   const [locationInfoOpen, setLocationInfoOpen] = useState(false);
 
@@ -93,20 +93,20 @@ const PropertiesPage = () => {
     if (reason === "clickaway") return;
     setNotification((prev) => ({ ...prev, open: false }));
   };
-  
+
   const showWishlistNotification = (message, severity) => {
     setNotification({ open: true, message, severity });
   };
-  
+
   const handleWishlistToggle = (propertyId) => {
     if (!propertyId) return;
     toggleWishlist(propertyId, showWishlistNotification);
   };
-  
+
   const handleDrawerToggle = () => {
     setMobileFiltersOpen(!mobileFiltersOpen);
   };
-  
+
   // Handle location info dialog
   const toggleLocationInfo = () => {
     setLocationInfoOpen(!locationInfoOpen);
@@ -117,7 +117,7 @@ const PropertiesPage = () => {
     if (newViewMode !== null) {
       if (newViewMode === "map") {
         // Navigate to the full-screen map view with listing type as query param
-        const queryParam = mode ? `?type=${mode}` : '';
+        const queryParam = mode ? `?type=${mode}` : "";
         navigate(`/map${queryParam}`);
       } else {
         setViewMode(newViewMode);
@@ -152,27 +152,29 @@ const PropertiesPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           mb: 2,
-          flexWrap: 'wrap',
-          gap: 2
+          flexWrap: "wrap",
+          gap: 2,
         }}
       >
         <Typography variant="h4" component="h1" gutterBottom fontWeight={700}>
           {pageTitle}
         </Typography>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title={t("location_accuracy_info", "Location Accuracy Information")}>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip
+            title={t("location_accuracy_info", "Location Accuracy Information")}
+          >
             <IconButton onClick={toggleLocationInfo} color="info" size="small">
               <InfoIcon />
             </IconButton>
           </Tooltip>
-          
+
           <ToggleButtonGroup
             value={viewMode}
             exclusive
@@ -194,7 +196,8 @@ const PropertiesPage = () => {
 
       {wishlistError && (
         <Alert severity="warning" sx={{ mb: 2 }}>
-          {t("wishlist_error", "Could not load wishlist status")}: {wishlistError}
+          {t("wishlist_error", "Could not load wishlist status")}:{" "}
+          {wishlistError}
         </Alert>
       )}
 
@@ -303,7 +306,10 @@ const PropertiesPage = () => {
                 {t("no_properties_found", "No properties found")}
               </Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                {t("adjust_filters", "Try adjusting your filters or search criteria")}
+                {t(
+                  "adjust_filters",
+                  "Try adjusting your filters or search criteria"
+                )}
               </Typography>
               <Button
                 variant="contained"
@@ -331,65 +337,113 @@ const PropertiesPage = () => {
           {sidebarContent}
         </Box>
       </Drawer>
-      
+
       {/* Location Accuracy Information Dialog */}
       <Drawer
         anchor="bottom"
         open={locationInfoOpen}
         onClose={toggleLocationInfo}
-        PaperProps={{ 
-          sx: { 
-            maxHeight: "50%", 
+        PaperProps={{
+          sx: {
+            maxHeight: "50%",
             borderTopLeftRadius: "16px",
             borderTopRightRadius: "16px",
-            p: 2
-          } 
+            p: 2,
+          },
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-            <Typography variant="h6">{t("location_accuracy_info", "Location Accuracy Information")}</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 1,
+            }}
+          >
+            <Typography variant="h6">
+              {t("location_accuracy_info", "Location Accuracy Information")}
+            </Typography>
             <IconButton onClick={toggleLocationInfo} size="small">
               <CloseIcon />
             </IconButton>
           </Box>
           <Divider sx={{ mb: 2 }} />
-          
+
           <Typography variant="body1" paragraph>
-            {t("location_info_description", "Property locations on the map are displayed with different accuracy levels:")}
+            {t(
+              "location_info_description",
+              "Property locations on the map are displayed with different accuracy levels:"
+            )}
           </Typography>
-          
+
           <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Chip size="small" color="success" label="P" sx={{ mr: 1, width: 24, height: 24 }} />
+            <Typography
+              variant="subtitle1"
+              sx={{ display: "flex", alignItems: "center", mb: 1 }}
+            >
+              <Chip
+                size="small"
+                color="success"
+                label="P"
+                sx={{ mr: 1, width: 24, height: 24 }}
+              />
               {t("precise_location_title", "Precise Location")}
             </Typography>
             <Typography variant="body2" sx={{ ml: 4, mb: 2 }}>
-              {t("precise_location_desc", "The property is located at this exact point on the map.")}
+              {t(
+                "precise_location_desc",
+                "The property is located at this exact point on the map."
+              )}
             </Typography>
-            
-            <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Chip size="small" color="warning" label="A" sx={{ mr: 1, width: 24, height: 24 }} />
+
+            <Typography
+              variant="subtitle1"
+              sx={{ display: "flex", alignItems: "center", mb: 1 }}
+            >
+              <Chip
+                size="small"
+                color="warning"
+                label="A"
+                sx={{ mr: 1, width: 24, height: 24 }}
+              />
               {t("approximate_location_title", "Approximate Location")}
             </Typography>
             <Typography variant="body2" sx={{ ml: 4, mb: 2 }}>
-              {t("approximate_location_desc", "The property is located near this point, but the exact location may be slightly different.")}
+              {t(
+                "approximate_location_desc",
+                "The property is located near this point, but the exact location may be slightly different."
+              )}
             </Typography>
-            
-            <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Chip size="small" color="error" label="D" sx={{ mr: 1, width: 24, height: 24 }} />
+
+            <Typography
+              variant="subtitle1"
+              sx={{ display: "flex", alignItems: "center", mb: 1 }}
+            >
+              <Chip
+                size="small"
+                color="error"
+                label="D"
+                sx={{ mr: 1, width: 24, height: 24 }}
+              />
               {t("district_location_title", "District-Level Location")}
             </Typography>
             <Typography variant="body2" sx={{ ml: 4 }}>
-              {t("district_location_desc", "Only the general area (district) is known. The exact property location may be elsewhere in this district.")}
+              {t(
+                "district_location_desc",
+                "Only the general area (district) is known. The exact property location may be elsewhere in this district."
+              )}
             </Typography>
           </Box>
-          
+
           <Alert severity="info">
-            {t("directions_info", "When using the 'Directions' button, the system will prioritize using the property's address rather than map coordinates for more accurate navigation.")}
+            {t(
+              "directions_info",
+              "When using the 'Directions' button, the system will prioritize using the property's address rather than map coordinates for more accurate navigation."
+            )}
           </Alert>
-          
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+
+          <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
             <Button variant="contained" onClick={toggleLocationInfo}>
               {t("close", "Close")}
             </Button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { CognitoUserAttribute } from "amazon-cognito-identity-js";
-import { userPool } from "../../../aws/CognitoConfig"; // Adjust path as needed 
+import { userPool } from "../../../aws/CognitoConfig"; // Adjust path as needed
 import { useAuth } from "../../../context/AuthContext"; // Adjust path as needed
 import axios from "axios"; // <<< ADDED for API calls
 
@@ -28,7 +28,7 @@ const useProfileManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false); // For async operations (updates, delete)
-  const [dialogError, setDialogError] = useState(""); // For errors within dialogs 
+  const [dialogError, setDialogError] = useState(""); // For errors within dialogs
 
   // Dialog states
   const [editNameOpen, setEditNameOpen] = useState(false);
@@ -104,7 +104,7 @@ const useProfileManagement = () => {
 
       setProfileData(mergedData);
       // Initialize edit field with displayName from merged data
-      setEditNameValue(mergedData.displayName || "");
+      setEditNameValue(mergedData.displayName || mergedData.name || "");
     } catch (err) {
       console.error("Profile Hook Fetch Error:", err);
       setError(
@@ -127,7 +127,7 @@ const useProfileManagement = () => {
   // --- Dialog Open/Close ---
   const openEditNameDialog = useCallback(() => {
     // START MODIFICATION: Initialize with displayName
-    setEditNameValue(profileData?.displayName || ""); // Use displayName from profileData
+    setEditNameValue(profileData?.displayName || profileData?.name || ""); // Use displayName from profileData
     // END MODIFICATION
     setDialogError("");
     setEditNameOpen(true);
@@ -212,26 +212,18 @@ const useProfileManagement = () => {
         }
       );
 
-      // --- Success ---
-      console.log("Profile updated via API:", response.data);
+      const updatedDisplayName =
+        response.data.userProfile?.displayName || editNameValue.trim(); // Prefer backend response
 
-      // Update local state FIRST for immediate UI feedback on the profile page itself
       setProfileData((prev) => ({
         ...prev,
-        displayName: response.data.displayName,
+        displayName: updatedDisplayName, // Update displayName in local state
       }));
 
-      // THEN, trigger AuthContext to refresh its global user object.
-      // This will update other components like the Navbar.
       if (checkAuthState) {
-        console.log("Calling checkAuthState to refresh context...");
-        checkAuthState(); // Force AuthContext to refetch profile
+        // This refreshes AuthContext's user object
+        await checkAuthState(); // Make sure to await if it's async
       }
-
-      // Optionally, trigger context refresh if needed elsewhere immediately
-      // if (checkAuthState) {
-      //     checkAuthState(); // Force AuthContext to refetch everything
-      // }
 
       closeEditNameDialog();
       // Consider showing a success snackbar via context or props

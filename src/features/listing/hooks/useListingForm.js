@@ -315,14 +315,25 @@ const useListingForm = () => {
 
     const predefined = ["house1.png", "house2.png", "house3.png"];
     const randImg = predefined[Math.floor(Math.random() * predefined.length)];
+    const finalBangladeshDetails = { ...formData.bangladeshDetails };
+    if (finalBangladeshDetails.backupPower === "")
+      finalBangladeshDetails.backupPower = "none";
+    if (finalBangladeshDetails.sewerSystem === "")
+      finalBangladeshDetails.sewerSystem = "none";
+    if (finalBangladeshDetails.parkingType === "")
+      finalBangladeshDetails.parkingType = "none";
+    if (finalBangladeshDetails.propertyTenure === "")
+      finalBangladeshDetails.propertyTenure = "unknown"; // Example for another field
+
     const finalData = {
       ...formData,
+      bangladeshDetails: finalBangladeshDetails, // Use the potentially corrected details
       features:
         formData.propertyType !== "land" &&
         formData.propertyType !== "commercial"
           ? features
           : {},
-      images: [randImg],
+      images: [randImg], // You might want to use actual uploaded images from `state.images`
       createdBy: creator,
     };
 

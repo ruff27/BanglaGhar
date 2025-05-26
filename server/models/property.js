@@ -13,24 +13,24 @@ const propertySchema = new mongoose.Schema(
     upazila: { type: String, required: true },
     district: { type: String, required: true },
     postalCode: { type: String, required: true },
-    
+
     // Coordinate storage - both formats for compatibility
     latitude: { type: Number },
     longitude: { type: Number },
-    
+
     // Position object for frontend map compatibility
     position: {
       lat: { type: Number },
-      lng: { type: Number }
+      lng: { type: Number },
     },
-    
+
     // Location accuracy flag
     locationAccuracy: {
       type: String,
       enum: ["precise", "approximate", "district-level", "unknown"],
-      default: "unknown"
+      default: "unknown",
     },
-    
+
     // Original geocoded address (for troubleshooting)
     geocodedAddress: { type: String },
 
@@ -45,6 +45,14 @@ const propertySchema = new mongoose.Schema(
       enum: ["rent", "buy", "sold"],
       default: "rent",
       required: true,
+    },
+
+    listingStatus: {
+      type: String,
+      enum: ["available", "rented", "sold", "unavailable"], // Added "unavailable" for general cases
+      default: "available",
+      required: true,
+      index: true, // Add index if you plan to query by this field often
     },
 
     // Basic Details
@@ -147,48 +155,54 @@ const propertySchema = new mongoose.Schema(
 // Add custom instance methods for location handling
 propertySchema.methods = {
   // Method to return a formatted address string
-  getFormattedAddress: function() {
+  getFormattedAddress: function () {
     const addressParts = [
       this.addressLine1,
       this.addressLine2,
       this.upazila,
       this.cityTown,
       this.district,
-      this.postalCode
+      this.postalCode,
     ].filter(Boolean);
-    
-    return addressParts.length > 0 
-      ? addressParts.join(", ") 
+
+    return addressParts.length > 0
+      ? addressParts.join(", ")
       : "Location details not available";
   },
-  
+
   // Method to check if position data is valid
-  hasValidPosition: function() {
-    return this.position && 
-           typeof this.position.lat === 'number' && 
-           typeof this.position.lng === 'number';
-  }
+  hasValidPosition: function () {
+    return (
+      this.position &&
+      typeof this.position.lat === "number" &&
+      typeof this.position.lng === "number"
+    );
+  },
 };
 
 // Add hooks for automatic position field synchronization
-propertySchema.pre('save', function(next) {
+propertySchema.pre("save", function (next) {
   // If latitude and longitude are set, but position is not
-  if (this.isModified('latitude') || this.isModified('longitude')) {
+  if (this.isModified("latitude") || this.isModified("longitude")) {
     if (this.latitude !== undefined && this.longitude !== undefined) {
       if (!this.position) this.position = {};
       this.position.lat = this.latitude;
       this.position.lng = this.longitude;
     }
   }
-  
+
   // If position is set, but latitude and longitude are not
-  if (this.isModified('position.lat') || this.isModified('position.lng')) {
-    if (this.position && typeof this.position.lat === 'number' && typeof this.position.lng === 'number') {
+  if (this.isModified("position.lat") || this.isModified("position.lng")) {
+    if (
+      this.position &&
+      typeof this.position.lat === "number" &&
+      typeof this.position.lng === "number"
+    ) {
       this.latitude = this.position.lat;
       this.longitude = this.position.lng;
     }
   }
-  
+
   next();
 });
 
@@ -201,7 +215,9 @@ propertySchema.index({
   upazila: 1,
   propertyType: 1,
   listingType: 1,
+  listingStatus: 1,
   price: 1,
 });
 
-module.exports = mongoose.models.Property || mongoose.model("Property", propertySchema);
+module.exports =
+  mongoose.models.Property || mongoose.model("Property", propertySchema);

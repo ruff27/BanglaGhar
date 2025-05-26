@@ -56,16 +56,16 @@ const ChangePasswordForm = ({
   newPassword = "",
   confirmPassword = "",
   onNameChange = () => {},
+  onTemporaryPasswordChange = () => {},
   onNewPasswordChange = () => {},
   onConfirmPasswordChange = () => {},
   onSubmit = () => {},
   isSubmitting = false,
-
 }) => {
   const { t } = useTranslation();
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const [showTemporaryPassword, setShowTemporaryPassword] = useState(false);
 
   const handleToggleNewPassword = () => {
     setShowNewPassword((prev) => !prev);
@@ -74,6 +74,9 @@ const ChangePasswordForm = ({
   const handleToggleConfirmPassword = () => {
     setShowConfirmPassword((prev) => !prev);
   };
+  const handleToggleTemporaryPassword = () => {
+    setShowTemporaryPassword((prev) => !prev);
+  };
 
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
@@ -81,7 +84,6 @@ const ChangePasswordForm = ({
 
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
-      
       {/* Name Field */}
       <TextField
         margin="normal"
@@ -97,7 +99,41 @@ const ChangePasswordForm = ({
         onChange={onNameChange}
         disabled={isSubmitting}
       />
-      
+
+      <TextField
+        margin="normal"
+        required
+        fullWidth
+        id="temporaryPassword"
+        label={t("temporary_password", "Temporary Password")}
+        name="temporaryPassword"
+        type={showTemporaryPassword ? "text" : "password"}
+        autoComplete="off" // Temporary passwords usually shouldn't be autocompleted
+        variant="outlined"
+        value={temporaryPassword}
+        onChange={onTemporaryPasswordChange} // Use the new handler from props
+        disabled={isSubmitting}
+        sx={{ mb: 2 }}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label={t(
+                  "toggle_temporary_password_visibility",
+                  "Toggle temporary password visibility"
+                )}
+                onClick={handleToggleTemporaryPassword}
+                onMouseDown={handleMouseDownPassword}
+                edge="end"
+                disabled={isSubmitting}
+              >
+                {showTemporaryPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
+
       {/* New Password Field */}
       <TextField
         margin="normal"
@@ -165,12 +201,7 @@ const ChangePasswordForm = ({
         type="submit"
         fullWidth
         variant="contained"
-        disabled={
-          isSubmitting ||
-          !name ||
-          !newPassword ||
-          !confirmPassword
-        }
+        disabled={isSubmitting || !name || !newPassword || !confirmPassword}
         startIcon={
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
         }

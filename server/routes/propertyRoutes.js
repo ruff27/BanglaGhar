@@ -61,6 +61,11 @@ router.post(
       .isIn(["rent", "buy", "sold"])
       .withMessage("Invalid listing type."),
 
+    body("listingStatus")
+      .optional() // It will default to 'available' in the controller if not provided
+      .isIn(["available", "rented", "sold", "unavailable"])
+      .withMessage("Invalid listing status."),
+
     // --- Details ---
     body("bedrooms") //
       .optional()
@@ -189,6 +194,15 @@ router.get(
       .optional()
       .isIn(["rent", "buy", "sold"])
       .withMessage("Invalid listing type filter."),
+    query("listingStatus") // For explicitly querying by status
+      .optional()
+      .isIn(["available", "rented", "sold", "unavailable"])
+      .withMessage("Invalid listing status filter."),
+    query("includeUnavailable") // To fetch all statuses
+      .optional()
+      .isBoolean()
+      .withMessage("includeUnavailable must be true or false.")
+      .toBoolean(),
   ],
   handleValidationErrors, //
   propertyController.getAllProperties //
@@ -240,6 +254,11 @@ router.put(
       .optional()
       .isBoolean()
       .withMessage("isHidden must be true or false."),
+
+    body("listingStatus")
+      .optional()
+      .isIn(["available", "rented", "sold", "unavailable"])
+      .withMessage("Invalid listing status provided for update."),
   ],
   handleValidationErrors, //
   propertyController.updateProperty //

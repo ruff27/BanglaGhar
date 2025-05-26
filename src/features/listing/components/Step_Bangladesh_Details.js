@@ -148,45 +148,47 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
           </Grid>
         )}
 
+        {/* Updated Backup Power - removed empty option, set default to "none" */}
         <Grid item xs={12} sm={6} md={4}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.backupPower}>
             <InputLabel id="backupPower-label">
               {t("backup_power", "Backup Power")}
             </InputLabel>
             <Select
               labelId="backupPower-label"
               name="bangladeshDetails.backupPower"
-              value={bdDetails.backupPower || ""}
+              value={bdDetails.backupPower || "none"} // Fallback to "none"
               label={t("backup_power", "Backup Power")}
               onChange={handleChange}
             >
-              <MenuItem value="">
-                {t("select_optional", "Select (Optional)")}
-              </MenuItem>
+              <MenuItem value="none">{t("power_none", "None")}</MenuItem>
               <MenuItem value="ips">{t("power_ips", "IPS")}</MenuItem>
               <MenuItem value="generator">
                 {t("power_generator", "Generator")}
               </MenuItem>
               <MenuItem value="solar">{t("power_solar", "Solar")}</MenuItem>
-              <MenuItem value="none">{t("power_none", "None")}</MenuItem>
             </Select>
+            {bdErrors.backupPower && (
+              <FormHelperText>{bdErrors.backupPower}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 
+        {/* Updated Sewer System - removed empty option, set default to "none" */}
         <Grid item xs={12} sm={6} md={4}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.sewerSystem}>
             <InputLabel id="sewerSystem-label">
               {t("sewer_system", "Sewer System")}
             </InputLabel>
             <Select
               labelId="sewerSystem-label"
               name="bangladeshDetails.sewerSystem"
-              value={bdDetails.sewerSystem || ""}
+              value={bdDetails.sewerSystem || "none"} // Fallback to "none"
               label={t("sewer_system", "Sewer System")}
               onChange={handleChange}
             >
-              <MenuItem value="">
-                {t("select_optional", "Select (Optional)")}
+              <MenuItem value="none">
+                {t("sewer_none", "None / Unspecified")}
               </MenuItem>
               <MenuItem value="covered">
                 {t("sewer_covered", "Covered Drain")}
@@ -195,10 +197,10 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
               <MenuItem value="septic_tank">
                 {t("sewer_septic", "Septic Tank")}
               </MenuItem>
-              <MenuItem value="none">
-                {t("sewer_none", "None / Unspecified")}
-              </MenuItem>
             </Select>
+            {bdErrors.sewerSystem && (
+              <FormHelperText>{bdErrors.sewerSystem}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 
@@ -438,20 +440,22 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             </RadioGroup>
           </FormControl>
         </Grid>
+
+        {/* Updated Parking Type - removed empty option, set default to "none" */}
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.parkingType}>
             <InputLabel id="parkingType-label">
               {t("parking_type", "Parking Type")}
             </InputLabel>
             <Select
               labelId="parkingType-label"
               name="bangladeshDetails.parkingType"
-              value={bdDetails.parkingType || ""}
+              value={bdDetails.parkingType || "none"} // Fallback to "none"
               label={t("parking_type", "Parking Type")}
               onChange={handleChange}
             >
-              <MenuItem value="">
-                {t("select_optional", "Select (Optional)")}
+              <MenuItem value="none">
+                {t("parking_none", "None Available")}
               </MenuItem>
               <MenuItem value="dedicated">
                 {t("parking_dedicated", "Dedicated Spot")}
@@ -462,10 +466,10 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
               <MenuItem value="garage">
                 {t("parking_garage", "Garage")}
               </MenuItem>
-              <MenuItem value="none">
-                {t("parking_none", "None Available")}
-              </MenuItem>
             </Select>
+            {bdErrors.parkingType && (
+              <FormHelperText>{bdErrors.parkingType}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 
@@ -610,14 +614,14 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.propertyTenure}>
             <InputLabel id="propertyTenure-label">
               {t("property_tenure", "Property Tenure")}
             </InputLabel>
             <Select
               labelId="propertyTenure-label"
               name="bangladeshDetails.propertyTenure"
-              value={bdDetails.propertyTenure || ""}
+              value={bdDetails.propertyTenure || "unknown"} // Default to "unknown" as per schema
               label={t("property_tenure", "Property Tenure")}
               onChange={handleChange}
             >
@@ -631,6 +635,9 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                 {t("tenure_leasehold", "Leasehold")}
               </MenuItem>
             </Select>
+            {bdErrors.propertyTenure && (
+              <FormHelperText>{bdErrors.propertyTenure}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 

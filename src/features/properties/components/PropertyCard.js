@@ -13,6 +13,10 @@ import {
   useTheme,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import BedIcon from "@mui/icons-material/Bed";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
@@ -45,10 +49,39 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
         }`
       : "Price N/A";
 
-  const chipBgColor =
-    property.listingType === "sold"
-      ? theme.palette.grey[700]
-      : theme.palette.primary.main;
+  let statusChipColor = "default";
+  let statusChipIcon = <HelpOutlineIcon />;
+  let statusLabel = property.listingStatus
+    ? property.listingStatus.charAt(0).toUpperCase() +
+      property.listingStatus.slice(1)
+    : "Unknown";
+
+  switch (property.listingStatus) {
+    case "available":
+      statusChipColor = "success";
+      statusChipIcon = <CheckCircleIcon />;
+      statusLabel = "Available";
+      break;
+    case "sold":
+      statusChipColor = "error"; // Or a grey color like theme.palette.grey[700]
+      statusChipIcon = <RemoveShoppingCartIcon />;
+      statusLabel = "Sold";
+      break;
+    case "rented":
+      statusChipColor = "warning"; // Or a specific color for rented
+      statusChipIcon = <EventBusyIcon />;
+      statusLabel = "Rented";
+      break;
+    case "unavailable":
+      statusChipColor = "default";
+      statusChipIcon = <HelpOutlineIcon />;
+      statusLabel = "Unavailable";
+      break;
+    default:
+      // For any other status, or if listingStatus is undefined
+      statusChipColor = "default";
+      statusChipIcon = <HelpOutlineIcon />;
+  }
 
   const locationString =
     [
@@ -124,7 +157,12 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
                 top: 8,
                 left: 8,
                 zIndex: 1,
-                bgcolor: alpha(chipBgColor, 0.85),
+                bgcolor: alpha(
+                  property.listingType === "sold"
+                    ? theme.palette.grey[700]
+                    : theme.palette.primary.main,
+                  0.85
+                ),
                 color: "white",
                 fontWeight: 500,
                 borderRadius: "4px",
@@ -132,6 +170,32 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
               }}
             />
           )}
+
+          {property.listingStatus &&
+            property.listingStatus !== "available" && ( // Only show if not 'available' or always show based on preference
+              <Chip
+                icon={statusChipIcon}
+                label={statusLabel}
+                size="small"
+                color={statusChipColor} // MUI Chip color prop
+                variant="filled" // or "outlined"
+                sx={{
+                  position: "absolute",
+                  bottom: 8, // Position at the bottom of the image
+                  left: 8,
+                  zIndex: 1,
+                  color:
+                    statusChipColor === "default"
+                      ? theme.palette.text.primary
+                      : "white", // Ensure text visibility for default chip
+                  fontWeight: 500,
+                  borderRadius: "4px",
+                  backdropFilter: "blur(2px)",
+                  // Adjust bgcolor directly if Chip's color prop doesn't give desired effect for all statuses
+                  // bgcolor: statusChipColor === 'default' ? alpha(theme.palette.grey[300], 0.85) : alpha(theme.palette[statusChipColor]?.main || theme.palette.grey[700], 0.85),
+                }}
+              />
+            )}
         </Box>
 
         <CardContent

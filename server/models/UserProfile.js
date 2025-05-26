@@ -56,12 +56,12 @@ const userProfileSchema = new mongoose.Schema({
 
 // Middleware to update `updatedAt` field on save
 userProfileSchema.pre("save", function (next) {
-  // START MODIFICATION: Ensure displayName is set on initial save if empty
-  // Set default displayName based on 'name' (Cognito source) if displayName is empty
-  if (!this.displayName && this.name) {
-    this.displayName = this.name;
+  if (this.isNew || !this.displayName) {
+    if (!this.displayName && this.name) {
+      this.displayName = this.name;
+    }
   }
-  // END MODIFICATION
+
   this.updatedAt = Date.now();
   next();
 });

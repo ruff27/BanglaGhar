@@ -125,8 +125,8 @@ const UserProfilePage = () => {
         {/* Conditionally render profile picture only if profileData exists */}
         {profileData && (
           <ProfilePicture
-            picture={profileData.picture}
-            name={profileData.displayName} // Use displayName
+            picture={profileData.picture} // Assuming 'picture' holds the image URL/base64
+            name={profileData.displayName || profileData.name} // Prioritize displayName
             onPictureChange={handleUpdatePicture}
             isUpdating={isUpdating}
             onError={(msg) => handleShowSnackbar(msg, "error")}
