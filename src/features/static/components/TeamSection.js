@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography, Grid, Paper } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next";
 
 const TeamCard = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -14,52 +15,14 @@ const TeamCard = styled(Paper)(({ theme }) => ({
   },
 }));
 
-const teamMembers = [
-  {
-    name: "Nur E Siam",
-    role: "Team Lead",
-    description:
-      "Oversaw the entire project. Responsible for language translation and contributed significantly to UI development.",
-  },
-  {
-    name: "Ruffin Remad",
-    role: "Project Manager & UI Developer",
-    description:
-      "Managed project backlog, coordinated team tasks, assisted with language translation and UI development.",
-  },
-  {
-    name: "Ankit Malik",
-    role: "Backend Lead",
-    description:
-      "Handled MongoDB setup and Netlify integration. Led backend architecture and authored the deployment documentation.",
-  },
-  {
-    name: "Aaradhya",
-    role: "Lead UI Developer",
-    description: "Focused on user interface design and integrated the map functionality.",
-  },
-  {
-    name: "Shivam",
-    role: "Backend Developer",
-    description: "Implemented the property uploading and listing features.",
-  },
-  {
-    name: "Prabesh",
-    role: "AWS Developer",
-    description: "Managed AWS Cognito-based user authentication and security flows.",
-  },
-  {
-    name: "Ashim",
-    role: "AWS Deployment Specialist",
-    description: "Oversaw deployment pipelines and AWS infrastructure setup.",
-  },
-];
-
 const TeamSection = () => {
+  const { t } = useTranslation();
+  const teamMembers = t("team_section.members", { returnObjects: true });
+
   return (
     <Box sx={{ py: 6 }}>
       <Typography variant="h4" component="h2" fontWeight={700} align="center" gutterBottom>
-        Meet Our Team
+        {t("team_section.title")}
       </Typography>
       <Grid container spacing={4} sx={{ mt: 3 }}>
         {teamMembers.map((member, index) => (

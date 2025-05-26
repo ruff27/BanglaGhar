@@ -14,15 +14,14 @@ const AboutCTASection = () => {
     <Box sx={{ textAlign: "center", py: 6, backgroundColor: "#f8f9fa" }}>
       <Box sx={{ maxWidth: "800px", mx: "auto", p: 4, borderRadius: 4 }}>
         <Typography variant="h4" component="h2" fontWeight={600} gutterBottom>
-          Ready to Find Your Dream Property? {/* <-- Kept as is, no key */}
+          {t("about_cta.title")}
         </Typography>
         <Typography
           variant="h6"
           color="text.secondary"
           sx={{ mb: 4, maxWidth: "700px", mx: "auto" }}
         >
-          Take the first step toward your next home with Bangladesh's most
-          trusted real estate partner. {/* <-- Kept as is, no key */}
+          {t("about_cta.subtitle")}
         </Typography>
         <Stack
           direction={{ xs: "column", sm: "row" }}

@@ -86,13 +86,10 @@
   "closed": "Closed",
   "faq_q1": "How do I schedule a property viewing?",
   "faq_a1": "You can schedule a property viewing by filling out our contact form, calling our office, or sending us an email with your preferred date and time.",
-
   "faq_q2": "What areas do you serve in Bangladesh?",
   "faq_a2": "We currently serve major cities including Dhaka, Chittagong, Sylhet, Rajshahi, and Khulna, with plans to expand to other regions soon.",
-
   "faq_q3": "Do you handle commercial properties?",
   "faq_a3": "Yes, we handle both residential and commercial properties. Our experts can help you find the perfect space for your business needs.",
-
   "faq_q4": "What documents do I need for property registration?",
   "faq_a4": "Property registration typically requires national ID, TIN certificate, passport-sized photos, and property documents. Our team will guide you through the process.",
   "sign_in": "Sign In",
@@ -187,5 +184,72 @@
   "verify_otp": "Verify OTP",
   "enter_otp": "Enter OTP",
   "otp_sent_to": "An OTP has been sent to {{email}}. Please enter it below.",
-  "otp_success": "Email verified successfully! Redirecting to login..."
+  "otp_success": "Email verified successfully! Redirecting to login...",
+  "team_section": {
+    "title": "Meet Our Team",
+    "members": [
+      {
+        "name": "Nur E Siam",
+        "role": "Team Lead",
+        "description": "Oversaw the entire project. Responsible for language translation and contributed significantly to UI development."
+      },
+      {
+        "name": "Ruffin Remad",
+        "role": "Project Manager & UI Developer",
+        "description": "Managed project backlog, coordinated team tasks, and contributed to UI development."
+      },
+      {
+        "name": "Ankit Malik",
+        "role": "Backend Lead",
+        "description": "Handled MongoDB setup and Netlify integration. Oversaw backend architecture and deployment documentation."
+      },
+      {
+        "name": "Aaradhya Lamsal",
+        "role": "Lead UI Developer",
+        "description": "Focused on UI design and effective map integration."
+      },
+      {
+        "name": "Shivam Sharma",
+        "role": "Backend Developer",
+        "description": "Managed the property uploading and listing features."
+      },
+      {
+        "name": "Prabesh Bhattarai",
+        "role": "AWS Developer",
+        "description": "Handled AWS Cognito-based user verification and security flow checks."
+      },
+      {
+        "name": "Ashim Adhikari",
+        "role": "AWS Deployment Specialist",
+        "description": "Oversaw deployment pipelines and AWS infrastructure setup."
+      }
+    ]
+  },
+  "about_cta": {
+    "title": "Ready to Find Your Dream Property?",
+    "subtitle": "Take the first step toward your next home with Bangladesh's most trusted real estate partner."
+  },
+  "mission_section": {
+    "mission_title": "Our Mission",
+    "mission_text": "To simplify the property transaction process in Bangladesh by providing a transparent, efficient, and trustworthy platform connecting buyers, sellers, and renters with verified listings and reliable information.",
+    "vision_title": "Our Vision",
+    "vision_text": "To be the leading and most innovative real estate portal in Bangladesh, empowering individuals and families to find their perfect home or investment property with ease and confidence."
+  },
+  "values_section": {
+    "title": "Our Core Values",
+    "values": [
+      {
+        "title": "Trust & Transparency",
+        "description": "Building confidence through verified listings and clear communication."
+      },
+      {
+        "title": "Customer Focus",
+        "description": "Prioritizing user needs and providing exceptional support."
+      },
+      {
+        "title": "Innovation",
+        "description": "Continuously improving our platform with cutting-edge technology."
+      }
+    ]
+  }
 }

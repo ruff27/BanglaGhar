@@ -34,15 +34,12 @@ const MissionSection = () => {
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <HandshakeIcon color="primary" sx={{ fontSize: 40, mr: 2 }} />
                 <Typography variant="h5" component="h3" fontWeight={600}>
-                  Our Mission {/* <-- Kept as is, no key found */}
+                  {t("mission_section.mission_title")} {/* <-- Kept as is, no key found */}
                 </Typography>
               </Box>
               <Typography variant="body1" color="text.secondary">
                 {/* Kept as is, no key found */}
-                To simplify the property transaction process in Bangladesh by
-                providing a transparent, efficient, and trustworthy platform
-                connecting buyers, sellers, and renters with verified listings
-                and reliable information.
+                {t("mission_section.mission_text")}
               </Typography>
             </Paper>
           </AnimatedBox>
@@ -57,14 +54,12 @@ const MissionSection = () => {
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <HomeWorkIcon color="primary" sx={{ fontSize: 40, mr: 2 }} />
                 <Typography variant="h5" component="h3" fontWeight={600}>
-                  Our Vision {/* <-- Kept as is, no key found */}
+                  {t("mission_section.vision_title")}
                 </Typography>
               </Box>
               <Typography variant="body1" color="text.secondary">
                 {/* Kept as is, no key found */}
-                To be the leading and most innovative real estate portal in
-                Bangladesh, empowering individuals and families to find their
-                perfect home or investment property with ease and confidence.
+                {t("mission_section.vision_text")}
               </Typography>
             </Paper>
           </AnimatedBox>
