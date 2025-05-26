@@ -26,11 +26,9 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
 
   return (
     <Box>
-      {/* <Typography variant="h6" gutterBottom>
-        {t("step_specific_details", "Specific Property Details")}
-      </Typography> */}
       <Grid container spacing={3}>
         {/* --- Property Condition --- */}
+        {/* Marked 'required' on frontend. Ensure 'required: true' in Mongoose schema and '.notEmpty()' in backend validation. */}
         <Grid item xs={12} sm={6}>
           <FormControl fullWidth required error={!!bdErrors.propertyCondition}>
             <InputLabel id="propertyCondition-label">
@@ -39,8 +37,8 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             <Select
               labelId="propertyCondition-label"
               id="propertyCondition"
-              name="bangladeshDetails.propertyCondition" // Nested name
-              value={bdDetails.propertyCondition || ""}
+              name="bangladeshDetails.propertyCondition"
+              value={bdDetails.propertyCondition || ""} // Good: '|| ""' for required Selects
               label={t("property_condition", "Property Condition")}
               onChange={handleChange}
             >
@@ -62,12 +60,12 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
 
         {/* --- Utilities --- */}
         <Grid item xs={12}>
-          {" "}
           <Typography variant="subtitle1" gutterBottom>
             {t("utilities", "Utilities")}
-          </Typography>{" "}
+          </Typography>
         </Grid>
 
+        {/* Marked 'required' on frontend. Ensure 'required: true' in Mongoose schema and '.notEmpty()' in backend validation. */}
         <Grid item xs={12} sm={6} md={4}>
           <FormControl fullWidth required error={!!bdErrors.waterSource}>
             <InputLabel id="waterSource-label">
@@ -76,7 +74,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             <Select
               labelId="waterSource-label"
               name="bangladeshDetails.waterSource"
-              value={bdDetails.waterSource || ""}
+              value={bdDetails.waterSource || ""} // Good: '|| ""'
               label={t("water_source", "Water Source")}
               onChange={handleChange}
             >
@@ -93,6 +91,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
           </FormControl>
         </Grid>
 
+        {/* Marked 'required' on frontend. Ensure 'required: true' in Mongoose schema and '.notEmpty()' in backend validation. */}
         <Grid item xs={12} sm={6} md={4}>
           <FormControl fullWidth required error={!!bdErrors.gasSource}>
             <InputLabel id="gasSource-label">
@@ -101,7 +100,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             <Select
               labelId="gasSource-label"
               name="bangladeshDetails.gasSource"
-              value={bdDetails.gasSource || ""}
+              value={bdDetails.gasSource || ""} // Good: '|| ""'
               label={t("gas_source", "Gas Source")}
               onChange={handleChange}
             >
@@ -120,6 +119,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
         </Grid>
 
         {/* Conditionally show "Gas Line Installed?" only if source is 'piped' */}
+        {/* This is optional. Frontend defaults to "no". Backend validation .optional().isIn(["yes", "no", "na"]) is fine. */}
         {bdDetails.gasSource === "piped" && (
           <Grid item xs={12} sm={6} md={4}>
             <FormControl component="fieldset">
@@ -130,7 +130,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                 row
                 aria-label="gas-line-installed"
                 name="bangladeshDetails.gasLineInstalled"
-                value={bdDetails.gasLineInstalled || "no"}
+                value={bdDetails.gasLineInstalled || "no"} // Default to "no"
                 onChange={handleChange}
               >
                 <FormControlLabel
@@ -143,50 +143,53 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                   control={<Radio size="small" />}
                   label={t("no", "No")}
                 />
+                {/* Schema also allows "na", consider if UI needs it or if "no" covers it */}
               </RadioGroup>
             </FormControl>
           </Grid>
         )}
 
+        {/* Optional field. Frontend defaults to "none". Backend validation .optional().isIn([...]) should include "none". */}
         <Grid item xs={12} sm={6} md={4}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.backupPower}>
             <InputLabel id="backupPower-label">
               {t("backup_power", "Backup Power")}
             </InputLabel>
             <Select
               labelId="backupPower-label"
               name="bangladeshDetails.backupPower"
-              value={bdDetails.backupPower || ""}
+              value={bdDetails.backupPower || "none"} // Good: Fallback to "none"
               label={t("backup_power", "Backup Power")}
               onChange={handleChange}
             >
-              <MenuItem value="">
-                {t("select_optional", "Select (Optional)")}
-              </MenuItem>
+              <MenuItem value="none">{t("power_none", "None")}</MenuItem>
               <MenuItem value="ips">{t("power_ips", "IPS")}</MenuItem>
               <MenuItem value="generator">
                 {t("power_generator", "Generator")}
               </MenuItem>
               <MenuItem value="solar">{t("power_solar", "Solar")}</MenuItem>
-              <MenuItem value="none">{t("power_none", "None")}</MenuItem>
             </Select>
+            {bdErrors.backupPower && (
+              <FormHelperText>{bdErrors.backupPower}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 
+        {/* Optional field. Frontend defaults to "none". Backend validation .optional().isIn([...]) should include "none". */}
         <Grid item xs={12} sm={6} md={4}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.sewerSystem}>
             <InputLabel id="sewerSystem-label">
               {t("sewer_system", "Sewer System")}
             </InputLabel>
             <Select
               labelId="sewerSystem-label"
               name="bangladeshDetails.sewerSystem"
-              value={bdDetails.sewerSystem || ""}
+              value={bdDetails.sewerSystem || "none"} // Good: Fallback to "none"
               label={t("sewer_system", "Sewer System")}
               onChange={handleChange}
             >
-              <MenuItem value="">
-                {t("select_optional", "Select (Optional)")}
+              <MenuItem value="none">
+                {t("sewer_none", "None / Unspecified")}
               </MenuItem>
               <MenuItem value="covered">
                 {t("sewer_covered", "Covered Drain")}
@@ -195,19 +198,18 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
               <MenuItem value="septic_tank">
                 {t("sewer_septic", "Septic Tank")}
               </MenuItem>
-              <MenuItem value="none">
-                {t("sewer_none", "None / Unspecified")}
-              </MenuItem>
             </Select>
+            {bdErrors.sewerSystem && (
+              <FormHelperText>{bdErrors.sewerSystem}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 
         {/* --- Location & Accessibility --- */}
         <Grid item xs={12}>
-          {" "}
           <Typography variant="subtitle1" gutterBottom>
             {t("location_accessibility", "Location & Accessibility")}
-          </Typography>{" "}
+          </Typography>
         </Grid>
 
         <Grid item xs={12} sm={6}>
@@ -240,6 +242,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             )}
           />
         </Grid>
+        {/* Optional field. Frontend defaults to "no". Backend validation .optional().isIn([...]) should include "no". */}
         <Grid item xs={12} sm={6}>
           <FormControl component="fieldset">
             <FormLabel component="legend">
@@ -249,7 +252,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
               row
               aria-label="flood-prone"
               name="bangladeshDetails.floodProne"
-              value={bdDetails.floodProne || "no"}
+              value={bdDetails.floodProne || "no"} // Good: Default to "no"
               onChange={handleChange}
             >
               <FormControlLabel
@@ -283,12 +286,11 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
           />
         </Grid>
 
-        {/* --- Nearby Amenities --- */}
+        {/* --- Nearby Amenities (All optional TextFields) --- */}
         <Grid item xs={12}>
-          {" "}
           <Typography variant="subtitle1" gutterBottom>
             {t("nearby_amenities", "Nearby Amenities")}
-          </Typography>{" "}
+          </Typography>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <TextField
@@ -353,11 +355,11 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
 
         {/* --- Safety & Infrastructure --- */}
         <Grid item xs={12}>
-          {" "}
           <Typography variant="subtitle1" gutterBottom>
             {t("safety_infrastructure", "Safety & Infrastructure")}
-          </Typography>{" "}
+          </Typography>
         </Grid>
+        {/* Optional field (array of checkboxes). Ensure handleChange correctly builds an array. */}
         <Grid item xs={12} sm={6}>
           <FormControl component="fieldset" variant="standard">
             <FormLabel component="legend">
@@ -406,6 +408,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             </FormGroup>
           </FormControl>
         </Grid>
+        {/* Optional field. Frontend defaults to "unknown". Backend .optional().isIn([...]) should include "unknown". */}
         <Grid item xs={12} sm={6}>
           <FormControl component="fieldset">
             <FormLabel component="legend">
@@ -417,7 +420,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             <RadioGroup
               row
               name="bangladeshDetails.earthquakeResistance"
-              value={bdDetails.earthquakeResistance || "unknown"}
+              value={bdDetails.earthquakeResistance || "unknown"} // Good: Default to "unknown"
               onChange={handleChange}
             >
               <FormControlLabel
@@ -438,20 +441,22 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             </RadioGroup>
           </FormControl>
         </Grid>
+
+        {/* Optional field. Frontend defaults to "none". Backend .optional().isIn([...]) should include "none". */}
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.parkingType}>
             <InputLabel id="parkingType-label">
               {t("parking_type", "Parking Type")}
             </InputLabel>
             <Select
               labelId="parkingType-label"
               name="bangladeshDetails.parkingType"
-              value={bdDetails.parkingType || ""}
+              value={bdDetails.parkingType || "none"} // Good: Fallback to "none"
               label={t("parking_type", "Parking Type")}
               onChange={handleChange}
             >
-              <MenuItem value="">
-                {t("select_optional", "Select (Optional)")}
+              <MenuItem value="none">
+                {t("parking_none", "None Available")}
               </MenuItem>
               <MenuItem value="dedicated">
                 {t("parking_dedicated", "Dedicated Spot")}
@@ -462,21 +467,20 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
               <MenuItem value="garage">
                 {t("parking_garage", "Garage")}
               </MenuItem>
-              <MenuItem value="none">
-                {t("parking_none", "None Available")}
-              </MenuItem>
             </Select>
+            {bdErrors.parkingType && (
+              <FormHelperText>{bdErrors.parkingType}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 
         {/* --- Property Specific (if applicable) --- */}
-        {formData.propertyType !== "land" && ( // Show only if not land
+        {formData.propertyType !== "land" && (
           <>
             <Grid item xs={12}>
-              {" "}
               <Typography variant="subtitle1" gutterBottom>
                 {t("property_specifics", "Property Specifics")}
-              </Typography>{" "}
+              </Typography>
             </Grid>
             <Grid item xs={6} sm={3}>
               <TextField
@@ -500,6 +504,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                 onChange={handleChange}
               />
             </Grid>
+            {/* Optional field. Frontend defaults to "no". Backend .optional().isIn([...]) should include "no". */}
             <Grid item xs={6} sm={3}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">
@@ -508,7 +513,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                 <RadioGroup
                   row
                   name="bangladeshDetails.balcony"
-                  value={bdDetails.balcony || "no"}
+                  value={bdDetails.balcony || "no"} // Good: Default to "no"
                   onChange={handleChange}
                 >
                   <FormControlLabel
@@ -524,6 +529,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                 </RadioGroup>
               </FormControl>
             </Grid>
+            {/* Optional field. Frontend defaults to "no". Backend .optional().isIn([...]) should include "no". */}
             <Grid item xs={6} sm={3}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">
@@ -532,7 +538,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                 <RadioGroup
                   row
                   name="bangladeshDetails.rooftopAccess"
-                  value={bdDetails.rooftopAccess || "no"}
+                  value={bdDetails.rooftopAccess || "no"} // Good: Default to "no"
                   onChange={handleChange}
                 >
                   <FormControlLabel
@@ -570,11 +576,11 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
 
         {/* --- Legal & Financial --- */}
         <Grid item xs={12}>
-          {" "}
           <Typography variant="subtitle1" gutterBottom>
             {t("legal_financial", "Legal & Financial")}
-          </Typography>{" "}
+          </Typography>
         </Grid>
+        {/* Optional field. Frontend defaults to "unknown". Backend .optional().isIn([...]) should include "unknown". */}
         <Grid item xs={12} sm={6}>
           <FormControl component="fieldset">
             <FormLabel component="legend">
@@ -583,7 +589,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             <RadioGroup
               row
               name="bangladeshDetails.ownershipPapers"
-              value={bdDetails.ownershipPapers || "unknown"}
+              value={bdDetails.ownershipPapers || "unknown"} // Good: Default to "unknown"
               onChange={handleChange}
             >
               <FormControlLabel
@@ -609,15 +615,16 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             </RadioGroup>
           </FormControl>
         </Grid>
+        {/* Optional field. Frontend defaults to "unknown". Backend .optional().isIn([...]) MUST include "unknown". */}
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!bdErrors.propertyTenure}>
             <InputLabel id="propertyTenure-label">
               {t("property_tenure", "Property Tenure")}
             </InputLabel>
             <Select
               labelId="propertyTenure-label"
               name="bangladeshDetails.propertyTenure"
-              value={bdDetails.propertyTenure || ""}
+              value={bdDetails.propertyTenure || "unknown"} // Good: Default to "unknown" as per schema
               label={t("property_tenure", "Property Tenure")}
               onChange={handleChange}
             >
@@ -631,15 +638,17 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
                 {t("tenure_leasehold", "Leasehold")}
               </MenuItem>
             </Select>
+            {bdErrors.propertyTenure && (
+              <FormHelperText>{bdErrors.propertyTenure}</FormHelperText>
+            )}
           </FormControl>
         </Grid>
 
-        {/* --- Other Details --- */}
+        {/* --- Other Details (All optional TextFields) --- */}
         <Grid item xs={12}>
-          {" "}
           <Typography variant="subtitle1" gutterBottom>
             {t("other_details", "Other Details")}
-          </Typography>{" "}
+          </Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -664,7 +673,7 @@ const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
             onChange={handleChange}
           />
         </Grid>
-        {formData.listingType === "buy" && ( // Only show for sale listings
+        {formData.listingType === "buy" && (
           <Grid item xs={12}>
             <TextField
               name="bangladeshDetails.reasonForSelling"

@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import useMyListings from "../features/profile/hooks/useMyListings"; // Adjust path
 import PropertyCard from "../features/properties/components/PropertyCard"; // Adjust path
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 // --- START: Import Wishlist Hook and Snackbar Hook ---
 import useWishlist from "../features/properties/hooks/useWishlist"; // <<< Adjust path
 import { useSnackbar } from "../context/SnackbarContext"; // <<< Adjust path
@@ -19,9 +19,13 @@ import { useSnackbar } from "../context/SnackbarContext"; // <<< Adjust path
 
 const MyListingsPage = () => {
   const { myListings, loading, error, refetchListings } = useMyListings();
-  // --- START: Use Wishlist Hook and Snackbar Hook ---
-  const { wishlistIds, toggleWishlist, loadingWishlist } = useWishlist(); // Get wishlist state and toggle function
-  const { showSnackbar } = useSnackbar(); // Get snackbar function for feedback
+  const { wishlistIds, toggleWishlist, loadingWishlist } = useWishlist();
+  const { showSnackbar } = useSnackbar();
+  const navigate = useNavigate();
+
+  const handleEditProperty = (propertyId) => {
+    navigate(`/edit-property/${propertyId}`);
+  };
   // --- END: Use Hooks ---
 
   const renderContent = () => {
@@ -83,6 +87,24 @@ const MyListingsPage = () => {
                 isWishlisted={isWishlisted} // Pass current status
                 onWishlistToggle={handleToggle} // Pass toggle handler
               />
+
+              <Box
+                sx={{
+                  mt: 1,
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 1,
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => handleEditProperty(property._id)}
+                >
+                  Edit Property
+                </Button>
+                {/* You might also add a delete button here later */}
+              </Box>
               {/* --- END: Pass wishlist props --- */}
               {/* Add Edit/Delete buttons specific to user's own listings here */}
               {/* Example:

@@ -13,11 +13,15 @@ import {
   useTheme,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import BedIcon from "@mui/icons-material/Bed";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
-import WishlistButton from "./WishlistButton"; // Ensure this path is correct
+import WishlistButton from "./WishlistButton";
 
 const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
   const theme = useTheme();
@@ -27,14 +31,36 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
     return null;
   }
 
-  const placeholderImg = `/pictures/placeholder.png`;
-  const imgSrc =
-    Array.isArray(property.images) && property.images.length > 0
-      ? `/pictures/${property.images[0]}`
-      : placeholderImg;
+  const placeholderImg = `/pictures/placeholder.png`; // Make sure this placeholder exists in public/pictures/
+
+  // --- CORRECTED IMAGE SOURCE LOGIC ---
+  let imgSrc = placeholderImg; // Default to placeholder
+
+  if (Array.isArray(property.images) && property.images.length > 0) {
+    const firstImage = property.images[0];
+    // Check if the first image is a valid, absolute URL (likely from S3)
+    if (
+      firstImage &&
+      (firstImage.startsWith("http://") || firstImage.startsWith("https://"))
+    ) {
+      imgSrc = firstImage; // Use the S3 URL directly
+    }
+    // If you had a previous system with local paths and want to support them (optional):
+    // else if (firstImage) {
+    //   imgSrc = `/pictures/${firstImage}`; // Or however local paths were resolved
+    // }
+  }
+  // --- END CORRECTION ---
 
   const handleImageError = (e) => {
-    e.target.onerror = null;
+    // This will now only trigger if the S3 image itself fails to load
+    // (e.g., S3 object not public, or URL truly broken)
+    // or if the placeholder itself is missing.
+    console.error(
+      "Error loading image, falling back to placeholder. Failed URL:",
+      e.target.currentSrc || e.target.src
+    );
+    e.target.onerror = null; // Prevent infinite loop if placeholder also fails
     e.target.src = placeholderImg;
   };
 
@@ -45,10 +71,38 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
         }`
       : "Price N/A";
 
-  const chipBgColor =
-    property.listingType === "sold"
-      ? theme.palette.grey[700]
-      : theme.palette.primary.main;
+  let statusChipColor = "default";
+  let statusChipIcon = <HelpOutlineIcon />;
+  let statusLabel = property.listingStatus
+    ? property.listingStatus.charAt(0).toUpperCase() +
+      property.listingStatus.slice(1)
+    : "Unknown";
+
+  switch (property.listingStatus) {
+    case "available":
+      statusChipColor = "success";
+      statusChipIcon = <CheckCircleIcon />;
+      statusLabel = "Available";
+      break;
+    case "sold":
+      statusChipColor = "error";
+      statusChipIcon = <RemoveShoppingCartIcon />;
+      statusLabel = "Sold";
+      break;
+    case "rented":
+      statusChipColor = "warning";
+      statusChipIcon = <EventBusyIcon />;
+      statusLabel = "Rented";
+      break;
+    case "unavailable":
+      statusChipColor = "default";
+      statusChipIcon = <HelpOutlineIcon />;
+      statusLabel = "Unavailable";
+      break;
+    default:
+      statusChipColor = "default";
+      statusChipIcon = <HelpOutlineIcon />;
+  }
 
   const locationString =
     [
@@ -65,8 +119,6 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
     property.propertyType === "land" || property.propertyType === "commercial";
 
   return (
-    // Wrap with RouterLink first
-    // --- Ensure Link fills the Grid Item ---
     <RouterLink
       to={detailUrl}
       style={{ textDecoration: "none", display: "block", height: "100%" }}
@@ -76,7 +128,6 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
           borderRadius: "12px",
           overflow: "hidden",
           boxShadow: "0 5px 15px rgba(0, 0, 0, 0.06)",
-          // --- Ensure Card fills the Link wrapper ---
           height: "100%",
           display: "flex",
           flexDirection: "column",
@@ -89,27 +140,22 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
         }}
       >
         <Box sx={{ position: "relative", width: "100%" }}>
-          {/* Render WishlistButton only if onWishlistToggle is provided */}
           {onWishlistToggle && (
             <WishlistButton
               isWishlisted={isWishlisted}
-              // --- CORRECTED onClick ---
-              // Simply call onWishlistToggle. preventDefault/stopPropagation are handled inside WishlistButton.
               onClick={onWishlistToggle}
-              // --- END CORRECTION ---
               sx={{ position: "absolute", top: 8, right: 8, zIndex: 2 }}
             />
           )}
-          {/* --- Use Aspect Ratio for Image --- */}
           <CardMedia
             component="img"
-            image={imgSrc}
+            image={imgSrc} // This will now be the direct S3 URL or the placeholder
             alt={property.title || "Property image"}
             onError={handleImageError}
             sx={{
               objectFit: "cover",
-              aspectRatio: "16/9", // Common ratio, adjust e.g., '3/2', '4/3' if needed
-              width: "100%", // Ensure it takes full width
+              aspectRatio: "16/9",
+              width: "100%",
             }}
           />
           {property.listingType && (
@@ -124,8 +170,36 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
                 top: 8,
                 left: 8,
                 zIndex: 1,
-                bgcolor: alpha(chipBgColor, 0.85),
+                bgcolor: alpha(
+                  property.listingType === "sold"
+                    ? theme.palette.grey[700]
+                    : theme.palette.primary.main,
+                  0.85
+                ),
                 color: "white",
+                fontWeight: 500,
+                borderRadius: "4px",
+                backdropFilter: "blur(2px)",
+              }}
+            />
+          )}
+
+          {property.listingStatus && property.listingStatus !== "available" && (
+            <Chip
+              icon={statusChipIcon}
+              label={statusLabel}
+              size="small"
+              color={statusChipColor}
+              variant="filled"
+              sx={{
+                position: "absolute",
+                bottom: 8,
+                left: 8,
+                zIndex: 1,
+                color:
+                  statusChipColor === "default"
+                    ? theme.palette.text.primary
+                    : "white",
                 fontWeight: 500,
                 borderRadius: "4px",
                 backdropFilter: "blur(2px)",
@@ -136,14 +210,13 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
 
         <CardContent
           sx={{
-            flexGrow: 1, // Allows content to expand vertically
+            flexGrow: 1,
             display: "flex",
             flexDirection: "column",
             width: "100%",
-            p: 2, // Ensure consistent padding
+            p: 2,
           }}
         >
-          {/* Top details */}
           <Typography
             variant="h6"
             component="div"
@@ -168,27 +241,24 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
             </Typography>
           </Box>
 
-          {/* Middle features */}
           {!isLandOrCommercial ? (
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between", // Distribute space
-                flexWrap: "wrap", // Allow wrapping on narrow cards
-                gap: 1.5, // Space between items
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1.5,
                 mb: 2,
                 color: "text.secondary",
                 alignItems: "center",
               }}
             >
-              {/* Bed */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <BedIcon sx={{ fontSize: "1.1rem", color: "primary.light" }} />
                 <Typography variant="body2">
                   {property.bedrooms ?? "?"} Beds
                 </Typography>
               </Box>
-              {/* Bath */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <BathtubIcon
                   sx={{ fontSize: "1.1rem", color: "primary.light" }}
@@ -197,7 +267,6 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
                   {property.bathrooms ?? "?"} Baths
                 </Typography>
               </Box>
-              {/* Area */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <SquareFootIcon
                   sx={{ fontSize: "1.1rem", color: "primary.light" }}
@@ -208,7 +277,6 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
               </Box>
             </Box>
           ) : (
-            // Area for Land/Commercial
             <Box
               sx={{
                 display: "flex",
@@ -227,17 +295,14 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
             </Box>
           )}
 
-          {/* --- Spacer pushes content below it to the bottom --- */}
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* Bottom divider and price/type */}
           <Divider sx={{ my: 1 }} />
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              // mt: "auto", // REMOVED - using spacer box now
             }}
           >
             <Typography

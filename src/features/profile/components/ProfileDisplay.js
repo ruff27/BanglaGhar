@@ -44,9 +44,10 @@ const ProfileDisplay = ({ profileData }) => {
           </ListItemIcon>
           {/* Applied translation */}
           <ListItemText
-            primary={t("Display Name")} // Consider using a specific translation key
-            // Show displayName, fallback to Cognito name, then placeholder
-            secondary={profileData.displayName|| profileData.name || "-"}
+            primary={t("display_name_label", "Display Name")} // Use a more specific key if available
+            secondary={
+              profileData.displayName || profileData.name || t("not_set", "-")
+            } // Prioritize displayName, fallback to Cognito name, then placeholder
           />
         </ListItem>
         <Divider component="li" />

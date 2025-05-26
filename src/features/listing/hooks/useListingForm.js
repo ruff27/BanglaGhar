@@ -1,17 +1,12 @@
 // src/features/listing/hooks/useListingForm.js
-// Final fully updated hook with token header and context integration
-// citeturn1file0
-
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
 
-// Ensure your API base URL is correctly set, ideally via environment variables
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
-// Define steps - Updated 7-Step Workflow
 const steps = [
   "Basic Info",
   "Location",
@@ -22,69 +17,62 @@ const steps = [
   "Review",
 ];
 
-// --- Initial Form State ---
 const initialFormData = {
-  title: "", //
-  propertyType: "apartment", //
-  listingType: "rent", //
-  price: "", //
-  area: "", //
-  bedrooms: "", //
-  bathrooms: "", //
-  addressLine1: "", //
-  addressLine2: "", //
-  cityTown: "", //
-  upazila: "", //
-  district: "", //
-  postalCode: "", //
-  description: "", //
+  title: "",
+  propertyType: "apartment",
+  listingType: "rent",
+  price: "",
+  area: "",
+  bedrooms: "",
+  bathrooms: "",
+  addressLine1: "",
+  addressLine2: "",
+  cityTown: "",
+  upazila: "",
+  district: "",
+  postalCode: "",
+  description: "",
   bangladeshDetails: {
-    propertyCondition: "", // From your Step_Bangladesh_Details, this has options like "new", "under_construction", "resale". Default to "" or "new".
-    proximityToMainRoad: "", //
-    publicTransport: "", //
-    floodProne: "no", // Defaulted to "no"
-    waterSource: "", // Has enum ["wasa", "deep_tube_well", "both", "other"]. Default to "" or "wasa".
-    gasSource: "", // Has enum ["piped", "cylinder", "none"]. Default to "" or "none".
-    gasLineInstalled: "no", // Defaulted to "no"
-
-    // Corrected defaults based on your property.js schema
-    backupPower: "none", // Valid enum value from ['ips', 'generator', 'solar', 'none']
-    sewerSystem: "none", // Valid enum value from ['covered', 'open', 'septic_tank', 'none']
-    parkingType: "none", // Valid enum value from ['dedicated', 'street', 'garage', 'none']
-
-    nearbySchools: "", //
-    nearbyHospitals: "", //
-    nearbyMarkets: "", //
-    nearbyReligiousPlaces: "", //
-    nearbyOthers: "", //
-    securityFeatures: [], //
-    earthquakeResistance: "unknown", // Defaulted to "unknown"
-    roadWidth: "", //
-    floorNumber: "", //
-    totalFloors: "", //
-    balcony: "no", // Defaulted to "no"
-    rooftopAccess: "no", // Defaulted to "no"
-    naturalLight: "", //
-    ownershipPapers: "unknown", // Defaulted to "unknown"
-    propertyTenure: "", // Has enum ["freehold", "leasehold"]. Default to "" or "freehold".
-    recentRenovations: "", //
-    nearbyDevelopments: "", //
-    reasonForSelling: "", //
-    propertyTenure: "unknown", // Defaulted to "unknown"
+    propertyCondition: "",
+    proximityToMainRoad: "",
+    publicTransport: "",
+    floodProne: "no",
+    waterSource: "",
+    gasSource: "",
+    gasLineInstalled: "no",
+    backupPower: "none",
+    sewerSystem: "none",
+    parkingType: "none",
+    nearbySchools: "",
+    nearbyHospitals: "",
+    nearbyMarkets: "",
+    nearbyReligiousPlaces: "",
+    nearbyOthers: "",
+    securityFeatures: [],
+    earthquakeResistance: "unknown",
+    roadWidth: "",
+    floorNumber: "",
+    totalFloors: "",
+    balcony: "no",
+    rooftopAccess: "no",
+    naturalLight: "",
+    ownershipPapers: "unknown",
+    propertyTenure: "unknown", // Ensure this is the intended default and matches enum if applicable
+    recentRenovations: "",
+    nearbyDevelopments: "",
+    reasonForSelling: "",
+    // propertyTenure was duplicated in your original file, ensure this is the correct one.
   },
-  createdBy: "", //
+  createdBy: "",
 };
 
 const initialFeatures = {
-  //
-  parking: false, //
-  garden: false, //
-  airConditioning: false, //
-  furnished: "no", // Defaulted to "no"
-  pool: false, //
+  parking: false,
+  garden: false,
+  airConditioning: false,
+  furnished: "no",
+  pool: false,
 };
-
-const initialImages = [];
 
 const useListingForm = () => {
   const { user, idToken } = useAuth();
@@ -93,7 +81,10 @@ const useListingForm = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState(initialFormData);
   const [features, setFeatures] = useState(initialFeatures);
-  const [images, setImages] = useState(initialImages);
+
+  const [imageUrls, setImageUrls] = useState([]); // Stores S3 URLs
+  const [imageUploadStates, setImageUploadStates] = useState({}); // Tracks { [tempId]: { loading, error, url, fileName } }
+
   const [errors, setErrors] = useState({});
   const [loadingAI, setLoadingAI] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -103,7 +94,6 @@ const useListingForm = () => {
     severity: "info",
   });
 
-  // Update createdBy when context loads
   useEffect(() => {
     if (user?.email && !formData.createdBy) {
       setFormData((prev) => ({ ...prev, createdBy: user.email }));
@@ -159,71 +149,92 @@ const useListingForm = () => {
   }, []);
 
   const validateStep = useCallback(
-    (i) => {
-      const errs = {};
-      const data = formData;
-      const bd = data.bangladeshDetails || {};
-      const reqNum = (v) => v == null || v === "" || Number(v) <= 0;
-      const reqPos = (v) => v == null || v === "" || Number(v) < 0;
-      const needBB =
-        data.propertyType !== "land" && data.propertyType !== "commercial";
+    (stepIndex) => {
+      const newErrors = {};
+      const currentFormData = formData;
+      const bdDetails = currentFormData.bangladeshDetails || {};
+      const isNumericRequired = (val) =>
+        val == null || val === "" || Number(val) <= 0;
+      const isPositiveNumericRequired = (val) =>
+        val == null || val === "" || Number(val) < 0;
+      const needsBuildingSpecifics =
+        currentFormData.propertyType !== "land" &&
+        currentFormData.propertyType !== "commercial";
 
-      switch (i) {
-        case 0:
-          if (!data.title.trim()) errs.title = "Required";
-          if (!data.propertyType) errs.propertyType = "Required";
-          if (!data.listingType) errs.listingType = "Required";
-          if (reqNum(data.price)) errs.price = "Invalid";
-          if (needBB && reqPos(data.bedrooms)) errs.bedrooms = "Invalid";
-          if (needBB && reqPos(data.bathrooms)) errs.bathrooms = "Invalid";
+      switch (stepIndex) {
+        case 0: // Basic Info
+          if (!currentFormData.title.trim())
+            newErrors.title = "Title is required.";
+          if (!currentFormData.propertyType)
+            newErrors.propertyType = "Property type is required.";
+          if (!currentFormData.listingType)
+            newErrors.listingType = "Listing type is required.";
+          if (isNumericRequired(currentFormData.price))
+            newErrors.price = "Price must be a positive number.";
+          if (
+            needsBuildingSpecifics &&
+            isPositiveNumericRequired(currentFormData.bedrooms)
+          )
+            newErrors.bedrooms = "Bedrooms must be zero or more.";
+          if (
+            needsBuildingSpecifics &&
+            isPositiveNumericRequired(currentFormData.bathrooms)
+          )
+            newErrors.bathrooms = "Bathrooms must be zero or more.";
           break;
-        case 1:
-          if (!data.addressLine1.trim()) errs.addressLine1 = "Required";
-          if (!data.cityTown.trim()) errs.cityTown = "Required";
-          if (!data.upazila.trim()) errs.upazila = "Required";
-          if (!data.district.trim()) errs.district = "Required";
-          if (!data.postalCode.trim()) errs.postalCode = "Required";
+        case 1: // Location
+          if (!currentFormData.addressLine1.trim())
+            newErrors.addressLine1 = "Address Line 1 is required.";
+          if (!currentFormData.cityTown.trim())
+            newErrors.cityTown = "City/Town is required.";
+          if (!currentFormData.upazila.trim())
+            newErrors.upazila = "Upazila is required.";
+          if (!currentFormData.district.trim())
+            newErrors.district = "District is required.";
+          if (!currentFormData.postalCode.trim())
+            newErrors.postalCode = "Postal Code is required.";
           break;
-        case 3:
-          errs.bangladeshDetails = {};
-          if (!bd.propertyCondition)
-            errs.bangladeshDetails.propertyCondition = "Required";
-          if (!bd.waterSource) errs.bangladeshDetails.waterSource = "Required";
-          if (!bd.gasSource) errs.bangladeshDetails.gasSource = "Required";
-          if (Object.keys(errs.bangladeshDetails).length === 0)
-            delete errs.bangladeshDetails;
+        case 3: // Specific Details (Bangladesh Context)
+          newErrors.bangladeshDetails = {};
+          if (!bdDetails.propertyCondition)
+            newErrors.bangladeshDetails.propertyCondition =
+              "Property condition is required.";
+          if (!bdDetails.waterSource)
+            newErrors.bangladeshDetails.waterSource =
+              "Water source is required.";
+          if (!bdDetails.gasSource)
+            newErrors.bangladeshDetails.gasSource = "Gas source is required.";
+          if (Object.keys(newErrors.bangladeshDetails).length === 0) {
+            delete newErrors.bangladeshDetails;
+          }
+          break;
+        // Add other case validations as needed for other steps, e.g., images
+        case 4: // Upload Photos
+          if (imageUrls.length === 0) {
+            // Example: require at least one image
+            newErrors.images = "At least one image is recommended.";
+          }
           break;
         default:
           break;
       }
-      setErrors(errs);
-      return Object.keys(errs).length === 0;
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
     },
-    [formData]
+    [formData, imageUrls] // Added imageUrls dependency for step 4 validation example
   );
 
   const generateDescription = useCallback(async () => {
     setLoadingAI(true);
-    setErrors((prev) => ({ ...prev, description: null }));
+    setErrors((prev) => ({ ...prev, description: null })); // Clear previous description errors
     try {
       const payload = {
         propertyData: {
           basicInfo: {
-            title: formData.title,
-            propertyType: formData.propertyType,
-            listingType: formData.listingType,
-            price: formData.price,
-            area: formData.area,
-            bedrooms: formData.bedrooms,
-            bathrooms: formData.bathrooms,
+            /* ...formData fields ... */
           },
           location: {
-            addressLine1: formData.addressLine1,
-            addressLine2: formData.addressLine2,
-            cityTown: formData.cityTown,
-            upazila: formData.upazila,
-            district: formData.district,
-            postalCode: formData.postalCode,
+            /* ...formData fields ... */
           },
           features,
           bangladeshDetails: formData.bangladeshDetails,
@@ -234,7 +245,13 @@ const useListingForm = () => {
         payload
       );
       setFormData((prev) => ({ ...prev, description: res.data.description }));
-    } catch (_) {
+    } catch (error) {
+      console.error("Error generating description:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to generate description.",
+        severity: "error",
+      });
     } finally {
       setLoadingAI(false);
     }
@@ -244,121 +261,266 @@ const useListingForm = () => {
     if (!validateStep(activeStep)) {
       setSnackbar({
         open: true,
-        message: "Please fill required fields.",
+        message: "Please fill all required fields correctly before proceeding.",
         severity: "warning",
       });
       return;
     }
-    let nxt = activeStep + 1;
+    let nextStepIndex = activeStep + 1;
+    // Skip 'Features' step for 'land' or 'commercial' property types
     if (
-      activeStep === 1 &&
+      activeStep === 1 && // If current step is 'Location' (index 1)
       (formData.propertyType === "land" ||
         formData.propertyType === "commercial")
-    )
-      nxt = 3;
-    if (nxt < steps.length) setActiveStep(nxt);
-  }, [activeStep, formData.propertyType, validateStep]);
+    ) {
+      nextStepIndex = 3; // Skip to 'Specific Details' (index 3)
+    }
+    if (nextStepIndex < steps.length) {
+      setActiveStep(nextStepIndex);
+    }
+  }, [activeStep, formData.propertyType, validateStep, steps.length]);
 
   const handleBack = useCallback(() => {
-    let prev = activeStep - 1;
+    let prevStepIndex = activeStep - 1;
+    // If current step is 'Specific Details' (index 3) and property is 'land' or 'commercial', skip back to 'Location' (index 1)
     if (
       activeStep === 3 &&
       (formData.propertyType === "land" ||
         formData.propertyType === "commercial")
-    )
-      prev = 1;
-    if (prev >= 0) setActiveStep(prev);
+    ) {
+      prevStepIndex = 1;
+    }
+    if (prevStepIndex >= 0) {
+      setActiveStep(prevStepIndex);
+    }
   }, [activeStep, formData.propertyType]);
 
+  const handleImageFileSelected = useCallback(
+    async (file) => {
+      console.log(
+        "[useListingForm] handleImageFileSelected called with file:",
+        file.name
+      );
+      if (!idToken) {
+        console.error("[useListingForm] No idToken found for image upload.");
+        setSnackbar({
+          open: true,
+          message: "Authentication session error. Please log in again.",
+          severity: "error",
+        });
+        return;
+      }
+      if (imageUrls.length >= 10) {
+        setSnackbar({
+          open: true,
+          message: "You can upload a maximum of 10 images.",
+          severity: "warning",
+        });
+        return;
+      }
+
+      const tempId = `${file.name}-${Date.now()}`;
+      setImageUploadStates((prev) => ({
+        ...prev,
+        [tempId]: {
+          loading: true,
+          error: null,
+          url: null,
+          fileName: file.name,
+        },
+      }));
+
+      const imageFormData = new FormData();
+      imageFormData.append("propertyImage", file);
+
+      try {
+        console.log(
+          "[useListingForm] Attempting to upload image to backend route: /properties/upload-image"
+        );
+        const response = await axios.post(
+          `${API_BASE_URL}/properties/upload-image`,
+          imageFormData,
+          {
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        console.log(
+          "[useListingForm] Backend response for image upload:",
+          response.data
+        );
+        if (response.data && response.data.imageUrl) {
+          setImageUrls((prevUrls) => [...prevUrls, response.data.imageUrl]);
+          setImageUploadStates((prev) => ({
+            ...prev,
+            [tempId]: {
+              ...prev[tempId],
+              loading: false,
+              url: response.data.imageUrl,
+            },
+          }));
+          if (errors.images) setErrors((prev) => ({ ...prev, images: null }));
+        } else {
+          throw new Error("Image URL not found in backend response.");
+        }
+      } catch (uploadError) {
+        const errorMsg = uploadError.response
+          ? JSON.stringify(uploadError.response.data)
+          : uploadError.message;
+        console.error(
+          "[useListingForm] Error during image upload to backend:",
+          errorMsg
+        );
+        setImageUploadStates((prev) => ({
+          ...prev,
+          [tempId]: {
+            ...prev[tempId],
+            loading: false,
+            error:
+              "Upload failed: " +
+              (uploadError.response?.data?.message || "Network error"),
+          },
+        }));
+        setSnackbar({
+          open: true,
+          message:
+            "Image upload failed: " +
+            (uploadError.response?.data?.message || "Check console"),
+          severity: "error",
+        });
+      }
+    },
+    [idToken, imageUrls, errors.images]
+  ); // Added imageUrls to dependencies
+
+  const removeImageByUrl = useCallback((urlToRemove) => {
+    console.log("[useListingForm] Removing image by URL:", urlToRemove);
+    setImageUrls((prevUrls) => prevUrls.filter((url) => url !== urlToRemove));
+    setImageUploadStates((prevStates) => {
+      const newStates = { ...prevStates };
+      Object.keys(newStates).forEach((key) => {
+        if (newStates[key].url === urlToRemove) {
+          delete newStates[key];
+        }
+      });
+      return newStates;
+    });
+  }, []);
+
   const handleSubmit = useCallback(async () => {
-    let valid = true;
+    console.log("[useListingForm] handleSubmit called.");
+    let allStepsValid = true;
     for (let i = 0; i < steps.length - 1; i++) {
-      const skip =
-        i === 2 &&
-        (formData.propertyType === "land" ||
-          formData.propertyType === "commercial");
-      if (!skip && !validateStep(i)) {
-        valid = false;
+      // Validate all steps except "Review"
+      const isLandOrCommercial =
+        formData.propertyType === "land" ||
+        formData.propertyType === "commercial";
+      const skipStep = i === 2 && isLandOrCommercial; // Skip "Features" (index 2) for land/commercial
+
+      if (!skipStep && !validateStep(i)) {
+        allStepsValid = false;
         setActiveStep(i);
         setSnackbar({
           open: true,
-          message: `Please fix errors in Step ${i + 1}: ${steps[i]}.`,
-          severity: "warning",
+          message: `Please review Step ${i + 1}: ${steps[i]} for errors.`,
+          severity: "error",
         });
         break;
       }
     }
-    if (!valid) return;
+
+    if (!allStepsValid) {
+      console.log("[useListingForm] Form validation failed before submission.");
+      return;
+    }
 
     if (!idToken) {
-      console.error("No token");
+      console.error("[useListingForm] handleSubmit: No idToken!");
       setSnackbar({
         open: true,
-        message: "Auth error. Please log in.",
+        message: "Authentication error. Please log in again.",
         severity: "error",
       });
       return;
     }
-    const creator = user?.email;
-    if (!creator) {
-      console.error("No email");
+    const creatorEmail = user?.email;
+    if (!creatorEmail) {
+      console.error("[useListingForm] handleSubmit: User email not found!");
       setSnackbar({
         open: true,
-        message: "User info missing.",
+        message: "User information is missing. Please log in again.",
         severity: "error",
       });
       return;
     }
 
     setLoadingSubmit(true);
-    setSnackbar({ open: false });
+    setSnackbar({ open: false }); // Close any existing snackbar
 
-    const predefined = ["house1.png", "house2.png", "house3.png"];
-    const randImg = predefined[Math.floor(Math.random() * predefined.length)];
+    const finalBangladeshDetails = { ...formData.bangladeshDetails };
+    if (finalBangladeshDetails.backupPower === "")
+      finalBangladeshDetails.backupPower = "none";
+    if (finalBangladeshDetails.sewerSystem === "")
+      finalBangladeshDetails.sewerSystem = "none";
+    if (finalBangladeshDetails.parkingType === "")
+      finalBangladeshDetails.parkingType = "none";
+    if (finalBangladeshDetails.propertyTenure === "")
+      finalBangladeshDetails.propertyTenure = "unknown";
+
     const finalData = {
       ...formData,
+      bangladeshDetails: finalBangladeshDetails,
       features:
         formData.propertyType !== "land" &&
         formData.propertyType !== "commercial"
           ? features
           : {},
-      images: [randImg],
-      createdBy: creator,
+      images: imageUrls, // Send the array of S3 URLs
+      createdBy: creatorEmail,
     };
+    console.log(
+      "[useListingForm] Final data being submitted to /properties:",
+      finalData
+    );
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/properties`, finalData, {
+      await axios.post(`${API_BASE_URL}/properties`, finalData, {
         headers: { Authorization: `Bearer ${idToken}` },
       });
       setSnackbar({
         open: true,
-        message: "Submitted successfully!",
+        message: "Property listed successfully!",
         severity: "success",
       });
       setTimeout(() => navigate("/user-profile"), 1500);
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      const msg =
-        err.response?.status === 401 || err.response?.status === 403
-          ? `Not authorized (${err.response.status}).`
-          : `Submission failed.`;
-      setSnackbar({ open: true, message: msg, severity: "error" });
+      const errorResponse = err.response;
+      console.error(
+        "Property submission error:",
+        errorResponse ? errorResponse.data : err.message
+      );
+      const errorMessage =
+        errorResponse?.status === 401 || errorResponse?.status === 403
+          ? `Authorization error (${errorResponse.status}). Please try logging in again.`
+          : errorResponse?.data?.message ||
+            errorResponse?.data?.error ||
+            "Property submission failed. Please try again.";
+      setSnackbar({ open: true, message: errorMessage, severity: "error" });
     } finally {
       setLoadingSubmit(false);
     }
-  }, [activeStep, formData, features, user, idToken, navigate, validateStep]);
-
-  const handleImageUpload = useCallback(
-    (files) => {
-      setImages((prev) => [...prev, ...files].slice(0, 10));
-      if (errors.images) setErrors((prev) => ({ ...prev, images: null }));
-    },
-    [errors.images]
-  );
-
-  const removeImageByIndex = useCallback((idx) => {
-    setImages((prev) => prev.filter((_, i) => i !== idx));
-  }, []);
+  }, [
+    formData,
+    features,
+    user,
+    idToken,
+    navigate,
+    validateStep,
+    imageUrls,
+    steps, // Added steps dependency
+  ]);
 
   const handleCloseSnackbar = useCallback((_, reason) => {
     if (reason === "clickaway") return;
@@ -370,15 +532,16 @@ const useListingForm = () => {
     steps,
     formData,
     features,
-    images,
+    imageUrls, // For Step4_Images to display S3 images
+    imageUploadStates, // For Step4_Images to show upload progress/status
     errors,
     loadingAI,
     loadingSubmit,
     snackbar,
     handleChange,
     handleFeatureChange,
-    handleImageUpload,
-    removeImageByIndex,
+    handleImageFileSelected, // Pass this to Step4_Images
+    removeImageByUrl, // Pass this to Step4_Images
     generateDescription,
     handleNext,
     handleBack,

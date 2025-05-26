@@ -121,13 +121,13 @@ const SignupForm = ({
         margin="normal"
         required
         fullWidth
-        id="username"
-        label={t("name")} // Applied translation (using 'name' key)
-        name="username"
-        autoComplete="name"
+        id="fullName" // Changed id for clarity, ensure hook corresponds if id is used elsewhere
+        label={t("full_name", "Full Name")} // Changed label to "Full Name"
+        name="fullName" // Changed name attribute for clarity
+        autoComplete="name" // Standard autocomplete for full name
         variant="outlined"
-        value={username}
-        onChange={onUsernameChange}
+        value={username} // Still bound to 'username' state from the hook
+        onChange={onUsernameChange} // Still uses onUsernameChange handler from the hook
         disabled={isSubmitting}
         sx={{ mb: 2 }}
       />

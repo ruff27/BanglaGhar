@@ -67,12 +67,11 @@ export default function ProfileMenu({ handleLogout }) {
             invisible={true} // Set to 'unreadMessagesCount < 1' later
           >
             <Avatar sx={{ bgcolor: "primary.main" }}>
-              {" "}
-              {/* */}
-              {//
-              (user?.displayName?.charAt(0) || user?.name?.charAt(0)) //
-                ?.toUpperCase() || <AccountCircleIcon />}{" "}
-              {/* */}
+              {(
+                user?.displayName?.charAt(0) ||
+                user?.name?.charAt(0) ||
+                "#"
+              )?.toUpperCase()}
             </Avatar>
           </Badge>
         </IconButton>
@@ -142,24 +141,21 @@ export default function ProfileMenu({ handleLogout }) {
           <ListItemText>{t("nav_chat", "Chat")}</ListItemText>{" "}
           {/* Ensure "nav_chat" is in your i18n files */}
         </MenuItem>
-        {user?.isAdmin && ( //
-          <>
-            <Divider sx={{ my: 0.5 }} /> {/* */}
-            <MenuItem onClick={() => go("/admin/pending-approvals")}>
-              {" "}
-              {/* */}
-              <ListItemIcon>
-                {" "}
-                {/* */}
-                <AdminPanelSettingsIcon fontSize="small" /> {/* */}
-              </ListItemIcon>
-              <ListItemText>
-                {t("admin_dashboard", "Admin Dashboard")}
-              </ListItemText>{" "}
-              {/* Added t() */}
-            </MenuItem>
-          </>
-        )}
+        {user?.isAdmin && [
+          // Return an array of items
+          <Divider sx={{ my: 0.5 }} key="admin-divider" />,
+          <MenuItem
+            onClick={() => go("/admin/pending-approvals")}
+            key="admin-dashboard-link"
+          >
+            <ListItemIcon>
+              <AdminPanelSettingsIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>
+              {t("admin_dashboard", "Admin Dashboard")}
+            </ListItemText>
+          </MenuItem>,
+        ]}
         <Divider sx={{ my: 0.5 }} /> {/* */}
         <MenuItem onClick={triggerLogout} sx={{ color: "error.main" }}>
           {" "}

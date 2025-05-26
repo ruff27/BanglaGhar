@@ -31,6 +31,7 @@ import UserProfilePage from "./features/profile/UserProfilePage";
 import AdminRoutes from "./admin/AdminRoutes"; // Import the file defining admin routes
 import AdminProtectedRoute from "./components/common/AdminProtectedRoute"; // Import the guard
 import ChatPage from "./features/chat/ChatPage";
+import EditPropertyPage from "./pages/EditPropertyPage";
 
 // Theme and Context
 import { theme } from "./styles/theme";
@@ -117,6 +118,11 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/saved" element={<Saved />} />
                   <Route path="/my-listings" element={<MyListingsPage />} />
+                  <Route
+                    path="/edit-property/:propertyId"
+                    element={<EditPropertyPage />}
+                  />
+
                   <Route path="/user-profile" element={<UserProfilePage />} />
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/chat/:conversationId" element={<ChatPage />} />

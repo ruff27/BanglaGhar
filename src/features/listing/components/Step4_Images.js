@@ -1,5 +1,7 @@
-// src/features/ListPropertyPage/components/Step4_Images.js
-import React, { useState, useCallback, useEffect } from "react";
+// src/features/listing/components/Step4_Images.js
+// (Assuming this is the correct path as per your previous files)
+
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Button,
@@ -9,119 +11,94 @@ import {
   CardMedia,
   IconButton,
   FormHelperText,
-  CircularProgress, // Added for potential upload progress later
+  CircularProgress,
+  LinearProgress, // Using CircularProgress for individual uploads
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from "react-i18next";
 
-/**
- * Step4_Images Component - Handles image uploads and previews
- * Now uses handleImageUpload to add files and removeImageByIndex to remove
- */
 const Step4_Images = ({
-  images,
-  handleImageUpload,
-  removeImageByIndex,
-  errors,
+  imageUrls, // Receives S3 URLs of successfully uploaded images
+  imageUploadStates, // Receives an object tracking { [tempId]: { loading, error, url, fileName } }
+  handleImageFileSelected, // Function from useListingForm to upload a single file to S3
+  removeImageByUrl, // Function from useListingForm to remove an image by its S3 URL
+  errors, // General errors for the images step from useListingForm
 }) => {
   const { t } = useTranslation();
-  const [previews, setPreviews] = useState([]);
-  const [imageErrors, setImageErrors] = useState(null); // Local error state for immediate feedback
-
-  // Generate previews when images (File objects) change
-  useEffect(() => {
-    const objectUrls = [];
-    const newPreviews = images
-      .map((file) => {
-        if (file instanceof File) {
-          const url = URL.createObjectURL(file);
-          objectUrls.push(url); // Keep track to revoke later
-          return url;
-        }
-        // Handle cases where 'images' might contain existing URLs (e.g., during edit)
-        if (typeof file === "string" && file.startsWith("http")) {
-          return file;
-        }
-        return null; // Ignore other types or invalid entries
-      })
-      .filter(Boolean); // Remove nulls
-
-    setPreviews(newPreviews);
-
-    // Cleanup object URLs when component unmounts or images change
-    return () => {
-      objectUrls.forEach(URL.revokeObjectURL);
-    };
-  }, [images]); // Re-run only when the images array changes
+  const [localValidationErrors, setLocalValidationErrors] = useState(null); // For client-side file type/size checks
 
   const onFileChange = useCallback(
-    (event) => {
-      setImageErrors(null); // Clear previous local errors
+    async (event) => {
+      setLocalValidationErrors(null); // Clear previous local errors
       if (event.target.files) {
         const newFiles = Array.from(event.target.files);
         const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-        const maxSize = 5 * 1024 * 1024; // 5 MB limit per image (example)
+        const maxSize = 10 * 1024 * 1024; // 10MB limit (ensure this matches backend)
+        let currentErrorMessages = [];
 
-        const validFiles = [];
-        const currentErrors = [];
+        let filesCurrentlyBeingProcessed = Object.values(
+          imageUploadStates
+        ).filter((s) => s.loading).length;
+        let totalPotentialImages =
+          imageUrls.length + filesCurrentlyBeingProcessed;
 
-        newFiles.forEach((file) => {
-          if (!allowedTypes.includes(file.type)) {
-            currentErrors.push(`${file.name}: Invalid file type.`);
-          } else if (file.size > maxSize) {
-            currentErrors.push(`${file.name}: File size exceeds 5MB.`);
-          } else {
-            validFiles.push(file);
+        for (const file of newFiles) {
+          if (totalPotentialImages >= 10) {
+            currentErrorMessages.push(
+              t(
+                "max_10_images_error",
+                "Maximum 10 images allowed. Some files were not processed."
+              )
+            );
+            break; // Stop processing further files from this selection
           }
-        });
 
-        if (currentErrors.length > 0) {
-          setImageErrors(currentErrors.join(" "));
+          if (!allowedTypes.includes(file.type)) {
+            currentErrorMessages.push(
+              t(
+                "invalid_file_type_error",
+                "{{fileName}}: Invalid file type (only PNG, JPG, WEBP).",
+                { fileName: file.name }
+              )
+            );
+          } else if (file.size > maxSize) {
+            currentErrorMessages.push(
+              t(
+                "file_size_exceeds_error",
+                "{{fileName}}: File size exceeds 10MB.",
+                { fileName: file.name }
+              )
+            );
+          } else {
+            // If file is valid on client-side, pass to the upload handler from the hook
+            // This function now also handles the actual upload to S3 via the backend.
+            await handleImageFileSelected(file); // This is asynchronous
+            totalPotentialImages++;
+          }
         }
 
-        // Calculate how many new images can be added without exceeding the limit (e.g., 10)
-        const availableSlots = 10 - images.length;
-        const filesToAdd = validFiles.slice(0, availableSlots);
-
-        if (filesToAdd.length < validFiles.length) {
-          setImageErrors(
-            (prev) =>
-              (prev ? prev + " " : "") +
-              `Maximum 10 images allowed. Some files were not added.`
-          );
+        if (currentErrorMessages.length > 0) {
+          setLocalValidationErrors(currentErrorMessages.join(" "));
         }
-
-        if (filesToAdd.length > 0) {
-          handleImageUpload(filesToAdd); // Pass only the *new* valid files to the hook
-        }
-
-        // Clear the input value to allow selecting the same file again if needed
-        event.target.value = null;
+        event.target.value = null; // Clear the file input to allow re-selecting the same file
       }
     },
-    [handleImageUpload, images.length] // Depend on hook function and current image count
-  );
-
-  // Use the remove handler passed from the hook
-  const handleRemoveImage = useCallback(
-    (indexToRemove) => {
-      removeImageByIndex(indexToRemove);
-    },
-    [removeImageByIndex]
+    [handleImageFileSelected, imageUrls.length, imageUploadStates, t]
   );
 
   return (
     <Box>
-      {/* <Typography variant="h6" gutterBottom>
-        {t("step_upload_photos", "Upload Photos")}
-      </Typography> */}
       <Button
         variant="outlined"
         component="label"
         startIcon={<PhotoCameraIcon />}
         sx={{ mb: 2, textTransform: "none" }}
-        disabled={images.length >= 10} // Disable button if max images reached
+        disabled={
+          imageUrls.length +
+            Object.values(imageUploadStates).filter((s) => s.loading).length >=
+          10
+        }
       >
         {t("select_images", "Select Images")}
         <input
@@ -132,48 +109,44 @@ const Step4_Images = ({
           onChange={onFileChange}
         />
       </Button>
-      {/* Display hook-level errors (e.g., 'at least one image recommended') */}
-      {errors.images && (
+
+      {/* Display general errors from the hook (e.g., "at least one image required") */}
+      {errors && errors.images && (
         <FormHelperText error sx={{ mb: 1 }}>
           {errors.images}
         </FormHelperText>
       )}
-      {/* Display local validation errors */}
-      {imageErrors && (
+      {/* Display local validation errors (file type/size) */}
+      {localValidationErrors && (
         <FormHelperText error sx={{ mb: 2 }}>
-          {imageErrors}
+          {localValidationErrors}
         </FormHelperText>
       )}
 
       <Grid container spacing={2}>
-        {previews.map((previewUrl, index) => (
-          <Grid item xs={6} sm={4} md={3} key={index}>
+        {/* Display successfully uploaded images from S3 URLs */}
+        {imageUrls.map((url) => (
+          <Grid item xs={6} sm={4} md={3} key={url}>
             {" "}
-            {/* Use index as key for dynamic list */}
+            {/* Use S3 URL as key */}
             <Card sx={{ position: "relative", height: 150 }}>
               <CardMedia
                 component="img"
-                image={previewUrl}
-                alt={t(
-                  "property_preview_alt",
-                  `Property Preview ${index + 1}`,
-                  { index: index + 1 }
-                )}
+                image={url}
+                alt={t("property_preview_alt_s3", "Uploaded property image")}
                 sx={{ height: "100%", objectFit: "cover" }}
               />
               <IconButton
                 size="small"
-                onClick={() => handleRemoveImage(index)} // Use the passed handler
-                aria-label={t("remove_image_aria", `Remove image ${index + 1}`)}
+                onClick={() => removeImageByUrl(url)} // Use the new handler
+                aria-label={t("remove_image_s3_aria", "Remove uploaded image")}
                 sx={{
                   position: "absolute",
                   top: 4,
                   right: 4,
                   backgroundColor: "rgba(0, 0, 0, 0.6)",
                   color: "white",
-                  "&:hover": {
-                    backgroundColor: "rgba(0, 0, 0, 0.8)",
-                  },
+                  "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.8)" },
                 }}
               >
                 <DeleteIcon fontSize="small" />
@@ -181,6 +154,63 @@ const Step4_Images = ({
             </Card>
           </Grid>
         ))}
+
+        {/* Display files currently being uploaded or with errors */}
+        {Object.entries(imageUploadStates).map(([tempId, state]) => {
+          // Only render if it's loading or if it errored and hasn't got a successful URL yet
+          if (!state.url && (state.loading || state.error)) {
+            return (
+              <Grid item xs={6} sm={4} md={3} key={tempId}>
+                <Card
+                  sx={{
+                    height: 150,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    p: 1,
+                    boxSizing: "border-box",
+                    border: state.error ? "1px solid red" : "1px solid #eee",
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      wordBreak: "break-all",
+                      textAlign: "center",
+                      mb: 0.5,
+                      flexGrow: 1,
+                      maxHeight: "3em",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {state.fileName || "Uploading..."}
+                  </Typography>
+                  {state.loading && (
+                    <CircularProgress size={24} sx={{ my: 1 }} />
+                  )}
+                  {state.error && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{
+                        textAlign: "center",
+                        fontSize: "0.7rem",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        mt: 0.5,
+                      }}
+                    >
+                      {state.error}
+                    </Typography>
+                  )}
+                  {/* Optionally, add a retry button or a clear button for errored items */}
+                </Card>
+              </Grid>
+            );
+          }
+          return null; // Don't render if successfully uploaded (it's in imageUrls) or not yet processed
+        })}
       </Grid>
       <Typography
         variant="caption"
@@ -188,8 +218,8 @@ const Step4_Images = ({
         sx={{ mt: 2, color: "text.secondary" }}
       >
         {t(
-          "image_upload_caption",
-          "Upload up to 10 images (JPEG, PNG, WEBP, max 5MB each). The first image will be the main cover."
+          "image_upload_caption_s3",
+          "Upload up to 10 images (JPEG, PNG, WEBP format, max 10MB each). Images are stored securely. The first image will be the main cover image."
         )}
       </Typography>
     </Box>
