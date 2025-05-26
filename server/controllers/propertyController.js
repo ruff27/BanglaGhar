@@ -208,37 +208,40 @@ exports.createProperty = async (req, res) => {
   }
 
   try {
-    // Extract address fields for geocoding
     const addressData = {
-      addressLine1: req.body.addressLine1,
-      addressLine2: req.body.addressLine2,
-      cityTown: req.body.cityTown,
-      upazila: req.body.upazila,
-      district: req.body.district,
-      postalCode: req.body.postalCode,
+      /* ... extract addressData ... */
     };
-
-    // Geocode the address
-    const geocodeResult = await geocodeAddress(addressData);
+    const geocodeResult = await geocodeAddress(addressData); // [cite: 1]
 
     let propertyData = {
       ...req.body,
       createdBy: req.userProfile._id,
-      listingStatus: req.body.listingStatus || "available", // Initialize or take from body, default to "available"
+      listingStatus: req.body.listingStatus || "available",
     };
 
-    // Add geocoding result to property data if available
     if (geocodeResult) {
       propertyData = {
         ...propertyData,
-        ...geocodeResult,
+        ...geocodeResult, // geocodeResult includes latitude, longitude, position, locationAccuracy [cite: 1]
       };
       console.log(
         `Geocoded address to: ${geocodeResult.latitude}, ${geocodeResult.longitude} (accuracy: ${geocodeResult.locationAccuracy})`
       );
     } else {
-      console.warn(`Geocoding failed for address, using null coordinates`);
-      propertyData.locationAccuracy = "unknown";
+      // THIS IS THE CRITICAL FALLBACK FOR COORDINATES
+      console.warn(
+        `Geocoding failed completely for address. Assigning default map coordinates.`
+      );
+      const defaultMapCenter = { lat: 23.8103, lng: 90.4125 }; // Example: Dhaka, Bangladesh or your preferred general default
+
+      propertyData.latitude = defaultMapCenter.lat;
+      propertyData.longitude = defaultMapCenter.lng;
+      propertyData.position = {
+        // Ensure the position object is also populated [cite: 2]
+        lat: defaultMapCenter.lat,
+        lng: defaultMapCenter.lng,
+      };
+      propertyData.locationAccuracy = "unknown"; // Or "default_fallback" to be more specific [cite: 2]
     }
 
     const newProperty = new Property(propertyData);

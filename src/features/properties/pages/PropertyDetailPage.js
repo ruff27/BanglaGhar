@@ -287,24 +287,17 @@ const PropertyDetailPage = () => {
   };
 
   const handleOpenMap = () => {
-    if (
-      property &&
-      property.position &&
-      typeof property.position.lat === "number" &&
-      typeof property.position.lng === "number"
-    ) {
-      navigate("/map", {
-        state: {
-          properties: [property],
-          center: property.position,
-          zoom: 15,
-        },
-      });
+    if (property && property._id) {
+      // Use property._id (or the correct identifier)
+      // Ensure property.position exists if you intend to pass it for immediate centering,
+      // though MapPage will re-fetch based on property._id.
+      navigate(`/map/${property._id}`);
     } else {
       showSnackbar(
         "Location data for this property is not available or invalid.",
         "warning"
       );
+      // console.error("Property data or ID is missing for map navigation.");
     }
   };
 

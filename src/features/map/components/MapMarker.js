@@ -3,31 +3,31 @@ import { Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
-import PlaceIcon from '@mui/icons-material/Place';
-import { renderToString } from 'react-dom/server';
+import PlaceIcon from "@mui/icons-material/Place";
+import { renderToString } from "react-dom/server";
 
 /**
  * Helper function to normalize position data
  */
 const normalizePosition = (position) => {
-  if (!position || typeof position !== 'object') {
+  if (!position || typeof position !== "object") {
     return null;
   }
 
   // Handle {lat, lng} format
-  if (typeof position.lat === 'number' && typeof position.lng === 'number') {
+  if (typeof position.lat === "number" && typeof position.lng === "number") {
     return {
       lat: parseFloat(position.lat.toFixed(6)),
-      lng: parseFloat(position.lng.toFixed(6))
+      lng: parseFloat(position.lng.toFixed(6)),
     };
   }
 
   // Handle array format [lat, lng]
   if (Array.isArray(position) && position.length === 2) {
-    if (typeof position[0] === 'number' && typeof position[1] === 'number') {
+    if (typeof position[0] === "number" && typeof position[1] === "number") {
       return {
         lat: parseFloat(position[0].toFixed(6)),
-        lng: parseFloat(position[1].toFixed(6))
+        lng: parseFloat(position[1].toFixed(6)),
       };
     }
   }
@@ -42,18 +42,22 @@ const getPropertyPosition = (property) => {
   if (!property) return null;
 
   // First try position.lat/lng format
-  if (property.position &&
-    typeof property.position.lat === 'number' &&
-    typeof property.position.lng === 'number') {
+  if (
+    property.position &&
+    typeof property.position.lat === "number" &&
+    typeof property.position.lng === "number"
+  ) {
     return normalizePosition(property.position);
   }
 
   // Then try latitude/longitude format
-  if (typeof property.latitude === 'number' &&
-    typeof property.longitude === 'number') {
+  if (
+    typeof property.latitude === "number" &&
+    typeof property.longitude === "number"
+  ) {
     return normalizePosition({
       lat: property.latitude,
-      lng: property.longitude
+      lng: property.longitude,
     });
   }
 
@@ -84,8 +88,6 @@ const createMUIIcon = (property, isSelected) => {
   });
 };
 
-
-
 /**
  * Helper to format price for display on marker
  */
@@ -108,14 +110,22 @@ const formatPriceForMarker = (price, listingType) => {
  * MapMarker Component Wrapper
  */
 const MapMarker = (props) => {
-  // Early validation to avoid rendering invalid markers
+  console.log("MapMarker: Received props.property:", props.property); // Log the raw property
   const position = getPropertyPosition(props.property);
+  console.log(
+    "MapMarker: Extracted position for property ID " +
+      props.property?._id +
+      ":",
+    position
+  ); // Log the extracted position
 
   if (!position) {
-    console.warn("Invalid property position, skipping marker:", props.property);
-    return null;
+    console.warn(
+      "MapMarker: Skipping marker due to invalid position for property ID " +
+        props.property?._id
+    );
+    return null; // This is why a marker might not render
   }
-
   return <MapMarkerInner {...props} position={position} />;
 };
 
@@ -135,13 +145,15 @@ const MapMarkerInner = ({
   const stablePosition = useMemo(() => {
     return [
       parseFloat(position.lat.toFixed(6)),
-      parseFloat(position.lng.toFixed(6))
+      parseFloat(position.lng.toFixed(6)),
     ];
   }, [position]);
 
   // Format price label
   const priceLabel = useMemo(() => {
-    return showPrice ? formatPriceForMarker(property.price, property.listingType) : null;
+    return showPrice
+      ? formatPriceForMarker(property.price, property.listingType)
+      : null;
   }, [property.price, property.listingType, showPrice]);
 
   // Create icon options
@@ -153,7 +165,7 @@ const MapMarkerInner = ({
   }, [property, isSelected]);
 
   // Handle marker click
-   const handleMarkerClick = () => {
+  const handleMarkerClick = () => {
     if (property && property._id) {
       navigate(`/properties/details/${property._id}`);
     }
@@ -179,9 +191,22 @@ const MapMarkerInner = ({
         position={stablePosition}
         icon={icon}
         eventHandlers={{
-          click: handleMarkerClick
+          click: () => {
+            // MODIFIED PART
+            if (onClick) {
+              onClick(property); // Calls the onMarkerClick(property) from MapComponent
+            }
+            // If you still want to navigate immediately, uncomment the next line:
+            // originalHandleMarkerClick();
+          },
         }}
-        zIndexOffset={isSelected ? 1000 : property.price ? Math.floor(property.price / 10000) : 0}
+        zIndexOffset={
+          isSelected
+            ? 1000
+            : property.price
+            ? Math.floor(property.price / 10000)
+            : 0
+        }
       >
         {children}
       </Marker>

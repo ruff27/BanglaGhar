@@ -63,6 +63,9 @@ const MapComponent = ({
   mapCenter = DEFAULT_CENTER,
   mapZoom = DEFAULT_ZOOM,
   selectedProperty,
+  onMarkerClick,
+  onMapMove,
+  showLocationAccuracy,
 }) => {
   const mapRef = useRef(null);
   const [, setMapReady] = useState(false);
@@ -75,6 +78,11 @@ const MapComponent = ({
     typeof mapZoom === "number" && !isNaN(mapZoom) ? mapZoom : DEFAULT_ZOOM;
   const validProperties = properties.filter((property) =>
     hasValidPosition(property)
+  );
+  console.log("MapComponent: Properties received:", properties);
+  console.log(
+    "MapComponent: Filtered validProperties for markers:",
+    validProperties
   );
   console.log(
     "🧪 Valid Properties With Marker Coordinates:",
@@ -106,8 +114,6 @@ const MapComponent = ({
 
     const bounds = [];
 
-
-
     // Fit bounds if there are markers
     if (bounds.length > 0) {
       map.fitBounds(bounds, {
@@ -133,7 +139,7 @@ const MapComponent = ({
         style={{ height: "100%", width: "100%", borderRadius: "inherit" }}
       >
         <TileLayer
-          attribution='© OpenStreetMap contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
@@ -142,14 +148,18 @@ const MapComponent = ({
             key={property._id}
             property={property}
             isSelected={selectedProperty?._id === property._id}
-            onClick={() => console.log("Clicked property:", property.title)}
+            onClick={() => {
+              // MODIFIED LINE
+              if (onMarkerClick) {
+                onMarkerClick(property);
+              }
+            }}
             showPrice
           />
         ))}
       </MapContainer>
     </Box>
   );
-
 };
 
 // Loading state (optional)
