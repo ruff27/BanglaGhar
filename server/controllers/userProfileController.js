@@ -222,24 +222,52 @@ exports.uploadGovtId = async (req, res) => {
 
 // --- getMyListings function --- (No changes from your previous version)
 exports.getMyListings = async (req, res) => {
-  // ... (your existing getMyListings code) ...
-  if (!req.user || !req.user.email) {
+  // Use req.user from the token, which should be populated by your auth middleware
+  if (!req.user || (!req.user.email && !req.user.sub)) {
     console.error(
-      "Get My Listings Error: User not authenticated or email missing."
+      "Get My Listings Error: User not authenticated or identifier (email/sub) missing from token."
     );
     return res.status(401).json({ error: "Authentication required." });
   }
-  const userEmail = req.user.email;
+
   try {
-    const userListings = await Property.find({ createdBy: userEmail })
+    // Step 1: Find the UserProfile document using a unique identifier from the token.
+    // Using 'sub' (Cognito subject) is often more reliable than email if available and indexed.
+    const queryIdentifier = req.user.sub
+      ? { cognitoSub: req.user.sub }
+      : { email: req.user.email };
+    const userProfile = await UserProfile.findOne(queryIdentifier);
+
+    if (!userProfile) {
+      console.log(
+        `User profile not found for identifier: ${JSON.stringify(
+          queryIdentifier
+        )}. Cannot fetch listings.`
+      );
+      // If a user is authenticated but somehow has no profile record, they can't have listings.
+      return res.status(200).json([]); // Return empty array, not an error
+    }
+
+    // Step 2: Use the _id from the found UserProfile to query properties.
+    const userListings = await Property.find({ createdBy: userProfile._id })
       .sort({ createdAt: -1 })
       .select(
+        // Specify fields you need for the "My Listings" view
         "title price listingType propertyType images addressLine1 cityTown district createdAt isHidden bedrooms bathrooms area"
       );
-    console.log(`Found ${userListings.length} listings for user ${userEmail}`);
+
+    console.log(
+      `Found ${userListings.length} listings for user ${userProfile.email} (ID: ${userProfile._id})`
+    );
     res.status(200).json(userListings);
   } catch (error) {
-    console.error(`Error fetching listings for user ${userEmail}:`, error);
+    // This catch block will handle any errors from the UserProfile.findOne or Property.find calls
+    console.error(
+      `Error fetching listings for user (identifier: ${
+        JSON.stringify(req.user && (req.user.sub || req.user.email)) || "N/A"
+      }):`,
+      error // Log the actual error object
+    );
     res.status(500).json({ error: "Server error fetching user listings." });
   }
 };
