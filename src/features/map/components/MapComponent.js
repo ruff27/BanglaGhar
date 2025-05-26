@@ -1,152 +1,200 @@
-import React, { useEffect, useRef } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-  CircleMarker,
-  Tooltip,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
+import "@maplibre/maplibre-gl-leaflet";
+import { Box, Typography, Alert, CircularProgress } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import { divisionCenters } from "../../../constants/divisionCenters";
+import { MapContainer, TileLayer } from "react-leaflet";
+import MapMarker from "./MapMarker";
+// Default center coordinates (Dhaka)
+const DEFAULT_CENTER = [23.8103, 90.4125];
+const DEFAULT_ZOOM = 7;
 
-// Fix for default Leaflet marker icon issue with webpack
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
-  iconUrl: require("leaflet/dist/images/marker-icon.png"),
-  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
-});
+// Helper: Check if property has valid coordinates
+const hasValidPosition = (property) => {
+  if (property?.position?.lat && property?.position?.lng) return true;
+  if (property?.latitude !== undefined && property?.longitude !== undefined)
+    return true;
+  return false;
+};
 
-// Custom hook to update map view when center or zoom changes
-function ChangeView({ center, zoom }) {
-  const map = useMap();
-  useEffect(() => {
-    if (
-      Array.isArray(center) &&
-      center.length === 2 &&
-      typeof center[0] === "number" &&
-      typeof center[1] === "number" &&
-      typeof zoom === "number"
-    ) {
-      map.setView(center, zoom);
-    }
-  }, [center, zoom, map]);
+// Normalize position to [lat, lng]
+const normalizePositionArray = (property) => {
+  if (!property) return null;
+
+  // Direct lat/lng
+  if (
+    property.position?.lat !== undefined &&
+    property.position?.lng !== undefined
+  ) {
+    return [
+      parseFloat(property.position.lat.toFixed(6)),
+      parseFloat(property.position.lng.toFixed(6)),
+    ];
+  }
+
+  if (property.latitude !== undefined && property.longitude !== undefined) {
+    return [
+      parseFloat(property.latitude.toFixed(6)),
+      parseFloat(property.longitude.toFixed(6)),
+    ];
+  }
+
+  // Fallback: match district/division to known centers
+  const lowerDistrict = property.district?.toLowerCase() || "";
+  const lowerDivision = property.division?.toLowerCase() || "";
+
+  const fallbackKey = Object.keys(divisionCenters).find(
+    (key) => lowerDistrict.includes(key) || lowerDivision.includes(key)
+  );
+
+  if (fallbackKey) {
+    property.locationAccuracy = "district-level";
+    return divisionCenters[fallbackKey];
+  }
+
   return null;
-}
+};
 
-/**
- * MapComponent
- */
 const MapComponent = ({
-  properties,
-  mapCenter,
-  mapZoom,
-  userLocation,
+  properties = [],
+  mapCenter = DEFAULT_CENTER,
+  mapZoom = DEFAULT_ZOOM,
   selectedProperty,
-  onMarkerClick,
-  onMapMove,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
-  const mapRef = useRef();
+  const mapRef = useRef(null);
+  const [, setMapReady] = useState(false);
 
-  // Handler for map move/zoom events
-  const MapEvents = () => {
-    const map = useMap();
-    useEffect(() => {
-      if (!onMapMove) return;
+  const normalizedCenter =
+    Array.isArray(mapCenter) && mapCenter.length === 2
+      ? mapCenter
+      : DEFAULT_CENTER;
+  const normalizedZoom =
+    typeof mapZoom === "number" && !isNaN(mapZoom) ? mapZoom : DEFAULT_ZOOM;
+  const validProperties = properties.filter((property) =>
+    hasValidPosition(property)
+  );
+  console.log(
+    "🧪 Valid Properties With Marker Coordinates:",
+    validProperties.map((p) => ({
+      title: p.title,
+      coords: normalizePositionArray(p),
+    }))
+  );
 
-      const handleMoveEnd = () => {
-        const center = map.getCenter();
-        const zoom = map.getZoom();
-        onMapMove([center.lat, center.lng], zoom);
-      };
+  useEffect(() => {
+    if (!mapRef.current) return;
 
-      map.on("moveend", handleMoveEnd);
-      map.on("zoomend", handleMoveEnd);
+    // Prevent double initialization
+    if (mapRef.current._leaflet_id) return;
 
-      return () => {
-        map.off("moveend", handleMoveEnd);
-        map.off("zoomend", handleMoveEnd);
-      };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map]);
-    return null;
-  };
+    const map = L.map(mapRef.current).setView(normalizedCenter, normalizedZoom);
+
+    // Lock to Bangladesh bounds
+    map.setMaxBounds([
+      [20.5, 87], // Southwest
+      [26.7, 92], // Northeast
+    ]);
+
+    // Add OpenFreeMap vector tiles
+    L.maplibreGL({
+      style: "https://tiles.openfreemap.org/styles/liberty",
+      attribution: "© OpenStreetMap contributors | Style: OpenFreeMap Liberty",
+    }).addTo(map);
+
+    const bounds = [];
+
+
+
+    // Fit bounds if there are markers
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 14,
+      });
+    } else {
+      map.setView(normalizedCenter, normalizedZoom); // fallback
+    }
+
+    setMapReady(true);
+  }, [normalizedCenter, normalizedZoom, validProperties, selectedProperty]);
 
   return (
-    <MapContainer
-      ref={mapRef}
-      center={
-        Array.isArray(mapCenter) && mapCenter.length === 2
-          ? mapCenter
-          : [23.8103, 90.4125]
-      }
-      zoom={typeof mapZoom === "number" ? mapZoom : 7}
-      scrollWheelZoom={true}
-      style={{ height: "100%", width: "100%", borderRadius: "inherit" }}
+    <Box sx={{ position: "relative", height: "100%", width: "100%" }}>
+      <MapContainer
+        center={normalizedCenter}
+        zoom={normalizedZoom}
+        maxBounds={[
+          [20.5, 87],
+          [26.7, 92],
+        ]}
+        style={{ height: "100%", width: "100%", borderRadius: "inherit" }}
+      >
+        <TileLayer
+          attribution='© OpenStreetMap contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {validProperties.map((property) => (
+          <MapMarker
+            key={property._id}
+            property={property}
+            isSelected={selectedProperty?._id === property._id}
+            onClick={() => console.log("Clicked property:", property.title)}
+            showPrice
+          />
+        ))}
+      </MapContainer>
+    </Box>
+  );
+
+};
+
+// Loading state (optional)
+export const MapLoadingState = () => {
+  const { t } = useTranslation();
+  return (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+        backgroundColor: "rgba(0,0,0,0.03)",
+        borderRadius: "12px",
+      }}
     >
-      <ChangeView center={mapCenter} zoom={mapZoom} />
-      <TileLayer
-        attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <CircularProgress size={60} thickness={4} />
+      <Typography sx={{ mt: 2 }}>
+        {t("loading_map", "Loading map data...")}
+      </Typography>
+    </Box>
+  );
+};
 
-      {/* Render User Location Marker */}
-      {userLocation &&
-        Array.isArray(userLocation) &&
-        userLocation.length === 2 && (
-          <CircleMarker
-            center={userLocation}
-            radius={8}
-            pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.6 }}
-          >
-            <Tooltip>Your Location</Tooltip>{" "}
-            {/* <-- Kept as is, no key found */}
-          </CircleMarker>
-        )}
-
-      {/* Render Property Markers */}
-      {properties &&
-        properties.map((property) => {
-          if (
-            !property?.position ||
-            typeof property.position.lat !== "number" ||
-            typeof property.position.lng !== "number"
-          ) {
-            console.warn(
-              "Skipping property marker due to invalid position:",
-              property
-            );
-            return null;
-          }
-          return (
-            <Marker
-              key={property._id}
-              position={[property.position.lat, property.position.lng]}
-              eventHandlers={{
-                click: () => {
-                  if (onMarkerClick) onMarkerClick(property);
-                },
-              }}
-            >
-              <Popup>
-                <b>{property.title}</b>
-                <br />
-                {property.location}
-                <br />
-                {/* Applied translation for "Price" */}
-                {t("price")}: ৳ {property.price?.toLocaleString()}
-                {property.mode === "rent" ? "/mo" : ""} {/* Keep suffix */}
-              </Popup>
-            </Marker>
-          );
-        })}
-
-      {onMapMove && <MapEvents />}
-    </MapContainer>
+// Error state (optional)
+export const MapErrorState = ({ message }) => {
+  const { t } = useTranslation();
+  return (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+        backgroundColor: "rgba(0,0,0,0.03)",
+        borderRadius: "12px",
+        p: 3,
+      }}
+    >
+      <Alert severity="error" sx={{ maxWidth: "500px" }}>
+        {message || t("map_error", "Error loading map data")}
+      </Alert>
+    </Box>
   );
 };
 

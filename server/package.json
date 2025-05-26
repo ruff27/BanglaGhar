@@ -15,7 +15,7 @@
     "@aws-sdk/client-s3": "^3.802.0",
     "@aws-sdk/s3-request-presigner": "^3.802.0",
     "ably": "^2.9.0",
-    "axios": "^1.8.4",
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",

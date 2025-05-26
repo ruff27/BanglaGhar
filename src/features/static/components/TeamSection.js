@@ -1,76 +1,78 @@
 import React from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Avatar,
-} from "@mui/material";
+import { Box, Typography, Grid, Paper } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useTranslation } from "react-i18next"; // Import useTranslation
 
-// Import team member images
-const person1 = `${process.env.PUBLIC_URL}/pictures/Person1.jpg`;
-const person2 = `${process.env.PUBLIC_URL}/pictures/Person2.jpg`;
-const person3 = `${process.env.PUBLIC_URL}/pictures/Person3.jpg`;
-
-const TeamMemberCard = styled(Card)(({ theme }) => ({
-  // ... (styling kept as is)
-  textAlign: "center",
-  padding: theme.spacing(3, 2),
+const TeamCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
   borderRadius: "12px",
   height: "100%",
-  boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+  textAlign: "left",
   transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
   "&:hover": {
-    transform: "translateY(-8px)",
-    boxShadow: "0 12px 20px rgba(43, 123, 140, 0.1)",
+    transform: "translateY(-5px)",
+    boxShadow: theme.shadows[4],
   },
 }));
 
 const teamMembers = [
-  // Kept names and roles as is (specific data)
-  { name: "Ankit Malik", role: "Founder & CEO", img: person2 },
-  { name: "Nur e Siam", role: "Lead Developer", img: person3 },
-  { name: "Aaradhya Lamsal", role: "Marketing Head", img: person1 },
+  {
+    name: "Nur E Siam",
+    role: "Team Lead",
+    description:
+      "Oversaw the entire project. Responsible for language translation and contributed significantly to UI development.",
+  },
+  {
+    name: "Ruffin Remad",
+    role: "Project Manager & UI Developer",
+    description:
+      "Managed project backlog, coordinated team tasks, assisted with language translation and UI development.",
+  },
+  {
+    name: "Ankit Malik",
+    role: "Backend Lead",
+    description:
+      "Handled MongoDB setup and Netlify integration. Led backend architecture and authored the deployment documentation.",
+  },
+  {
+    name: "Aaradhya",
+    role: "Lead UI Developer",
+    description: "Focused on user interface design and integrated the map functionality.",
+  },
+  {
+    name: "Shivam",
+    role: "Backend Developer",
+    description: "Implemented the property uploading and listing features.",
+  },
+  {
+    name: "Prabesh",
+    role: "AWS Developer",
+    description: "Managed AWS Cognito-based user authentication and security flows.",
+  },
+  {
+    name: "Ashim",
+    role: "AWS Deployment Specialist",
+    description: "Oversaw deployment pipelines and AWS infrastructure setup.",
+  },
 ];
 
-/**
- * TeamSection Component
- */
 const TeamSection = () => {
-  const { t } = useTranslation(); // Initialize translation
-
   return (
     <Box sx={{ py: 6 }}>
-      <Typography
-        variant="h4"
-        component="h2"
-        fontWeight={700}
-        align="center"
-        gutterBottom
-      >
-        Meet Our Team {/* <-- Kept as is, no key found */}
+      <Typography variant="h4" component="h2" fontWeight={700} align="center" gutterBottom>
+        Meet Our Team
       </Typography>
-      <Grid container spacing={4} justifyContent="center" sx={{ mt: 3 }}>
+      <Grid container spacing={4} sx={{ mt: 3 }}>
         {teamMembers.map((member, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <TeamMemberCard>
-              <Avatar
-                alt={member.name}
-                src={member.img}
-                sx={{ width: 100, height: 100, margin: "0 auto 16px auto" }}
-              />
-              <CardContent sx={{ p: 0 }}>
-                <Typography variant="h6" component="div" fontWeight={600}>
-                  {member.name}
-                </Typography>
-                <Typography color="primary" variant="body1">
-                  {member.role}
-                </Typography>
-              </CardContent>
-            </TeamMemberCard>
+            <TeamCard elevation={3}>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
+                {member.name}
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                {member.role}
+              </Typography>
+              <Typography variant="body2">{member.description}</Typography>
+            </TeamCard>
           </Grid>
         ))}
       </Grid>

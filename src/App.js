@@ -6,10 +6,7 @@ import {
   Routes,
   Route,
   Outlet,
-} from "react-router-dom"; // Import Outlet
-
-import { SpeedInsights } from "@vercel/speed-insights/react";
-import { Analytics } from "@vercel/analytics/react";
+} from "react-router-dom";
 
 // Layout Components
 import Navbar from "./components/layout/Navbar";
@@ -28,6 +25,7 @@ import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 import PropertiesPage from "./features/properties/PropertiesPage";
 import PropertyDetailPage from "./features/properties/pages/PropertyDetailPage";
+import MapPage from "./features/map/MapPage"; // Import the MapPage component
 import Saved from "./pages/Saved";
 import UserProfilePage from "./features/profile/UserProfilePage";
 import AdminRoutes from "./admin/AdminRoutes"; // Import the file defining admin routes
@@ -35,7 +33,7 @@ import AdminProtectedRoute from "./components/common/AdminProtectedRoute"; // Im
 import ChatPage from "./features/chat/ChatPage";
 
 // Theme and Context
-import { theme } from "./styles/theme"; // Adjust path if needed
+import { theme } from "./styles/theme";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider } from "./context/AuthContext"; // Adjust path if needed
@@ -51,31 +49,43 @@ const MainLayout = () => (
     style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
   >
     <Navbar />
-    {/* Use flexGrow to make main content take available space */}
     <main
       className="content"
       style={{
         flexGrow: 1,
-        paddingTop: "64px" /* Adjust if Navbar height is different */,
+        paddingTop: "64px",
       }}
     >
-      <Outlet /> {/* Nested routes render here */}
+      <Outlet />
     </main>
     <Footer />
   </div>
 );
 
-// Layout for pages without Navbar/Footer (e.g., Login, Signup)
-// Also used as base for Admin section before AdminLayout takes over
-const BlankLayout = () => (
+// Layout for fullscreen map page (only includes Navbar)
+const MapLayout = () => (
   <div
     className="App"
-    style={
-      {
-        /* Basic styling if needed */
-      }
-    }
+    style={{ display: "flex", flexDirection: "column", height: "100vh" }}
   >
+    <Navbar />
+    <main
+      className="content"
+      style={{
+        flexGrow: 1,
+        paddingTop: "64px",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Outlet />
+    </main>
+  </div>
+);
+
+// Layout for pages without Navbar/Footer
+const BlankLayout = () => (
+  <div className="App">
     <main className="content">
       <Outlet />
     </main>
@@ -85,18 +95,15 @@ const BlankLayout = () => (
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Analytics />
-      <SpeedInsights />
       <CssBaseline />
       <AuthProvider>
         <SnackbarProvider>
           <ChatProvider>
             <Router>
-              {/* Routes are defined here */}
               <Routes>
                 {/* Routes using the MainLayout (Navbar/Footer) */}
                 <Route element={<MainLayout />}>
-                  <Route index element={<Home />} /> {/* Default route */}
+                  <Route index element={<Home />} />
                   <Route path="/home" element={<Home />} />
                   <Route
                     path="/properties/:mode"
@@ -113,13 +120,17 @@ function App() {
                   <Route path="/user-profile" element={<UserProfilePage />} />
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/chat/:conversationId" element={<ChatPage />} />
-                  {/* Add other main pages here */}
+                </Route>
+
+                {/* Map Routes with Map Layout (Navbar but no Footer) */}
+                <Route element={<MapLayout />}>
+                  <Route path="/map" element={<MapPage />} />
+                  <Route path="/map/:propertyCode" element={<MapPage />} />
                 </Route>
 
                 {/* Routes using the BlankLayout (No Navbar/Footer) */}
                 <Route element={<BlankLayout />}>
                   <Route path="/login" element={<Login />} />
-                  <Route path="/change-password" element={<ChangePassword />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/verify-otp" element={<VerifyOtp />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -150,8 +161,6 @@ function App() {
             </Router>
           </ChatProvider>
         </SnackbarProvider>
-        {/* Optional: Add a global Snackbar or Toast component here if needed */}
-        {/* <SnackbarComponent /> */}
       </AuthProvider>
     </ThemeProvider>
   );

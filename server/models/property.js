@@ -6,50 +6,59 @@ const propertySchema = new mongoose.Schema(
     title: { type: String, required: true },
     price: { type: Number, required: true },
 
-    // Location: Replace 'location' string with structured address
-    // location: { type: String, required: true }, // Remove this or redefine
+    // Structured address fields
     addressLine1: { type: String, required: true },
     addressLine2: { type: String },
     cityTown: { type: String, required: true },
     upazila: { type: String, required: true },
     district: { type: String, required: true },
     postalCode: { type: String, required: true },
-    // Consider adding Division if needed: division: { type: String },
-    // Optional: Geolocation coordinates
-    // geo: {
-    //   type: { type: String, enum: ['Point'], default: 'Point' },
-    //   coordinates: { type: [Number], index: '2dsphere' } // [longitude, latitude]
-    // },
+    
+    // Coordinate storage - both formats for compatibility
+    latitude: { type: Number },
+    longitude: { type: Number },
+    
+    // Position object for frontend map compatibility
+    position: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
+    
+    // Location accuracy flag
+    locationAccuracy: {
+      type: String,
+      enum: ["precise", "approximate", "district-level", "unknown"],
+      default: "unknown"
+    },
+    
+    // Original geocoded address (for troubleshooting)
+    geocodedAddress: { type: String },
 
-    // Property Type & Listing Type (mode)
+    // Property Type & Listing Type
     propertyType: {
       type: String,
       required: true,
-      enum: ["apartment", "house", "condo", "land", "commercial"], // Add new types
-      // default: "apartment", // Already handled in frontend initial state
+      enum: ["apartment", "house", "condo", "land", "commercial"],
     },
     listingType: {
-      // Renamed 'mode' for clarity? Or keep 'mode'. Let's keep 'mode' as per original
       type: String,
-      enum: ["rent", "buy", "sold"], // Keep existing or adjust
+      enum: ["rent", "buy", "sold"],
       default: "rent",
-      required: true, // Make required
+      required: true,
     },
 
     // Basic Details
-    bedrooms: { type: Number, default: 0 }, // Keep default or adjust
-    bathrooms: { type: Number, default: 0 }, // Keep default or adjust
-    area: { type: Number /* , required: false */ }, // Make optional - remove required or set required: false
+    bedrooms: { type: Number, default: 0 },
+    bathrooms: { type: Number, default: 0 },
+    area: { type: Number },
 
     // Features (Standard) - Nested object
     features: {
       parking: { type: Boolean, default: false },
       garden: { type: Boolean, default: false },
       airConditioning: { type: Boolean, default: false },
-      // furnished: { type: Boolean, default: false }, // Changed to String enum
       furnished: { type: String, enum: ["no", "semi", "full"], default: "no" },
       pool: { type: Boolean, default: false },
-      // Add others if needed: lift, servantRoom, etc.
     },
 
     // Bangladesh Specific Details - Nested object
@@ -66,7 +75,7 @@ const propertySchema = new mongoose.Schema(
         enum: ["wasa", "deep_tube_well", "both", "other"],
       },
       gasSource: { type: String, enum: ["piped", "cylinder", "none"] },
-      gasLineInstalled: { type: String, enum: ["yes", "no", "na"] }, // 'na' = not applicable
+      gasLineInstalled: { type: String, enum: ["yes", "no", "na"] },
       backupPower: {
         type: String,
         enum: ["ips", "generator", "solar", "none"],
@@ -80,7 +89,7 @@ const propertySchema = new mongoose.Schema(
       nearbyMarkets: { type: String },
       nearbyReligiousPlaces: { type: String },
       nearbyOthers: { type: String },
-      securityFeatures: [{ type: String, enum: ["gated", "guards", "cctv"] }], // Array of strings
+      securityFeatures: [{ type: String, enum: ["gated", "guards", "cctv"] }],
       earthquakeResistance: { type: String, enum: ["yes", "no", "unknown"] },
       roadWidth: { type: String },
       parkingType: {
@@ -108,19 +117,19 @@ const propertySchema = new mongoose.Schema(
 
     isHidden: {
       type: Boolean,
-      default: false, // Listings are visible by default
-      index: true, // Add index for faster filtering if needed later
+      default: false,
+      index: true,
     },
 
     featuredAt: {
-      type: Date, // Store the timestamp when it was featured
-      default: null, // Default to not featured
-      index: true, // Index for efficient sorting/finding oldest
+      type: Date,
+      default: null,
+      index: true,
     },
 
     // Description & Images
     description: { type: String },
-    images: [{ type: String }], // Store image URLs or keys
+    images: [{ type: String }],
 
     // Ownership & Timestamps
     createdBy: {
@@ -135,8 +144,56 @@ const propertySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Add index for faster geospatial queries if using geo field
-// propertySchema.index({ geo: '2dsphere' });
+// Add custom instance methods for location handling
+propertySchema.methods = {
+  // Method to return a formatted address string
+  getFormattedAddress: function() {
+    const addressParts = [
+      this.addressLine1,
+      this.addressLine2,
+      this.upazila,
+      this.cityTown,
+      this.district,
+      this.postalCode
+    ].filter(Boolean);
+    
+    return addressParts.length > 0 
+      ? addressParts.join(", ") 
+      : "Location details not available";
+  },
+  
+  // Method to check if position data is valid
+  hasValidPosition: function() {
+    return this.position && 
+           typeof this.position.lat === 'number' && 
+           typeof this.position.lng === 'number';
+  }
+};
+
+// Add hooks for automatic position field synchronization
+propertySchema.pre('save', function(next) {
+  // If latitude and longitude are set, but position is not
+  if (this.isModified('latitude') || this.isModified('longitude')) {
+    if (this.latitude !== undefined && this.longitude !== undefined) {
+      if (!this.position) this.position = {};
+      this.position.lat = this.latitude;
+      this.position.lng = this.longitude;
+    }
+  }
+  
+  // If position is set, but latitude and longitude are not
+  if (this.isModified('position.lat') || this.isModified('position.lng')) {
+    if (this.position && typeof this.position.lat === 'number' && typeof this.position.lng === 'number') {
+      this.latitude = this.position.lat;
+      this.longitude = this.position.lng;
+    }
+  }
+  
+  next();
+});
+
+// Add index for faster geospatial queries
+propertySchema.index({ latitude: 1, longitude: 1 });
 
 // Add index on fields commonly used for searching/filtering
 propertySchema.index({
@@ -147,5 +204,4 @@ propertySchema.index({
   price: 1,
 });
 
-module.exports =
-  mongoose.models.Property || mongoose.model("Property", propertySchema);
+module.exports = mongoose.models.Property || mongoose.model("Property", propertySchema);
