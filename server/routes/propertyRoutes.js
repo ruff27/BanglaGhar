@@ -1,19 +1,31 @@
 // server/routes/propertyRoutes.js
 const express = require("express");
-const { body, param, query } = require("express-validator");
+const router = express.Router();
 const propertyController = require("../controllers/propertyController");
+const authMiddleware = require("../middleware/authMiddleware");
+const fetchUserProfileMiddleware = require("../middleware/fetchUserProfileMiddleware");
+const checkListingApprovalMiddleware = require("../middleware/checkListingApprovalMiddleware.js"); // You fixed this import
 const {
   handleValidationErrors,
 } = require("../middleware/ValidationMiddleware");
-const authMiddleware = require("../middleware/authMiddleware"); //
+const { body, param, query } = require("express-validator");
+const multer = require("multer"); // Make sure multer is required
 
-// NEW IMPORT for fetchUserProfileMiddleware
-const fetchUserProfileMiddleware = require("../middleware/fetchUserProfileMiddleware");
-
-// Assuming you might need mongoose for custom validation or reference
-const mongoose = require("mongoose"); //
-
-const router = express.Router();
+// >> ENSURE THIS MULTER CONFIGURATION IS PRESENT AND CORRECT <<
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({
+  // This line defines 'upload'
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Not an image! Please upload an image file."), false);
+    }
+  },
+});
 
 // POST /api/properties - Create Property
 router.post(
@@ -267,6 +279,15 @@ router.put(
 // DELETE /api/properties/:id - Delete Property
 // Add fetchUserProfileMiddleware here as well if deleteProperty needs req.userProfile
 // and to ensure user can only delete their own properties (logic for that check would be in controller)
+router.post(
+  "/upload-image", // This path must match what the frontend is calling
+  authMiddleware,
+  fetchUserProfileMiddleware,
+  checkListingApprovalMiddleware,
+  upload.single("propertyImage"), // 'propertyImage' is the field name from FormData
+  propertyController.uploadPropertyImageToS3 // Ensure this controller function exists
+);
+
 router.delete(
   "/:id",
   authMiddleware, //

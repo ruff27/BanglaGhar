@@ -137,7 +137,10 @@ const propertySchema = new mongoose.Schema(
 
     // Description & Images
     description: { type: String },
-    images: [{ type: String }],
+    images: {
+      type: [String], // Array of S3 image URLs
+      default: [],
+    },
 
     // Ownership & Timestamps
     createdBy: {

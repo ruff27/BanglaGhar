@@ -85,20 +85,22 @@ const ListPropertyPage = () => {
     steps,
     formData,
     features,
-    images,
+    imageUrls, // Should be an empty array [] initially from useListingForm
+    imageUploadStates, // Should be an empty object {} initially
+    handleImageFileSelected,
+    removeImageByUrl,
     errors,
     loadingAI,
     loadingSubmit,
     snackbar,
     handleChange,
     handleFeatureChange,
-    handleImageUpload,
-    removeImageByIndex,
     generateDescription,
     handleNext,
     handleBack,
     handleSubmit,
     handleCloseSnackbar,
+    // validateStep, // This was in the hook but not explicitly destructured here before, add if needed
   } = useListingForm();
 
   const currentStepLabel =
@@ -179,12 +181,29 @@ const ListPropertyPage = () => {
           />
         );
       case 4: // Upload Photos
+        console.log(
+          "[ListPropertyPage/getStepContent] For Step 4 - imageUrls being passed:",
+          imageUrls
+        );
+        console.log(
+          "[ListPropertyPage/getStepContent] For Step 4 - imageUploadStates being passed:",
+          imageUploadStates
+        );
+        console.log(
+          "[ListPropertyPage/getStepContent] For Step 4 - typeof handleImageFileSelected:",
+          typeof handleImageFileSelected
+        );
+        console.log(
+          "[ListPropertyPage/getStepContent] For Step 4 - typeof removeImageByUrl:",
+          typeof removeImageByUrl
+        );
         return (
           <Step4_Images
-            images={images}
-            handleImageUpload={handleImageUpload}
-            removeImageByIndex={removeImageByIndex}
-            errors={errors}
+            imageUrls={imageUrls} // Pass the new S3 URLs array
+            imageUploadStates={imageUploadStates} // Pass the upload status tracker
+            handleImageFileSelected={handleImageFileSelected} // Pass the new S3 upload handler
+            removeImageByUrl={removeImageByUrl} // Pass the new S3 URL removal handler
+            errors={errors} // Pass errors object (might contain errors.images)
           />
         );
       case 5: // Description
@@ -202,7 +221,7 @@ const ListPropertyPage = () => {
           <Step5_Review
             formData={formData}
             features={features}
-            images={images}
+            images={imageUrls} // Pass S3 URLs to the review component
           />
         );
       default:
@@ -242,12 +261,12 @@ const ListPropertyPage = () => {
               gap: 0.5, // Space between icon and title
             }}
           >
-            {/* Icon: Use a contrasting color, maybe the border teal? */}
-            <CurrentStepIcon
-              sx={{ fontSize: "2rem", color: "primary.main" }}
-            />{" "}
-            {/* Slightly darker teal icon */}
-            {/* Title: Use the Header/Text color for readability */}
+            {/* Ensure CurrentStepIcon and currentStepTitle are correctly defined and available in this scope */}
+            {CurrentStepIcon && (
+              <CurrentStepIcon
+                sx={{ fontSize: "2rem", color: "primary.main" }}
+              />
+            )}
             <Typography
               variant="h6"
               component="div"
@@ -258,13 +277,11 @@ const ListPropertyPage = () => {
             >
               {currentStepTitle}
             </Typography>
-            {/* REMOVED the "Step X / Y" Typography */}
           </Box>
         ) : (
-          // --- Desktop View: Unchanged Standard Horizontal Stepper ---
+          // --- Desktop View: Standard Horizontal Stepper ---
           <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
             {steps.map((label) => {
-              // ... unchanged desktop stepper map ...
               return (
                 <Step key={label}>
                   <StepLabel>
@@ -286,30 +303,29 @@ const ListPropertyPage = () => {
             mt: 4,
           }}
         >
-          {/* Back Button - Outlined Primary */}
+          {/* Back Button */}
           <Button
-            disabled={activeStep === 0 || loadingSubmit}
+            disabled={activeStep === 0 || loadingSubmit || loadingAI}
             onClick={handleBack}
             variant="outlined"
-            // Use primary color outline for better visibility
             color="primary"
             sx={{ borderRadius: "8px", textTransform: "none" }}
           >
             {t("back", "Back")}
           </Button>
 
-          {/* Cancel Button - Outlined Error */}
+          {/* Cancel Button */}
           <Button
             variant="outlined"
-            color="error" // Keep error color for this action
-            onClick={handleCancelListing}
+            color="error"
+            onClick={() => setCancelConfirmOpen(true)} // Ensure setCancelConfirmOpen is from useState
             disabled={loadingSubmit || loadingAI}
             sx={{ borderRadius: "8px", textTransform: "none", mx: 2 }}
           >
             {t("cancel_listing", "Cancel Listing")}
           </Button>
 
-          {/* Continue/Submit Button - Contained Primary */}
+          {/* Continue/Submit Button */}
           <StyledButton
             variant="contained"
             color="primary"
@@ -329,6 +345,7 @@ const ListPropertyPage = () => {
           </StyledButton>
         </Box>
       </StyledPaper>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -347,15 +364,21 @@ const ListPropertyPage = () => {
 
       <ConfirmationDialog
         open={isCancelConfirmOpen}
-        onClose={closeCancelConfirmDialog} // Closes dialog without action
-        onConfirm={confirmCancelListing} // Performs the cancel action
-        title="Cancel Property Listing"
-        message="Are you sure you want to cancel listing this property? Any progress will be lost."
-        confirmText="Yes, Cancel Listing"
-        cancelText="No, Continue Editing"
-        confirmButtonProps={{ color: "error" }} // Make confirm button red
+        onClose={closeCancelConfirmDialog}
+        onConfirm={confirmCancelListing}
+        title={t(
+          "cancel_listing_confirmation_title",
+          "Cancel Property Listing"
+        )}
+        message={t(
+          "cancel_listing_confirmation_message",
+          "Are you sure you want to cancel listing this property? Any progress will be lost."
+        )}
+        confirmText={t("yes_cancel_listing", "Yes, Cancel Listing")}
+        cancelText={t("no_continue_editing", "No, Continue Editing")}
+        confirmButtonProps={{ color: "error" }}
         cancelButtonProps={{ color: "primary" }}
-        isConfirming={false} // Not typically needed for cancel, but available
+        isConfirming={false} // Usually false for a cancel dialog, unless there's an async action on confirm
       />
     </Container>
   );

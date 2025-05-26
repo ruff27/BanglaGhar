@@ -42,7 +42,14 @@ import EventBusyIcon from "@mui/icons-material/EventBusy";
 import DeckIcon from "@mui/icons-material/Deck";
 import PoolIcon from "@mui/icons-material/Pool";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import { CircularProgress, Alert, Button, Tabs, Tab } from "@mui/material";
+import {
+  CircularProgress,
+  Alert,
+  Button,
+  Tabs,
+  Tab,
+  useTheme,
+} from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
 import ErrorIcon from "@mui/icons-material/Error";
@@ -59,8 +66,7 @@ import { useSnackbar } from "../../../context/SnackbarContext";
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
-// Helper functions (formatDisplayPrice, displayText, formatFeatureText, getPropertyPosition, constructLocationString, getLocationAccuracyInfo)
-// remain the same.
+// Helper functions (formatDisplayPrice, displayText, etc.) remain the same
 const formatDisplayPrice = (price, listingType) => {
   if (price === null || price === undefined) return "N/A";
   const numericPrice = Number(price);
@@ -169,8 +175,6 @@ const DetailListItem = ({ icon, primary, secondary }) => {
     return null;
   return (
     <ListItem disablePadding sx={{ pb: 0.5 }}>
-      {" "}
-      {/* Adjusted paddingBottom for slightly more space between items */}
       <ListItemIcon sx={{ minWidth: 36, color: "primary.main" }}>
         {icon}
       </ListItemIcon>
@@ -195,7 +199,6 @@ function TabPanel(props) {
       {...other}
     >
       {value === index && (
-        // Added horizontal padding (px) to this Box
         <Box sx={{ pt: { xs: 2, md: 3 }, pb: 2, px: { xs: 2, sm: 3 } }}>
           {children}
         </Box>
@@ -213,13 +216,14 @@ const PropertyDetailPage = () => {
   const { showSnackbar } = useSnackbar();
   const [contactLoading, setContactLoading] = useState(false);
   const { wishlistIds, toggleWishlist, loadingWishlist } = useWishlist();
+  const theme = useTheme();
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // fetchPropertyDetails, useEffect, handleWishlistToggle, handleOpenMap, handleContactAdvertiser remain the same
   const fetchPropertyDetails = useCallback(async () => {
     if (!propertyId) {
       setError("Property ID is missing.");
@@ -234,6 +238,7 @@ const PropertyDetailPage = () => {
       );
       if (response.data) {
         const fetchedProperty = response.data;
+        setSelectedImageIndex(0); // Reset for new property
         const positionData = getPropertyPosition(fetchedProperty);
         if (!positionData) {
           if (
@@ -288,16 +293,12 @@ const PropertyDetailPage = () => {
 
   const handleOpenMap = () => {
     if (property && property._id) {
-      // Use property._id (or the correct identifier)
-      // Ensure property.position exists if you intend to pass it for immediate centering,
-      // though MapPage will re-fetch based on property._id.
       navigate(`/map/${property._id}`);
     } else {
       showSnackbar(
         "Location data for this property is not available or invalid.",
         "warning"
       );
-      // console.error("Property data or ID is missing for map navigation.");
     }
   };
 
@@ -350,6 +351,36 @@ const PropertyDetailPage = () => {
     setActiveTab(newValue);
   };
 
+  // --- IMAGE LOGIC FROM FIRST FILE ---
+  const placeholderImg = `/pictures/placeholder.png`;
+  let mainImageSrc = placeholderImg;
+
+  if (Array.isArray(property?.images) && property.images.length > 0) {
+    const selectedImg = property.images[selectedImageIndex];
+    if (
+      selectedImg &&
+      (selectedImg.startsWith("http://") || selectedImg.startsWith("https://"))
+    ) {
+      mainImageSrc = selectedImg;
+    } else if (selectedImg) {
+      console.warn("Image URL does not start with http(s):", selectedImg);
+    }
+  }
+
+  const handleImageError = (e) => {
+    console.error(
+      "Error loading main property image, falling back to placeholder. Failed URL:",
+      e.target.src
+    );
+    e.target.onerror = null;
+    e.target.src = placeholderImg;
+  };
+
+  const handleThumbnailClick = (index) => {
+    setSelectedImageIndex(index);
+  };
+  // --- END IMAGE LOGIC FROM FIRST FILE ---
+
   if (loading || isAuthLoading)
     return (
       <Container sx={{ py: 4, textAlign: "center" }}>
@@ -386,15 +417,6 @@ const PropertyDetailPage = () => {
       </Container>
     );
 
-  const placeholderImg = `/pictures/placeholder.png`;
-  const imgSrc =
-    Array.isArray(property.images) && property.images.length > 0
-      ? `/pictures/${property.images[0]}`
-      : placeholderImg;
-  const handleImageError = (e) => {
-    e.target.onerror = null;
-    e.target.src = placeholderImg;
-  };
   const isWishlisted = wishlistIds.has(property._id);
   const locationString = constructLocationString(property);
   const locationAccuracy = property.locationAccuracy || "unknown";
@@ -490,6 +512,7 @@ const PropertyDetailPage = () => {
       )}
 
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 3, md: 4 } }}>
+        {/* --- MAIN IMAGE AND THUMBNAILS SECTION --- */}
         <Grid item xs={12} md={7} lg={8}>
           <Paper
             elevation={3}
@@ -497,12 +520,12 @@ const PropertyDetailPage = () => {
               borderRadius: "12px",
               overflow: "hidden",
               position: "relative",
-              background: "#f0f0f0",
+              background: theme.palette.grey[100],
             }}
           >
             <CardMedia
               component="img"
-              image={imgSrc}
+              image={mainImageSrc}
               alt={property.title || t("property_image_alt", "Property image")}
               onError={handleImageError}
               sx={{
@@ -510,6 +533,7 @@ const PropertyDetailPage = () => {
                 height: { xs: 300, sm: 400, md: 520 },
                 objectFit: "cover",
                 display: "block",
+                transition: "opacity 0.3s ease-in-out",
               }}
             />
             <Tooltip
@@ -530,9 +554,7 @@ const PropertyDetailPage = () => {
                   right: { xs: 8, md: 16 },
                   backgroundColor: "rgba(0, 0, 0, 0.3)",
                   color: "white",
-                  "&:hover": {
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  },
+                  "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.5)" },
                 }}
               >
                 {isWishlisted ? (
@@ -543,6 +565,72 @@ const PropertyDetailPage = () => {
               </IconButton>
             </Tooltip>
           </Paper>
+
+          {/* Thumbnails */}
+          {property.images && property.images.length > 1 && (
+            <Box
+              sx={{
+                mt: 2,
+                display: "flex",
+                gap: 1,
+                overflowX: "auto",
+                pb: 1,
+                "&::-webkit-scrollbar": { height: "8px" },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: theme.palette.grey[400],
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: theme.palette.grey[200],
+                  borderRadius: "4px",
+                },
+              }}
+            >
+              {property.images.map((imgUrl, index) => {
+                const isValidUrl =
+                  typeof imgUrl === "string" &&
+                  (imgUrl.startsWith("http://") ||
+                    imgUrl.startsWith("https://"));
+                const thumbnailUrl = isValidUrl ? imgUrl : placeholderImg;
+
+                return (
+                  <Box
+                    key={index}
+                    component="img"
+                    src={thumbnailUrl}
+                    alt={`${t("thumbnail_alt", "Thumbnail")} ${index + 1}`}
+                    onClick={() => handleThumbnailClick(index)}
+                    sx={{
+                      width: { xs: 70, sm: 90, md: 100 },
+                      height: { xs: 50, sm: 60, md: 70 },
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      border:
+                        selectedImageIndex === index
+                          ? `3px solid ${theme.palette.primary.main}`
+                          : `3px solid transparent`,
+                      transition: "border-color 0.2s ease, transform 0.2s ease",
+                      flexShrink: 0,
+                      "&:hover": {
+                        borderColor:
+                          selectedImageIndex !== index
+                            ? theme.palette.primary.light
+                            : theme.palette.primary.main,
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                    onError={(e) => {
+                      if (e.target.src !== placeholderImg) {
+                        e.target.onerror = null;
+                        e.target.src = placeholderImg;
+                      }
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          )}
         </Grid>
 
         <Grid item xs={12} md={5} lg={4}>
@@ -567,22 +655,21 @@ const PropertyDetailPage = () => {
               >
                 {displayText(property.title)}
               </Typography>
-              {/* MODIFIED Location Box */}
               <Box
                 sx={{
                   display: "flex",
-                  alignItems: "flex-start", // Changed to flex-start for better top alignment
+                  alignItems: "flex-start",
                   color: "text.secondary",
                   mb: 2,
-                  flexWrap: "nowrap", // Prevent wrapping of icon and text for alignment control
+                  flexWrap: "nowrap",
                 }}
               >
                 <LocationOnIcon
                   sx={{
-                    fontSize: "1.2rem", // Slightly larger for presence
+                    fontSize: "1.2rem",
                     mr: 0.75,
-                    mt: "3px", // Nudge icon down to align with first line of text
-                    color: "primary.main", // Thematic color
+                    mt: "3px",
+                    color: "primary.main",
                     flexShrink: 0,
                   }}
                 />
@@ -594,8 +681,6 @@ const PropertyDetailPage = () => {
                     flexGrow: 1,
                   }}
                 >
-                  {" "}
-                  {/* Inner box for text and chip to wrap */}
                   <Typography variant="body2" sx={{ mr: 1, lineHeight: 1.5 }}>
                     {locationString}
                   </Typography>
@@ -627,8 +712,6 @@ const PropertyDetailPage = () => {
                   </Tooltip>
                 </Box>
               </Box>
-              {/* END MODIFIED Location Box */}
-
               <Typography
                 variant="h4"
                 color="primary.main"
@@ -640,7 +723,6 @@ const PropertyDetailPage = () => {
                   property.listingType || property.mode
                 )}
               </Typography>
-
               <Grid
                 container
                 spacing={{ xs: 1.5, md: 2 }}
@@ -700,7 +782,6 @@ const PropertyDetailPage = () => {
                   </Box>
                 </Grid>
               </Grid>
-
               <Box
                 sx={{
                   display: "flex",
@@ -728,7 +809,6 @@ const PropertyDetailPage = () => {
                   sx={{ fontWeight: "medium", borderRadius: "8px" }}
                 />
               </Box>
-
               {property.createdBy && (
                 <>
                   <Divider sx={{ mb: 1.5 }} />
@@ -749,7 +829,6 @@ const PropertyDetailPage = () => {
                 </>
               )}
             </Box>
-
             <Box sx={{ mt: property.createdBy ? 1 : "auto" }}>
               {isAuthLoading ? (
                 <CircularProgress
@@ -869,7 +948,6 @@ const PropertyDetailPage = () => {
             )}
           </Typography>
         </TabPanel>
-
         <TabPanel value={activeTab} index={1}>
           <Typography
             variant="h6"
@@ -917,7 +995,6 @@ const PropertyDetailPage = () => {
             )}
           </List>
         </TabPanel>
-
         <TabPanel value={activeTab} index={2}>
           <Typography
             variant="h6"
