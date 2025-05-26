@@ -46,6 +46,14 @@ import PoolIcon from "@mui/icons-material/Pool";
 import ElevatorIcon from "@mui/icons-material/Elevator";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import { CircularProgress, Alert, Snackbar, Button } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
+import ErrorIcon from "@mui/icons-material/Error";
+import InfoIcon from "@mui/icons-material/Info";
+import MapIcon from "@mui/icons-material/Map";
+
+// For translation function 't':
+import { useTranslation } from "react-i18next";
 
 // New Icons (Examples - Use appropriate icons)
 
@@ -202,6 +210,7 @@ const DetailListItem = ({ icon, primary, secondary }) => {
 };
 
 const PropertyDetailPage = () => {
+  const { t } = useTranslation();
   const { propertyId } = useParams();
   const navigate = useNavigate();
   const { user, idToken, isLoggedIn, isLoading: isAuthLoading } = useAuth(); //
@@ -324,6 +333,37 @@ const PropertyDetailPage = () => {
       showSnackbar(message, severity);
     });
   };
+
+  const handleOpenMap = () => {
+    if (
+      property &&
+      property.position &&
+      typeof property.position.lat === "number" &&
+      typeof property.position.lng === "number"
+    ) {
+      // Navigate to your map page (e.g., '/map')
+      // Pass property data, specifically location, via route state.
+      // The MapPage can then use this data to display the property.
+      navigate("/map", {
+        state: {
+          properties: [property], // Sending as an array in case your MapPage handles multiple markers
+          center: property.position, // Optional: tell MapPage to center on this property
+          zoom: 15, // Optional: suggest an initial zoom level
+        },
+      });
+    } else {
+      // Handle cases where location data might be missing or invalid
+      showSnackbar(
+        "Location data for this property is not available or invalid.",
+        "warning"
+      );
+      console.warn(
+        "handleOpenMap: Property or property.position is missing or invalid.",
+        property
+      );
+    }
+  };
+
   const handleContactAdvertiser = async () => {
     if (!isLoggedIn || !idToken || !user || !user.cognitoSub) {
       //
