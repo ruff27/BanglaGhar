@@ -1,12 +1,10 @@
 // server/controllers/aiController.js
 
-const OpenAI = require("openai");
+const fetch = require("node-fetch"); // Add fetch for Gemini API
+const axios = require("axios");
 
-// Configure OpenAI client from env
-const openai = new OpenAI({
-  baseURL: process.env.OPENAI_API_BASE_URL || "https://api.aimlapi.com/v1", // Default to aimlapi if needed
-  apiKey: process.env.AIML_API_KEY || process.env.OPENAI_API_KEY, // Check both potential env var names
-});
+const NVIDIA_API_KEY = "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";
+const NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
 // Helper function to safely access nested properties
 const getSafe = (obj, path, defaultValue = "N/A") => {
@@ -101,8 +99,12 @@ const formatBangladeshDetailsForPrompt = (bdDetails = {}) => {
 
 const generatePropertyDescription = async (req, res) => {
   try {
+    // Debug: Log the language received from frontend
+    console.log("[AIController] Received language:", req.body.language);
+
     // Access the nested propertyData object sent from the frontend
     const propertyDataFromRequest = req.body.propertyData;
+    const language = req.body.language || "en"; // Default to English
     if (
       !propertyDataFromRequest ||
       typeof propertyDataFromRequest !== "object"
@@ -117,70 +119,88 @@ const generatePropertyDescription = async (req, res) => {
     const bdDetails = propertyDataFromRequest.bangladeshDetails || {};
 
     // --- Build the NEW, Detailed Prompt ---
-    const prompt = `
-You are a professional real estate agent writing a property listing for the Bangladeshi market. Generate a compelling and informative 150-200 word description for the following property. Focus on clarity, key selling points, and local context.
+    let prompt = "";
+    
+    
+      prompt = `You are an expert real estate copywriter with deep understanding of the Bangladeshi property market, local culture, and what appeals to buyers and renters in different segments. Write a warm, emotionally engaging, and highly appealing property description for the listing below.
 
-**Property Overview:**
+**Instructions:**
+- The tone should be inviting, descriptive, and story-driven—like a trusted friend or real estate advisor is narrating the experience of living in the home.
+- Highlight the **unique lifestyle advantages** this property offers, not just its features.
+- Emphasize **comfort, ambiance, and neighborhood character**—make the reader imagine walking through the space and feeling at home.
+- Draw attention to **standout features**, such as views, balconies, natural light, peaceful surroundings, or convenient access to roads, markets, schools, mosques, hospitals, etc.—but only if included in the data provided.
+- Incorporate **cultural references or habits** where appropriate, such as the value of separate dining space for family gatherings, prayer space, veranda tea time, or close-knit community living.
+- Never make up facts—only use what's provided in the listing details.
+- Focus on clarity, warmth, and a strong sense of place.
+- Avoid sounding robotic, overly generic, or like a simple feature list.
+- give response in simple txt format, no markdown or code block
+- (IMPORTANT) PLEASE GIVE ME THE RESPONSE IN ${language} LANGUAGE. the translation should be accurate and natural, not just a direct word-for-word translation. if possible use google translate api to get the translation. if you can't use google translate api, then use your own translation model to get the translation. but please make sure the translation is accurate and natural.
+- avoid using like in the heart of dhaka or in the heart of dhaka city, instead use like in dhaka city or in dhaka or anything more specific.
+- can you analyse the the location of the property in whatever part of the city it lies and generate a description accoringly avoiding key phrases like in the heart of dhaka or in the heart of dhaka city, instead use like in dhaka city or in dhaka or anything like that.
+
+Length: 150–200 words
+`;
+    
+    prompt += `**Property Details:**
 - Title: ${getSafe(basicInfo, "title")}
 - Property Type: ${getSafe(basicInfo, "propertyType")}
 - Listing Type: For ${getSafe(basicInfo, "listingType")}
-- Price: ${getSafe(basicInfo, "price")} BDT ${
-      basicInfo.listingType === "rent" ? "/month" : ""
-    }
+- Price: ${getSafe(basicInfo, "price")} BDT${basicInfo.listingType === "rent" ? " /month" : ""}
 - Size: ${getSafe(basicInfo, "area")} sqft
 - Bedrooms: ${getSafe(basicInfo, "bedrooms", "N/A (Land/Commercial)")}
 - Bathrooms: ${getSafe(basicInfo, "bathrooms", "N/A (Land/Commercial)")}
 
 **Location:**
-- Address: ${getSafe(location, "addressLine1")}${
-      location.addressLine2 ? `, ${location.addressLine2}` : ""
-    }
+- Address: ${getSafe(location, "addressLine1")}${location.addressLine2 ? `, ${location.addressLine2}` : ""}
 - Area/Town: ${getSafe(location, "cityTown")}
 - Upazila/Thana: ${getSafe(location, "upazila")}
 - District: ${getSafe(location, "district")}
 - Postal Code: ${getSafe(location, "postalCode")}
 
-**Standard Features:**
+**Key Features & Amenities:**
 ${formatFeaturesForPrompt(features)}
 
-**Specific Details & Local Context:**
-${formatBangladeshDetailsForPrompt(bdDetails)}
+**Local Highlights & Context:**
+${formatBangladeshDetailsForPrompt(bdDetails)}`;
+    // --- End of Improved Prompt ---
 
-**Instructions:**
-Write an engaging description based *only* on the details provided above. Highlight the most attractive features, benefits of the location, and suitability for potential buyers/renters in Bangladesh. Ensure the tone is professional and inviting. Do not invent details not listed.
-`;
-    // --- End of New Prompt ---
+    console.log("---- Sending Prompt to NVIDIA ----\n", prompt); // Log the prompt for debugging
 
-    console.log("---- Sending Prompt to AI ----\n", prompt); // Log the prompt for debugging
-
-    const completion = await openai.chat.completions.create({
+    const payload = {
+      model: "mistralai/mistral-medium-3-instruct",
       messages: [
         {
-          role: "system",
-          content:
-            "You are a helpful assistant writing compelling property descriptions for the Bangladeshi market based on provided details.",
-        },
-        { role: "user", content: prompt },
+          role: "user",
+          content: prompt
+        }
       ],
-      model: process.env.AI_MODEL || "mistralai/Mistral-7B-Instruct-v0.2", // Use env var for model if needed
-      // max_tokens: 250, // Optional: Limit response length
-      // temperature: 0.7, // Optional: Adjust creativity
-    });
-
-    if (completion?.choices?.[0]?.message?.content) {
-      console.log(
-        "---- AI Response Received ----\n",
-        completion.choices[0].message.content
-      ); // Log response
-      res.json({ description: completion.choices[0].message.content.trim() });
+      max_tokens: 512,
+      temperature: 1.0,
+      top_p: 1.0,
+      stream: false
+    };
+    const headers = {
+      "Authorization": `Bearer ${NVIDIA_API_KEY}`,
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    };
+    const response = await axios.post(NVIDIA_API_URL, payload, { headers });
+    if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message && response.data.choices[0].message.content) {
+      const description = response.data.choices[0].message.content.trim();
+      res.json({ description });
     } else {
-      console.error("Invalid response structure from AI API:", completion);
-      throw new Error("Invalid response structure from AI API");
+      console.error("Invalid response structure from NVIDIA API:", response.data);
+      res.status(500).json({
+        error: "Failed to generate property description",
+        details: "Invalid response structure from NVIDIA API",
+        nvidiaRaw: response.data,
+      });
     }
   } catch (error) {
     console.error(
       "AI Description Error:",
-      error?.response?.data || error?.message || error
+      error?.response?.data || error?.message || error,
+      JSON.stringify(error, null, 2)
     );
     res.status(500).json({
       error: "Failed to generate property description",
