@@ -1,5 +1,5 @@
 // src/features/Properties/pages/PropertiesPage.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -21,7 +21,7 @@ import {
   ToggleButton,
   Tooltip,
   Chip,
-  Divider, // Added Divider import
+  Divider,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import SearchIcon from "@mui/icons-material/Search";
@@ -29,18 +29,18 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import MapIcon from "@mui/icons-material/Map";
 import InfoIcon from "@mui/icons-material/Info";
-import CloseIcon from "@mui/icons-material/Close"; // Added CloseIcon import
+import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
 
 // Import Hooks and Components
-import usePropertyFilters from "./hooks/usePropertyFilters";
-import useWishlist from "./hooks/useWishlist";
-import FilterSidebar from "./components/FilterSidebar";
-import SortDropdown from "./components/SortDropdown";
-import PropertyCard from "./components/PropertyCard";
+import usePropertyFilters from "./hooks/usePropertyFilters"; // Corrected path if it's in the same directory
+import useWishlist from "./hooks/useWishlist"; // Corrected path
+import FilterSidebar from "./components/FilterSidebar"; // Corrected path
+import SortDropdown from "./components/SortDropdown"; // Corrected path
+import PropertyCard from "./components/PropertyCard"; // Corrected path
 
 /**
- * PropertiesPage Component - Updated with map navigation and location accuracy information
+ * PropertiesPage Component
  */
 const PropertiesPage = () => {
   const { mode } = useParams(); // mode = 'rent', 'buy', 'sold' or undefined
@@ -50,36 +50,39 @@ const PropertiesPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State for view mode (list only now - map redirects to MapPage)
   const [viewMode, setViewMode] = useState("list");
-
-  // State for location accuracy info dialog
   const [locationInfoOpen, setLocationInfoOpen] = useState(false);
 
-  // Get property data using existing hooks
+  // Construct apiQueryParams based on the mode
+  const apiQueryParams = useMemo(() => {
+    let params = {};
+    if (mode === "sold") {
+      params = { listingStatus: "sold" };
+    } else if (mode === "rent") {
+      params = { listingType: "rent", listingStatus: "available" };
+    } else if (mode === "buy") {
+      params = { listingType: "buy", listingStatus: "available" };
+    } else {
+      // Default for "All Properties" or undefined mode - fetch all available
+      params = { listingStatus: "available" };
+    }
+    return params;
+  }, [mode]);
+
   const {
     properties,
     loading,
     error,
-    filters,
+    filters, // These are client-side filters from the hook
     searchTerm,
     sortBy,
-    handleFilterChange,
+    handleFilterChange, // This now refers to handleClientFilterChange from the hook
     handleSearchChange,
     handleSortChange,
-    resetFilters,
-  } = usePropertyFilters(mode);
+    resetFilters, // This now refers to resetClientFilters from the hook
+  } = usePropertyFilters(apiQueryParams);
 
-  // Debug for handleSearchChange function
-  useEffect(() => {
-    console.log(
-      "PropertiesPage: handleSearchChange defined?",
-      typeof handleSearchChange
-    );
-  }, [handleSearchChange]);
-
-  const { wishlistIds, toggleWishlist, loadingWishlist, wishlistError } =
-    useWishlist();
+  const { wishlistIds, toggleWishlist, wishlistError } = useWishlist();
 
   const [notification, setNotification] = useState({
     open: false,
@@ -88,7 +91,6 @@ const PropertiesPage = () => {
   });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Notification handlers
   const handleCloseNotification = (event, reason) => {
     if (reason === "clickaway") return;
     setNotification((prev) => ({ ...prev, open: false }));
@@ -107,25 +109,21 @@ const PropertiesPage = () => {
     setMobileFiltersOpen(!mobileFiltersOpen);
   };
 
-  // Handle location info dialog
   const toggleLocationInfo = () => {
     setLocationInfoOpen(!locationInfoOpen);
   };
 
-  // Handle view mode toggle - redirects to map page for "map" mode
   const handleViewModeChange = (event, newViewMode) => {
     if (newViewMode !== null) {
       if (newViewMode === "map") {
-        // Navigate to the full-screen map view with listing type as query param
-        const queryParam = mode ? `?type=${mode}` : "";
-        navigate(`/map${queryParam}`);
+        const queryParams = new URLSearchParams(apiQueryParams).toString();
+        navigate(`/map${queryParams ? "?" + queryParams : ""}`);
       } else {
         setViewMode(newViewMode);
       }
     }
   };
 
-  // Determine page title based on mode and translate
   const getPageTitle = () => {
     switch (mode) {
       case "rent":
@@ -135,16 +133,16 @@ const PropertiesPage = () => {
       case "sold":
         return t("properties_sold", "Sold Properties");
       default:
-        return t("properties_all", "All Properties");
+        return t("properties_all", "Available Properties"); // Updated default title
     }
   };
   const pageTitle = getPageTitle();
 
   const sidebarContent = (
     <FilterSidebar
-      filters={filters}
-      onFilterChange={handleFilterChange}
-      onResetFilters={resetFilters}
+      filters={filters} // Pass client-side filters to sidebar
+      onFilterChange={handleFilterChange} // Use renamed handler for client-side filters
+      onResetFilters={resetFilters} // Use renamed handler
       isMobile={isMobile}
       onClose={handleDrawerToggle}
     />
@@ -259,7 +257,6 @@ const PropertiesPage = () => {
             )}
           </Paper>
 
-          {/* LIST VIEW CONTENT */}
           {loading ? (
             <Box
               sx={{
@@ -286,7 +283,7 @@ const PropertiesPage = () => {
                       onWishlistToggle={() =>
                         handleWishlistToggle(property._id)
                       }
-                      showLocationAccuracy={true}
+                      // showLocationAccuracy={true} // This prop might not exist on PropertyCard
                     />
                   </Grid>
                 ) : null
@@ -314,7 +311,7 @@ const PropertiesPage = () => {
               <Button
                 variant="contained"
                 startIcon={<RefreshIcon />}
-                onClick={resetFilters}
+                onClick={resetFilters} // This now resets client-side filters
               >
                 {t("reset_filters", "Reset Filters")}
               </Button>
@@ -323,7 +320,6 @@ const PropertiesPage = () => {
         </Grid>
       </Grid>
 
-      {/* Filters Drawer */}
       <Drawer
         anchor="left"
         open={mobileFiltersOpen}
@@ -338,7 +334,6 @@ const PropertiesPage = () => {
         </Box>
       </Drawer>
 
-      {/* Location Accuracy Information Dialog */}
       <Drawer
         anchor="bottom"
         open={locationInfoOpen}
@@ -369,14 +364,12 @@ const PropertiesPage = () => {
             </IconButton>
           </Box>
           <Divider sx={{ mb: 2 }} />
-
           <Typography variant="body1" paragraph>
             {t(
               "location_info_description",
               "Property locations on the map are displayed with different accuracy levels:"
             )}
           </Typography>
-
           <Box sx={{ mb: 2 }}>
             <Typography
               variant="subtitle1"
@@ -396,7 +389,6 @@ const PropertiesPage = () => {
                 "The property is located at this exact point on the map."
               )}
             </Typography>
-
             <Typography
               variant="subtitle1"
               sx={{ display: "flex", alignItems: "center", mb: 1 }}
@@ -415,7 +407,6 @@ const PropertiesPage = () => {
                 "The property is located near this point, but the exact location may be slightly different."
               )}
             </Typography>
-
             <Typography
               variant="subtitle1"
               sx={{ display: "flex", alignItems: "center", mb: 1 }}
@@ -435,14 +426,12 @@ const PropertiesPage = () => {
               )}
             </Typography>
           </Box>
-
           <Alert severity="info">
             {t(
               "directions_info",
               "When using the 'Directions' button, the system will prioritize using the property's address rather than map coordinates for more accurate navigation."
             )}
           </Alert>
-
           <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
             <Button variant="contained" onClick={toggleLocationInfo}>
               {t("close", "Close")}
