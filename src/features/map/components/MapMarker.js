@@ -1,216 +1,110 @@
-import React, { useEffect, useMemo } from "react";
-import { Marker } from "react-leaflet";
+// src/features/map/components/MapMarker.js
+import React, { useMemo } from "react";
+import { Marker, Popup, useMap } from "react-leaflet"; // Added useMap
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useNavigate } from "react-router-dom";
-import PlaceIcon from "@mui/icons-material/Place";
+// Removed useNavigate as direct navigation is handled by onMarkerClick -> handleSelectProperty -> PropertyInfoPanel
+import PlaceIcon from "@mui/icons-material/Place"; // Default MUI icon
 import { renderToString } from "react-dom/server";
+import MapPopupContent from "./MapPopup"; // Assuming MapPopup.js is renamed or this is the content component
 
-/**
- * Helper function to normalize position data
- */
-const normalizePosition = (position) => {
-  if (!position || typeof position !== "object") {
-    return null;
+// Helper to create Leaflet icon from MUI icon based on selection and accuracy
+const createLeafletIcon = (property, isSelected) => {
+  let iconColor;
+  let iconSize = isSelected ? 38 : 30; // Slightly larger when selected
+
+  if (isSelected) {
+    iconColor = "#E91E63"; // Pink/Magenta for selected (or your preferred selected color)
+  } else {
+    iconColor = "#1976D2"; // Default Blue for all unselected pins (or your preferred default color)
+    // The original accuracy-based coloring for unselected pins is removed to meet the new requirement.
+    // switch (property?.locationAccuracy) {
+    //   case "approximate":
+    //     iconColor = "#FFA000";
+    //     break;
+    //   case "district-level":
+    //     iconColor = "#D32F2F";
+    //     break;
+    //   case "precise":
+    //   default:
+    //     iconColor = "#1976D2";
+    //     break;
+    // }
   }
 
-  // Handle {lat, lng} format
-  if (typeof position.lat === "number" && typeof position.lng === "number") {
-    return {
-      lat: parseFloat(position.lat.toFixed(6)),
-      lng: parseFloat(position.lng.toFixed(6)),
-    };
-  }
-
-  // Handle array format [lat, lng]
-  if (Array.isArray(position) && position.length === 2) {
-    if (typeof position[0] === "number" && typeof position[1] === "number") {
-      return {
-        lat: parseFloat(position[0].toFixed(6)),
-        lng: parseFloat(position[1].toFixed(6)),
-      };
-    }
-  }
-
-  return null;
-};
-
-/**
- * Helper to extract position from property using multiple possible data formats
- */
-const getPropertyPosition = (property) => {
-  if (!property) return null;
-
-  // First try position.lat/lng format
-  if (
-    property.position &&
-    typeof property.position.lat === "number" &&
-    typeof property.position.lng === "number"
-  ) {
-    return normalizePosition(property.position);
-  }
-
-  // Then try latitude/longitude format
-  if (
-    typeof property.latitude === "number" &&
-    typeof property.longitude === "number"
-  ) {
-    return normalizePosition({
-      lat: property.latitude,
-      lng: property.longitude,
-    });
-  }
-
-  console.warn("Invalid property position data:", property);
-  return null;
-};
-
-/**
- * Create map icon based on property data
- */
-const createMUIIcon = (property, isSelected) => {
   const iconHtml = renderToString(
     <PlaceIcon
       style={{
-        fontSize: isSelected ? "40px" : "32px",
-        color: isSelected ? "#d32f2f" : "#1976d2",
-        transform: "translate(-50%, -100%)",
+        fontSize: `${iconSize}px`,
+        color: iconColor,
       }}
     />
   );
 
   return L.divIcon({
     html: iconHtml,
-    className: "",
-    iconSize: [32, 40],
-    iconAnchor: [16, 40],
-    popupAnchor: [0, -40],
+    className: "custom-leaflet-div-icon",
+    iconSize: [iconSize, iconSize],
+    iconAnchor: [iconSize / 2, iconSize],
+    popupAnchor: [0, -iconSize + iconSize / 4],
   });
 };
 
-/**
- * Helper to format price for display on marker
- */
-const formatPriceForMarker = (price, listingType) => {
-  if (!price) return null;
-  const numericPrice = Number(price);
-  if (isNaN(numericPrice)) return null;
+// MapMarker expects property.position to be {lat, lng}
+const MapMarker = ({ property, isSelected, onClick }) => {
+  const map = useMap(); // Get map instance for flyTo
 
-  // Format based on price range
-  if (numericPrice >= 1000000) {
-    return `৳${(numericPrice / 1000000).toFixed(1)}M`;
-  } else if (numericPrice >= 1000) {
-    return `৳${(numericPrice / 1000).toFixed(0)}K`;
-  } else {
-    return `৳${numericPrice}`;
-  }
-};
+  // Position should be directly from property.position (which is {lat, lng})
+  const position = property?.position;
 
-/**
- * MapMarker Component Wrapper
- */
-const MapMarker = (props) => {
-  console.log("MapMarker: Received props.property:", props.property); // Log the raw property
-  const position = getPropertyPosition(props.property);
-  console.log(
-    "MapMarker: Extracted position for property ID " +
-      props.property?._id +
-      ":",
-    position
-  ); // Log the extracted position
-
-  if (!position) {
-    console.warn(
-      "MapMarker: Skipping marker due to invalid position for property ID " +
-        props.property?._id
-    );
-    return null; // This is why a marker might not render
-  }
-  return <MapMarkerInner {...props} position={position} />;
-};
-
-/**
- * Inner MapMarker component where all hooks are safely called
- */
-const MapMarkerInner = ({
-  property,
-  position,
-  isSelected = false,
-  onClick,
-  children,
-  showPrice = false,
-}) => {
-  const navigate = useNavigate();
-  // Create a stable position array for Leaflet
-  const stablePosition = useMemo(() => {
-    return [
-      parseFloat(position.lat.toFixed(6)),
-      parseFloat(position.lng.toFixed(6)),
-    ];
-  }, [position]);
-
-  // Format price label
-  const priceLabel = useMemo(() => {
-    return showPrice
-      ? formatPriceForMarker(property.price, property.listingType)
-      : null;
-  }, [property.price, property.listingType, showPrice]);
-
-  // Create icon options
-  const iconOptions = { price: priceLabel };
-
-  // Create custom SVG icon
+  // Memoize icon creation
   const icon = useMemo(() => {
-    return createMUIIcon(property, isSelected);
+    return createLeafletIcon(property, isSelected);
   }, [property, isSelected]);
 
-  // Handle marker click
+  if (
+    !position ||
+    typeof position.lat !== "number" ||
+    typeof position.lng !== "number"
+  ) {
+    console.warn(
+      `MapMarker: Skipping marker for property ID ${property?._id} due to invalid or missing position. Position:`,
+      position,
+      "Property:",
+      property
+    );
+    return null;
+  }
+
   const handleMarkerClick = () => {
-    if (property && property._id) {
-      navigate(`/properties/details/${property._id}`);
+    if (onClick) {
+      onClick(property); // This is onPropertySelect from MapPage
     }
+    // Fly to the marker's position smoothly
+    map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 15), {
+      animate: true,
+      duration: 0.8,
+    });
   };
 
-  // CSS for animated markers
-  const markerStyle = `
-    .property-marker {
-      transition: transform 0.2s ease-out;
-    }
-    .selected-marker {
-      z-index: 1000 !important;
-      transform: scale(1.1);
-    }
-  `;
-
   return (
-    <>
-      {/* Add style for custom markers */}
-      <style>{markerStyle}</style>
-
-      <Marker
-        position={stablePosition}
-        icon={icon}
-        eventHandlers={{
-          click: () => {
-            // MODIFIED PART
-            if (onClick) {
-              onClick(property); // Calls the onMarkerClick(property) from MapComponent
-            }
-            // If you still want to navigate immediately, uncomment the next line:
-            // originalHandleMarkerClick();
-          },
-        }}
-        zIndexOffset={
-          isSelected
-            ? 1000
-            : property.price
-            ? Math.floor(property.price / 10000)
-            : 0
-        }
-      >
-        {children}
-      </Marker>
-    </>
+    <Marker
+      position={[position.lat, position.lng]} // Leaflet expects [lat, lng] array
+      icon={icon}
+      eventHandlers={{
+        click: handleMarkerClick,
+      }}
+      zIndexOffset={isSelected ? 1000 : 0} // Bring selected marker to front
+    >
+      {/* The MapPopup component will be rendered by PropertyInfoPanel or similar, not directly here for this design
+          If you want a direct leaflet popup on click without the panel, you can add it here.
+          For now, clicking selects it, and PropertyInfoPanel shows details.
+      */}
+      {/* Example of how you might use MapPopupContent if you want a direct Leaflet Popup */}
+      {/* <Popup>
+        <MapPopupContent property={property} onViewDetails={() => handleMarkerClick()} />
+      </Popup> */}
+    </Marker>
   );
 };
 

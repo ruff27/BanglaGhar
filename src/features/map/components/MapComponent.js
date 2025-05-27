@@ -1,168 +1,130 @@
-import React, { useEffect, useRef, useState } from "react";
+// src/features/map/components/MapComponent.js
+import React, { useEffect, useRef } from "react"; // Removed useState if mapReady not strictly needed
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "maplibre-gl/dist/maplibre-gl.css";
-import "@maplibre/maplibre-gl-leaflet";
-import { Box, Typography, Alert, CircularProgress } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { divisionCenters } from "../../../constants/divisionCenters";
-import { MapContainer, TileLayer } from "react-leaflet";
+// Removed MapLibre-GL specific imports as TileLayer is used for OpenStreetMap directly.
+// If you intend to use MapLibre GL as the renderer for vector tiles,
+// ensure '@maplibre/maplibre-gl-leaflet' is correctly configured and used.
+// For simplicity with OpenStreetMap raster tiles, those are not needed.
+
+import { Box, Typography, Alert, CircularProgress } from "@mui/material"; // Kept for exports
+import { useTranslation } from "react-i18next"; // Kept for exports
+// Removed divisionCenters and normalizePositionArray, assuming properties are pre-processed by useMapData
+
+import { MapContainer, TileLayer, useMap } from "react-leaflet"; // Added useMap
 import MapMarker from "./MapMarker";
-// Default center coordinates (Dhaka)
-const DEFAULT_CENTER = [23.8103, 90.4125];
+
+const DEFAULT_CENTER = [23.8103, 90.4125]; // Dhaka
 const DEFAULT_ZOOM = 7;
+const BANGLADESH_BOUNDS = L.latLngBounds(
+  L.latLng(20.0, 88.0), // Southwest
+  L.latLng(26.75, 92.75) // Northeast
+);
 
-// Helper: Check if property has valid coordinates
-const hasValidPosition = (property) => {
-  if (property?.position?.lat && property?.position?.lng) return true;
-  if (property?.latitude !== undefined && property?.longitude !== undefined)
-    return true;
-  return false;
-};
-
-// Normalize position to [lat, lng]
-const normalizePositionArray = (property) => {
-  if (!property) return null;
-
-  // Direct lat/lng
-  if (
-    property.position?.lat !== undefined &&
-    property.position?.lng !== undefined
-  ) {
-    return [
-      parseFloat(property.position.lat.toFixed(6)),
-      parseFloat(property.position.lng.toFixed(6)),
-    ];
-  }
-
-  if (property.latitude !== undefined && property.longitude !== undefined) {
-    return [
-      parseFloat(property.latitude.toFixed(6)),
-      parseFloat(property.longitude.toFixed(6)),
-    ];
-  }
-
-  // Fallback: match district/division to known centers
-  const lowerDistrict = property.district?.toLowerCase() || "";
-  const lowerDivision = property.division?.toLowerCase() || "";
-
-  const fallbackKey = Object.keys(divisionCenters).find(
-    (key) => lowerDistrict.includes(key) || lowerDivision.includes(key)
-  );
-
-  if (fallbackKey) {
-    property.locationAccuracy = "district-level";
-    return divisionCenters[fallbackKey];
-  }
-
+// Component to handle map view updates
+function ChangeView({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    if (
+      center &&
+      center.length === 2 &&
+      typeof center[0] === "number" &&
+      typeof center[1] === "number"
+    ) {
+      map.setView(center, zoom);
+    }
+  }, [center, zoom, map]);
   return null;
-};
+}
 
 const MapComponent = ({
-  properties = [],
-  mapCenter = DEFAULT_CENTER,
+  properties = [], // Expects properties with pre-processed .position objects
+  mapCenter = DEFAULT_CENTER, // Expected as [lat, lng]
   mapZoom = DEFAULT_ZOOM,
+  // userLocation, // userLocation prop is available if you want to show a marker for it
   selectedProperty,
-  onMarkerClick,
-  onMapMove,
-  showLocationAccuracy,
+  onMarkerClick, // This is onPropertySelect from MapPage
+  onMapMove, // This is handleMapMove from useMapData via MapPage
+  // showLocationAccuracy prop removed, as MapMarker doesn't need it if icon is generic
 }) => {
-  const mapRef = useRef(null);
-  const [, setMapReady] = useState(false);
+  const mapRef = useRef(null); // To store the map instance if needed outside react-leaflet context
 
-  const normalizedCenter =
-    Array.isArray(mapCenter) && mapCenter.length === 2
+  // Ensure mapCenter is always a valid array for <MapContainer/>
+  const currentCenter =
+    Array.isArray(mapCenter) &&
+    mapCenter.length === 2 &&
+    typeof mapCenter[0] === "number" &&
+    typeof mapCenter[1] === "number"
       ? mapCenter
       : DEFAULT_CENTER;
-  const normalizedZoom =
-    typeof mapZoom === "number" && !isNaN(mapZoom) ? mapZoom : DEFAULT_ZOOM;
-  const validProperties = properties.filter((property) =>
-    hasValidPosition(property)
-  );
-  console.log("MapComponent: Properties received:", properties);
-  console.log(
-    "MapComponent: Filtered validProperties for markers:",
-    validProperties
-  );
-  console.log(
-    "🧪 Valid Properties With Marker Coordinates:",
-    validProperties.map((p) => ({
-      title: p.title,
-      coords: normalizePositionArray(p),
-    }))
-  );
 
-  useEffect(() => {
-    if (!mapRef.current) return;
+  console.log("MapComponent: Rendering with", properties.length, "properties.");
+  console.log("MapComponent: Center:", currentCenter, "Zoom:", mapZoom);
 
-    // Prevent double initialization
-    if (mapRef.current._leaflet_id) return;
-
-    const map = L.map(mapRef.current).setView(normalizedCenter, normalizedZoom);
-
-    // Lock to Bangladesh bounds
-    map.setMaxBounds([
-      [20.5, 87], // Southwest
-      [26.7, 92], // Northeast
-    ]);
-
-    // Add OpenFreeMap vector tiles
-    L.maplibreGL({
-      style: "https://tiles.openfreemap.org/styles/liberty",
-      attribution: "© OpenStreetMap contributors | Style: OpenFreeMap Liberty",
-    }).addTo(map);
-
-    const bounds = [];
-
-    // Fit bounds if there are markers
-    if (bounds.length > 0) {
-      map.fitBounds(bounds, {
-        padding: [50, 50],
-        maxZoom: 14,
-      });
-    } else {
-      map.setView(normalizedCenter, normalizedZoom); // fallback
+  const handleLeafletMapMove = (event) => {
+    if (onMapMove) {
+      const map = event.target;
+      onMapMove(map.getCenter(), map.getZoom()); // Pass {lat, lng} and zoom
     }
-
-    setMapReady(true);
-  }, [normalizedCenter, normalizedZoom, validProperties, selectedProperty]);
+  };
 
   return (
-    <Box sx={{ position: "relative", height: "100%", width: "100%" }}>
+    <Box
+      sx={{
+        position: "relative",
+        height: "100%",
+        width: "100%",
+        borderRadius: "inherit",
+        overflow: "hidden",
+      }}
+    >
       <MapContainer
-        center={normalizedCenter}
-        zoom={normalizedZoom}
-        maxBounds={[
-          [20.5, 87],
-          [26.7, 92],
-        ]}
-        style={{ height: "100%", width: "100%", borderRadius: "inherit" }}
+        center={currentCenter}
+        zoom={mapZoom}
+        scrollWheelZoom={true}
+        style={{ height: "100%", width: "100%" }}
+        whenCreated={(instance) => {
+          mapRef.current = instance;
+        }} // Store map instance
+        maxBounds={BANGLADESH_BOUNDS}
+        minZoom={6} // Set a reasonable min zoom for Bangladesh
+        onMoveend={handleLeafletMapMove} // Use onMoveend for less frequent updates
+        onZoomend={handleLeafletMapMove}
       >
+        <ChangeView center={currentCenter} zoom={mapZoom} />
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {validProperties.map((property) => (
-          <MapMarker
-            key={property._id}
-            property={property}
-            isSelected={selectedProperty?._id === property._id}
-            onClick={() => {
-              // MODIFIED LINE
-              if (onMarkerClick) {
-                onMarkerClick(property);
-              }
-            }}
-            showPrice
-          />
-        ))}
+        {properties.map((property) => {
+          // property.position should be {lat, lng} from useMapData
+          if (property && property._id && property.position) {
+            return (
+              <MapMarker
+                key={property._id}
+                property={property} // Pass the whole property object
+                // position prop is now derived inside MapMarker from property.position
+                isSelected={selectedProperty?._id === property._id}
+                onClick={onMarkerClick} // This will call onPropertySelect(property) in MapPage
+                // showPrice can be a prop for MapMarker if needed
+              />
+            );
+          }
+          return null;
+        })}
+        {/* Example: User Location Marker if you pass userLocation */}
+        {/* {userLocation && userLocation.lat && userLocation.lng && (
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={L.icon({ iconUrl: '/path/to/user-marker.png', iconSize: [25, 41], iconAnchor: [12, 41] })}>
+            <Popup>Your Location</Popup>
+          </Marker>
+        )} */}
       </MapContainer>
     </Box>
   );
 };
 
-// Loading state (optional)
+// Loading state and Error state components remain the same as in your provided file
 export const MapLoadingState = () => {
   const { t } = useTranslation();
   return (
@@ -185,7 +147,6 @@ export const MapLoadingState = () => {
   );
 };
 
-// Error state (optional)
 export const MapErrorState = ({ message }) => {
   const { t } = useTranslation();
   return (

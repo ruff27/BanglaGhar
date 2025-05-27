@@ -1,6 +1,9 @@
 // src/features/map/MapPage.js
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  useParams,
+  useNavigate, // Removed useLocation as it wasn't actively used for query params here
+} from "react-router-dom";
 import {
   Box,
   Typography,
@@ -30,86 +33,17 @@ import { useTranslation } from "react-i18next";
 // Import components and hooks
 import MapComponent from "./components/MapComponent";
 import PropertyInfoPanel from "./components/PropertyInfoPanel";
-import FilterSidebar from "../properties/components/FilterSidebar";
+import FilterSidebar from "../properties/components/FilterSidebar"; // Adjust path if needed
 import useMapData from "./hooks/useMapData";
-import axios from "axios";
-import { divisionCenters } from "../../constants/divisionCenters";
+// Removed axios and divisionCenters, as useMapData handles this
+// Removed API_BASE_URL, as useMapData handles this
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:5001/api";
-
-/**
- * Extract position data from a property in a consistent format
- */
-const getFallbackPosition = (property) => {
-  const lowerDistrict = property.district?.toLowerCase() || "";
-  const lowerDivision = property.division?.toLowerCase() || "";
-
-  const fallbackKey = Object.keys(divisionCenters).find(
-    (key) => lowerDistrict.includes(key) || lowerDivision.includes(key)
-  );
-
-  if (fallbackKey) {
-    return {
-      lat: divisionCenters[fallbackKey][0],
-      lng: divisionCenters[fallbackKey][1],
-    };
-  }
-
-  return null; // no fallback available
-};
-const getPropertyPosition = (property) => {
-  if (!property) return null;
-
-  if (
-    property.position &&
-    typeof property.position.lat === "number" &&
-    typeof property.position.lng === "number"
-  ) {
-    return {
-      lat: property.position.lat,
-      lng: property.position.lng,
-    };
-  }
-
-  if (
-    typeof property.latitude === "number" &&
-    typeof property.longitude === "number"
-  ) {
-    return {
-      lat: property.latitude,
-      lng: property.longitude,
-    };
-  }
-
-  const lowerDistrict = property.district?.toLowerCase() || "";
-  const lowerDivision = property.division?.toLowerCase() || "";
-
-  const fallbackKey = Object.keys(divisionCenters).find(
-    (key) => lowerDistrict.includes(key) || lowerDivision.includes(key)
-  );
-
-  if (fallbackKey) {
-    property.locationAccuracy = "district-level";
-    return {
-      lat: divisionCenters[fallbackKey][0],
-      lng: divisionCenters[fallbackKey][1],
-    };
-  }
-
-  return null;
-};
-
-/**
- * Function to construct a complete address string from property fields
- */
+// Helper function to construct a complete address string (can be moved to a utils file)
 const constructAddressString = (property) => {
   if (!property) return "Location unavailable";
+  if (property.address) return property.address; // If already constructed
+  if (property.location) return property.location; // Legacy
 
-  // Use the location field if it exists
-  if (property.location) return property.location;
-
-  // Otherwise construct from individual address components
   const addressParts = [
     property.addressLine1,
     property.addressLine2,
@@ -118,55 +52,37 @@ const constructAddressString = (property) => {
     property.district,
     property.postalCode,
   ].filter(Boolean);
-
   return addressParts.length > 0
     ? addressParts.join(", ")
     : "Location details not available";
 };
 
-/**
- * MapPage Component - Fullscreen map view with enhanced location handling
- */
 const MapPage = () => {
-  const { propertyCode } = useParams();
+  const { propertyCode } = useParams(); // For directly loading a specific property
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // --- Local State for Page Controls ---
   const [searchQuery, setSearchQuery] = useState("");
-  const [divisionZoomOverride, setDivisionZoomOverride] = useState({
-    center: null,
-    zoom: null,
-  });
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all"); // Values 'all', 'rent', 'buy', 'sold' used internally
-
-  // State for filter drawer
+  // propertyTypeFilter is for listingType (rent/buy/sold)
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState({
+  // Detailed filters from FilterSidebar
+  const [detailedFilters, setDetailedFilters] = useState({
     priceRange: [0, 50000000],
     bedrooms: "any",
     bathrooms: "any",
-    propertyType: "any",
+    propertyType: "any", // This is for actual property type (apartment, house, etc.)
   });
-
-  // State for notifications
   const [notification, setNotification] = useState({
     open: false,
     message: "",
     severity: "info",
   });
-
-  // State for location accuracy info dialog
   const [showLocationInfo, setShowLocationInfo] = useState(false);
 
-  // Refs for tracking state
-  const propertyPositionRef = useRef(null);
-  const propertyAddressRef = useRef(null);
-  const loadingPropertyRef = useRef(false);
-
-  // Use the map data hook
+  // Use the map data hook, passing propertyCode if present in URL
   const {
-    properties,
+    properties: allMappableProperties, // Renamed to clarify these are pre-processed by the hook
     loading,
     error,
     userLocation,
@@ -174,313 +90,221 @@ const MapPage = () => {
     mapZoom,
     selectedProperty,
     locateUser,
-    handleSelectProperty,
+    handleSelectProperty, // This now expects a processed property from allMappableProperties
     clearSelectedProperty,
     handleMapMove,
-  } = useMapData();
+    fetchPropertyByCode, // Hook exposes this if needed
+  } = useMapData(propertyCode);
 
-  // --- Filtered Properties based on local controls ---
-  const filteredMapProperties = useMemo(() => {
-    return properties.filter((p) =>
-      propertyTypeFilter === "all" || p.listingType === propertyTypeFilter
-    );
-  }, [properties, propertyTypeFilter]);
-
-
-  // Track if we've loaded a specific property
-  const [specificPropertyLoaded, setSpecificPropertyLoaded] = useState(false);
-
-  // --- Handlers for Page Controls ---
-  const handleSearchChange = (e) => setSearchQuery(e.target.value);
-
-  const handlePropertyTypeChange = (event, newType) => {
-    if (newType !== null) {
-      setPropertyTypeFilter(newType);
-      clearSelectedProperty();
+  // Effect to handle notifications for specific property loading results from useMapData
+  useEffect(() => {
+    if (propertyCode && selectedProperty?._id === propertyCode) {
+      const message =
+        selectedProperty.locationAccuracy === "district-level"
+          ? t(
+              "location_district_level",
+              "Property loaded with district-level location. Exact location may vary."
+            )
+          : selectedProperty.locationAccuracy === "approximate"
+          ? t(
+              "location_approximate",
+              "Property loaded with approximate location"
+            )
+          : t(
+              "property_loaded",
+              `Property '${
+                selectedProperty.title || "Unnamed Property"
+              }' loaded`
+            );
+      const severity =
+        selectedProperty.locationAccuracy === "district-level"
+          ? "warning"
+          : "info";
+      showNotification(message, severity);
+    } else if (propertyCode && !loading && !selectedProperty) {
+      // If propertyCode was given, loading finished, but no selectedProperty (means fetch failed or no location)
+      // Error state from useMapData hook should primarily handle this.
+      // This is a fallback or supplemental notification.
+      // showNotification(error || `Could not load property ${propertyCode}. It may not have a valid location.`, "error");
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyCode, selectedProperty, loading, t]); // Removed 'error' and 'showNotification' to simplify, relying on hook's error state
 
-  // Show notification helper
   const showNotification = useCallback((message, severity = "info") => {
-    setNotification({
-      open: true,
-      message,
-      severity,
-    });
+    setNotification({ open: true, message, severity });
   }, []);
 
-  // Close notification handler
-  const handleCloseNotification = () => {
-    setNotification((prev) => ({
-      ...prev,
-      open: false,
-    }));
-  };
+  const filteredMapProperties = useMemo(() => {
+    let propsToFilter = Array.isArray(allMappableProperties)
+      ? [...allMappableProperties]
+      : [];
 
-  // Toggle location info dialog
-  const toggleLocationInfo = () => {
-    setShowLocationInfo((prev) => !prev);
-  };
-
-  // Fetch specific property if propertyCode is provided
-  useEffect(() => {
-    if (
-      propertyCode &&
-      !specificPropertyLoaded &&
-      !loadingPropertyRef.current
-    ) {
-      loadingPropertyRef.current = true;
-      const fetchProperty = async () => {
-        try {
-          const response = await axios.get(
-            `${API_BASE_URL}/properties/${propertyCode}`
-          );
-
-          if (response.data) {
-            const property = response.data;
-
-            const addressString = constructAddressString(property);
-            propertyAddressRef.current = addressString;
-
-            let positionData = getPropertyPosition(property);
-
-            if (!positionData) {
-              const lowerDistrict = property.district?.toLowerCase() || "";
-              const lowerDivision = property.division?.toLowerCase() || "";
-
-              const fallbackKey = Object.keys(divisionCenters).find(
-                (key) =>
-                  lowerDistrict.includes(key) || lowerDivision.includes(key)
-              );
-
-              if (fallbackKey) {
-                const fallbackCoords = divisionCenters[fallbackKey];
-
-                showNotification(
-                  t(
-                    "property_fallback_location",
-                    `Exact property location is not available. Showing approximate location for '${fallbackKey}'.`
-                  ),
-                  "warning"
-                );
-
-                positionData = {
-                  lat: fallbackCoords[0],
-                  lng: fallbackCoords[1],
-                };
-
-                console.log(
-                  "📍 Fallback used for division:",
-                  fallbackKey,
-                  "→",
-                  positionData
-                );
-
-                property.position = positionData;
-                property.latitude = positionData.lat;
-                property.longitude = positionData.lng;
-
-                // Label it as approximate
-                property.locationAccuracy = "district-level";
-              } else {
-                console.warn(
-                  `No position and no known division/district fallback for property ${propertyCode}`
-                );
-
-                showNotification(
-                  t(
-                    "property_missing_coordinates",
-                    "This property has no valid location. It may not appear on the map."
-                  ),
-                  "warning"
-                );
-
-                return; // Skip rendering
-              }
-            }
-
-            const stablePosition = {
-              lat: parseFloat(positionData.lat.toFixed(6)),
-              lng: parseFloat(positionData.lng.toFixed(6)),
-            };
-
-            propertyPositionRef.current = stablePosition;
-
-            const enhancedProperty = {
-              ...property,
-              address: addressString,
-              position: stablePosition,
-              latitude: stablePosition.lat,
-              longitude: stablePosition.lng,
-            };
-
-            handleSelectProperty(enhancedProperty);
-            setSpecificPropertyLoaded(true);
-
-            if (property.locationAccuracy === "district-level") {
-              showNotification(
-                t(
-                  "location_district_level",
-                  "Property loaded with district-level location. Exact location may vary."
-                ),
-                "warning"
-              );
-            } else if (property.locationAccuracy === "approximate") {
-              showNotification(
-                t(
-                  "location_approximate",
-                  "Property loaded with approximate location"
-                ),
-                "info"
-              );
-            } else {
-              showNotification(
-                t(
-                  "property_loaded",
-                  `Property '${enhancedProperty.title || "Unnamed Property"
-                  }' loaded`
-                ),
-                "success"
-              );
-            }
-          } else {
-            showNotification(
-              `Property with ID ${propertyCode} not found`,
-              "error"
-            );
-          }
-        } catch (err) {
-          console.error("Error fetching property:", err);
-          showNotification(`Error loading property: ${err.message}`, "error");
-        } finally {
-          loadingPropertyRef.current = false;
-        }
-      };
-
-      fetchProperty();
+    // 1. Apply listingType filter (e.g., 'rent', 'buy', 'sold')
+    if (propertyTypeFilter !== "all") {
+      propsToFilter = propsToFilter.filter(
+        (p) => p.listingType === propertyTypeFilter
+      );
     }
-  }, [
-    propertyCode,
-    handleSelectProperty,
-    specificPropertyLoaded,
-    showNotification,
-    t,
-  ]);
 
-  // Handle filter changes
-  const handleFilterChange = (newFilters) => setFilters((prev) => ({ ...prev, ...newFilters }));
+    // 2. Apply detailed filters from FilterSidebar state ('detailedFilters')
+    propsToFilter = propsToFilter.filter((p) => {
+      if (!p) return false;
+      const priceMatch =
+        p.price !== null && p.price !== undefined
+          ? (() => {
+              const [minPrice, maxPrice] = detailedFilters.priceRange;
+              return (
+                p.price >= minPrice &&
+                (maxPrice === 50000000 ? true : p.price <= maxPrice)
+              );
+            })()
+          : true;
 
-  // Reset filters
-  const handleResetFilters = () => {
-    setFilters({
+      let bedMatch = true;
+      if (
+        detailedFilters.bedrooms !== "any" &&
+        p.bedrooms !== null &&
+        p.bedrooms !== undefined
+      ) {
+        const requiredBeds = parseInt(detailedFilters.bedrooms, 10);
+        bedMatch =
+          detailedFilters.bedrooms === "5"
+            ? p.bedrooms >= requiredBeds
+            : p.bedrooms === requiredBeds;
+      } else if (
+        detailedFilters.bedrooms !== "any" &&
+        (p.bedrooms === null || p.bedrooms === undefined)
+      ) {
+        bedMatch = false;
+      }
+
+      let bathMatch = true;
+      if (
+        detailedFilters.bathrooms !== "any" &&
+        p.bathrooms !== null &&
+        p.bathrooms !== undefined
+      ) {
+        const requiredBaths = parseInt(detailedFilters.bathrooms, 10);
+        bathMatch =
+          detailedFilters.bathrooms === "3"
+            ? p.bathrooms >= requiredBaths
+            : p.bathrooms === requiredBaths;
+      } else if (
+        detailedFilters.bathrooms !== "any" &&
+        (p.bathrooms === null || p.bathrooms === undefined)
+      ) {
+        bathMatch = false;
+      }
+      // This 'propertyType' is from the detailedFilters (e.g., apartment, house)
+      const typeMatch =
+        detailedFilters.propertyType === "any" ||
+        (p.propertyType &&
+          p.propertyType.toLowerCase() ===
+            detailedFilters.propertyType.toLowerCase());
+
+      return priceMatch && bedMatch && bathMatch && typeMatch;
+    });
+
+    // 3. Apply Search Query
+    if (searchQuery && searchQuery.trim() !== "") {
+      const sq = searchQuery.toLowerCase().trim();
+      // Ensure address field is available for searching
+      const propsWithAddress = propsToFilter.map((p) => ({
+        ...p,
+        addressForSearch: constructAddressString(p),
+      }));
+      propsToFilter = propsWithAddress.filter(
+        (p) =>
+          (p.title && p.title.toLowerCase().includes(sq)) ||
+          (p.addressForSearch &&
+            p.addressForSearch.toLowerCase().includes(sq)) ||
+          (p.district && p.district.toLowerCase().includes(sq)) ||
+          (p.cityTown && p.cityTown.toLowerCase().includes(sq)) ||
+          (p.upazila && p.upazila.toLowerCase().includes(sq))
+      );
+    }
+    return propsToFilter;
+  }, [allMappableProperties, propertyTypeFilter, detailedFilters, searchQuery]);
+
+  const handleSearchChange = (e) => setSearchQuery(e.target.value);
+  const handlePropertyTypeFilterChange = (event, newType) => {
+    if (newType !== null) {
+      setPropertyTypeFilter(newType);
+      clearSelectedProperty(); // Clear selection when changing main type filter
+    }
+  };
+  const handleCloseNotification = () =>
+    setNotification((prev) => ({ ...prev, open: false }));
+  const toggleLocationInfo = () => setShowLocationInfo((prev) => !prev);
+
+  const handleDetailedFilterChange = (newFilters) =>
+    setDetailedFilters(newFilters);
+  const handleResetDetailedFilters = () => {
+    setDetailedFilters({
       priceRange: [0, 50000000],
       bedrooms: "any",
       bathrooms: "any",
       propertyType: "any",
     });
-    showNotification("Filters reset", "info");
+    showNotification(t("filters_reset", "Filters reset"), "info");
   };
+  const handleCloseFiltersDrawer = () => setFiltersOpen(false);
+  const handleOpenFiltersDrawer = () => setFiltersOpen(true);
 
-  // Close filter drawer
-  const handleCloseFilters = () => {
-    setFiltersOpen(false);
-  };
-
-  const clearSearchAndFilters = () => {
+  const clearAllPageFilters = () => {
     setSearchQuery("");
-    setPropertyTypeFilter("all");
+    setPropertyTypeFilter("all"); // Reset listingType filter
+    handleResetDetailedFilters(); // Reset detailed filters from sidebar
     clearSelectedProperty();
+    // Optionally reset map to default view if not viewing a specific property by URL
+    // if (!propertyCode) {
+    //   handleMapMove(DEFAULT_CENTER, DEFAULT_ZOOM); // Assuming DEFAULT_CENTER, DEFAULT_ZOOM are defined
+    // }
   };
+  const handleBack = () => navigate(-1);
 
-  // Back button handler
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  // Handle property selection with address handling
-  const onPropertySelect = useCallback(
+  // This is passed to MapComponent -> MapMarker for clicks on markers
+  const onMarkerPropertySelect = useCallback(
     (property) => {
-      if (!property) return;
-
-      // Add address to property if not already present
-      let enhancedProperty = { ...property };
-
-      if (!enhancedProperty.address) {
-        enhancedProperty.address = constructAddressString(property);
-      }
-
-      // Use the hook's handler with the enhanced property
-      handleSelectProperty(enhancedProperty);
-
-      // Update position reference
-      const positionData = getPropertyPosition(property);
-      if (positionData) {
-        propertyPositionRef.current = {
-          lat: parseFloat(positionData.lat.toFixed(6)),
-          lng: parseFloat(positionData.lng.toFixed(6)),
-        };
-      }
-
-      // Update address reference
-      propertyAddressRef.current = enhancedProperty.address;
-
-      // Show notification based on location accuracy
-      if (property.locationAccuracy === "district-level") {
-        showNotification(
-          t(
-            "location_district_level_short",
-            "District-level location (approximate)"
-          ),
-          "warning"
-        );
-      } else if (property.locationAccuracy === "approximate") {
-        showNotification(
-          t("location_approximate_short", "Approximate location"),
-          "info"
-        );
-      }
+      // The property object from allMappableProperties is already processed
+      handleSelectProperty(property);
     },
-    [handleSelectProperty, showNotification, t]
+    [handleSelectProperty]
   );
-
-  // Locate user handler with error handling
-  const handleLocateUser = () => {
-    try {
-      locateUser();
-      showNotification("Finding your location...", "info");
-    } catch (err) {
-      console.error("Error locating user:", err);
-      showNotification("Failed to get your location", "error");
-    }
-  };
 
   return (
     <Box
       sx={{
-        height: "calc(100vh - 64px)", // Full height minus navbar
+        height: "calc(100vh - 64px)",
         width: "100%",
         display: "flex",
         flexDirection: "column",
         position: "relative",
       }}
     >
-      {/* Top Controls */}
       <Paper
         elevation={2}
         sx={{
           p: 1,
-          m: 2,
+          m: { xs: 1, sm: 2 },
           mb: 0,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
+          gap: 1,
           borderRadius: "12px",
-          position: "relative",
           zIndex: 1100,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 0.5, sm: 1.5 },
+            flexWrap: "wrap",
+          }}
+        >
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={handleBack}
@@ -489,73 +313,123 @@ const MapPage = () => {
           >
             {t("back", "Back")}
           </Button>
+          <TextField
+            placeholder={t(
+              "search_map_placeholder",
+              "Search title, address..."
+            )}
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+              sx: { borderRadius: "8px", fontSize: "0.875rem" },
+            }}
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              mt: { xs: 1, sm: 0 },
+              maxWidth: { sm: 250 },
+            }}
+          />
+          <Tooltip title={t("filters", "Filters")}>
+            <IconButton
+              onClick={handleOpenFiltersDrawer}
+              color="primary"
+              size="small"
+            >
+              <FilterListIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 0.5, sm: 1.5 },
+            flexWrap: "wrap",
+            justifyContent: { xs: "space-between", sm: "flex-end" },
+            width: { xs: "100%", sm: "auto" },
+            mt: { xs: 1, sm: 0 },
+          }}
+        >
           <ToggleButtonGroup
             value={propertyTypeFilter}
             exclusive
-            onChange={handlePropertyTypeChange}
+            onChange={handlePropertyTypeFilterChange}
             aria-label="property type filter"
             size="small"
           >
-            <ToggleButton value="all">{t("all_types", "All Types")}</ToggleButton>
-            <ToggleButton value="rent">{t("nav_rent", "Rent")}</ToggleButton>
-            <ToggleButton value="buy">{t("nav_buy", "Buy")}</ToggleButton>
-            <ToggleButton value="sold">{t("nav_sold", "Sold")}</ToggleButton>
+            <ToggleButton value="all" sx={{ fontSize: "0.75rem", px: 1 }}>
+              {t("all_types", "All")}
+            </ToggleButton>
+            <ToggleButton value="rent" sx={{ fontSize: "0.75rem", px: 1 }}>
+              {t("nav_rent", "Rent")}
+            </ToggleButton>
+            <ToggleButton value="buy" sx={{ fontSize: "0.75rem", px: 1 }}>
+              {t("nav_buy", "Buy")}
+            </ToggleButton>
+            <ToggleButton value="sold" sx={{ fontSize: "0.75rem", px: 1 }}>
+              {t("nav_sold", "Sold")}
+            </ToggleButton>
           </ToggleButtonGroup>
-        </Box>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Tooltip title={t("locate_me", "Locate Me")}>
-            <IconButton onClick={handleLocateUser} color="primary">
+            <IconButton onClick={locateUser} color="primary" size="small">
               <MyLocationIcon />
             </IconButton>
           </Tooltip>
-
-          <Tooltip title={t("location_accuracy_info", "Location Accuracy Info")}>
-            <IconButton onClick={toggleLocationInfo} color="info">
+          <Tooltip title={t("location_accuracy_info", "Location Info")}>
+            <IconButton onClick={toggleLocationInfo} color="info" size="small">
               <InfoIcon />
             </IconButton>
           </Tooltip>
-
-          <Button onClick={clearSearchAndFilters} size="small">
-            {t("clear", "Clear")}
+          <Button
+            onClick={clearAllPageFilters}
+            size="small"
+            sx={{ fontSize: "0.75rem" }}
+          >
+            {t("clear_all", "Clear All")}
           </Button>
         </Box>
       </Paper>
 
-
-      {/* Error alert */}
       {error && (
         <Alert
           severity="error"
           sx={{
             position: "absolute",
-            top: "60px",
+            top: "80px",
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1001,
-            width: "90%",
-            maxWidth: "600px",
+            width: "auto",
+            maxWidth: "90%",
           }}
-          onClose={() => clearSelectedProperty()}
+          onClose={() => {
+            /* Consider if clearSelectedProperty or specific error clear is needed */
+          }}
         >
           {error}
         </Alert>
       )}
 
-      {/* Map Container */}
       <Box
         sx={{
           flexGrow: 1,
           position: "relative",
-          mx: 2,
-          mb: 2,
+          m: { xs: 1, sm: 2 },
+          mt: 1,
           borderRadius: "12px",
           overflow: "hidden",
           boxShadow: 1,
         }}
       >
-        {loading ? (
+        {loading && !selectedProperty ? ( // Show full map loader only if not already showing a selected property
           <Box
             sx={{
               height: "100%",
@@ -565,7 +439,7 @@ const MapPage = () => {
               flexDirection: "column",
             }}
           >
-            <CircularProgress />
+            <CircularProgress />{" "}
             <Typography sx={{ mt: 2 }}>
               {t("loading_map", "Loading map data...")}
             </Typography>
@@ -573,30 +447,34 @@ const MapPage = () => {
         ) : (
           <MapComponent
             properties={filteredMapProperties}
-            mapCenter={divisionZoomOverride.center || mapCenter}
-            mapZoom={divisionZoomOverride.zoom || mapZoom}
-            userLocation={userLocation}
+            mapCenter={mapCenter} // mapCenter is [lat,lng] from useMapData
+            mapZoom={mapZoom}
+            userLocation={userLocation} // userLocation is {lat,lng} from useMapData
             selectedProperty={selectedProperty}
-            onMarkerClick={onPropertySelect}
+            onMarkerClick={onMarkerPropertySelect}
             onMapMove={handleMapMove}
-            showLocationAccuracy={true}
+            // showLocationAccuracy prop can be removed if markers don't need it directly
           />
         )}
-
-        {/* Selected property info panel */}
         {selectedProperty && (
           <PropertyInfoPanel selectedProperty={selectedProperty} />
         )}
       </Box>
 
-      {/* Filters Drawer */}
       <Drawer
         anchor="left"
         open={filtersOpen}
-        onClose={handleCloseFilters}
-        PaperProps={{ sx: { width: "80%", maxWidth: "350px" } }}
+        onClose={handleCloseFiltersDrawer}
+        PaperProps={{ sx: { width: "80%", maxWidth: "320px" } }}
       >
-        <Box sx={{ p: 2 }}>
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
@@ -605,33 +483,32 @@ const MapPage = () => {
             }}
           >
             <Typography variant="h6">{t("filters", "Filters")}</Typography>
-            <IconButton onClick={handleCloseFilters} size="small">
+            <IconButton onClick={handleCloseFiltersDrawer} size="small">
               <CloseIcon />
             </IconButton>
           </Box>
           <Divider sx={{ my: 1 }} />
-
-          <FilterSidebar
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            onResetFilters={handleResetFilters}
-            isMobile={true}
-            onClose={handleCloseFilters}
-          />
+          <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+            <FilterSidebar
+              filters={detailedFilters}
+              onFilterChange={handleDetailedFilterChange}
+              onResetFilters={handleResetDetailedFilters}
+              isMobile={true} // Assuming sidebar adapts
+              onClose={handleCloseFiltersDrawer}
+            />
+          </Box>
         </Box>
       </Drawer>
 
-      {/* Location Accuracy Information Dialog */}
       <Drawer
         anchor="bottom"
         open={showLocationInfo}
         onClose={toggleLocationInfo}
         PaperProps={{
           sx: {
-            maxHeight: "50%",
+            maxHeight: "60%",
             borderTopLeftRadius: "16px",
             borderTopRightRadius: "16px",
-            p: 2,
           },
         }}
       >
@@ -652,14 +529,13 @@ const MapPage = () => {
             </IconButton>
           </Box>
           <Divider sx={{ mb: 2 }} />
-
           <Typography variant="body1" paragraph>
             {t(
               "location_info_description",
-              "Property locations on the map are displayed with different accuracy levels:"
+              "Property locations are displayed with different accuracy levels:"
             )}
           </Typography>
-
+          {/* Accuracy descriptions... */}
           <Box sx={{ mb: 2 }}>
             <Typography
               variant="subtitle1"
@@ -671,15 +547,14 @@ const MapPage = () => {
                 label="P"
                 sx={{ mr: 1, width: 24, height: 24 }}
               />
-              {t("precise_location_title", "Precise Location")}
+              {t("precise_location_title", "Precise Location (P)")}
             </Typography>
             <Typography variant="body2" sx={{ ml: 4, mb: 2 }}>
               {t(
                 "precise_location_desc",
-                "The property is located at this exact point on the map."
+                "The property is located at this exact point."
               )}
             </Typography>
-
             <Typography
               variant="subtitle1"
               sx={{ display: "flex", alignItems: "center", mb: 1 }}
@@ -690,15 +565,14 @@ const MapPage = () => {
                 label="A"
                 sx={{ mr: 1, width: 24, height: 24 }}
               />
-              {t("approximate_location_title", "Approximate Location")}
+              {t("approximate_location_title", "Approximate Location (A)")}
             </Typography>
             <Typography variant="body2" sx={{ ml: 4, mb: 2 }}>
               {t(
                 "approximate_location_desc",
-                "The property is located near this point, but the exact location may be slightly different."
+                "The property is near this point; exact location may vary."
               )}
             </Typography>
-
             <Typography
               variant="subtitle1"
               sx={{ display: "flex", alignItems: "center", mb: 1 }}
@@ -709,23 +583,21 @@ const MapPage = () => {
                 label="D"
                 sx={{ mr: 1, width: 24, height: 24 }}
               />
-              {t("district_location_title", "District-Level Location")}
+              {t("district_location_title", "District-Level (D)")}
             </Typography>
             <Typography variant="body2" sx={{ ml: 4 }}>
               {t(
                 "district_location_desc",
-                "Only the general area (district) is known. The exact property location may be elsewhere in this district."
+                "Only the general district is known."
               )}
             </Typography>
           </Box>
-
           <Alert severity="info">
             {t(
               "directions_info",
-              "When using the 'Directions' button, the system will prioritize using the property's address rather than map coordinates for more accurate navigation."
+              "For 'Directions', the property's address (if available) is prioritized over map coordinates for better accuracy."
             )}
           </Alert>
-
           <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
             <Button variant="contained" onClick={toggleLocationInfo}>
               {t("close", "Close")}
@@ -734,14 +606,21 @@ const MapPage = () => {
         </Box>
       </Drawer>
 
-      {/* Notifications */}
       <Snackbar
         open={notification.open}
         autoHideDuration={4000}
         onClose={handleCloseNotification}
-        message={notification.message}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      />
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

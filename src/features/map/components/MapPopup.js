@@ -1,3 +1,4 @@
+// src/features/map/components/MapPopup.js
 import React from "react";
 import { Popup } from "react-leaflet";
 import { Box, Typography, Button, Divider, Chip, Stack } from "@mui/material";
@@ -19,8 +20,9 @@ const formatPrice = (price, listingType) => {
   if (price === null || price === undefined) return "N/A";
   const numericPrice = Number(price);
   if (isNaN(numericPrice)) return "Invalid Price";
-  return `৳ ${numericPrice.toLocaleString()}${listingType === "rent" ? "/mo" : ""
-    }`;
+  return `৳ ${numericPrice.toLocaleString()}${
+    listingType === "rent" ? "/mo" : ""
+  }`;
 };
 
 /**
@@ -28,23 +30,23 @@ const formatPrice = (price, listingType) => {
  */
 const constructLocationString = (property) => {
   if (!property) return "Location unavailable";
-
-  // If the property has a pre-constructed address string, use it
+  // If the property has a pre-constructed address string (e.g., from useMapData), use it
   if (property.address) return property.address;
-
-  // If the property has a location field, use it (legacy support)
+  // If the property has a legacy location field, use it
   if (property.location) return property.location;
 
   // Otherwise construct from individual fields
   const locationParts = [
+    // Variable is declared as 'locationParts'
     property.addressLine1,
     property.addressLine2,
     property.upazila,
     property.cityTown,
     property.district,
     property.postalCode,
-  ].filter(Boolean);
+  ].filter(Boolean); // filter(Boolean) removes any null, undefined, or empty string values
 
+  // Use 'locationParts' here
   return locationParts.length > 0
     ? locationParts.join(", ")
     : "Location details not available";
@@ -87,48 +89,63 @@ const getLocationAccuracyColor = (accuracy) => {
  */
 const MapPopup = ({ property, onViewDetails }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate(); // Initialize navigate
 
   if (!property) return null;
 
-  // Get stable location string - moved outside useMemo
   const locationString = constructLocationString(property);
-
-  // Determine if property is land or commercial for conditional rendering
   const isLandOrCommercial =
     property.propertyType === "land" || property.propertyType === "commercial";
 
-
-  // Handle directions click
   const handleGetDirections = () => {
     let destination = "";
+    const position = property.position || {
+      lat: property.latitude,
+      lng: property.longitude,
+    };
 
-    // Try to use address for more accurate directions
     if (
       locationString &&
       locationString !== "Location details not available" &&
       locationString !== "Location unavailable"
     ) {
-      // Use the address string directly, encoded for a URL
       destination = encodeURIComponent(locationString);
-    } else if (property.position) {
-      // Fall back to coordinates if no valid address
-      destination = `${property.position.lat},${property.position.lng}`;
-    } else if (property.latitude && property.longitude) {
-      // Support for legacy format
-      destination = `${property.latitude},${property.longitude}`;
+    } else if (
+      position &&
+      typeof position.lat === "number" &&
+      typeof position.lng === "number"
+    ) {
+      destination = `${position.lat},${position.lng}`;
     } else {
-      console.error("Cannot get directions - no valid location data");
+      console.error(
+        "Cannot get directions - no valid location data for property:",
+        property._id
+      );
       return;
     }
-
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=$${destination}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleViewDetailsClick = () => {
+    if (onViewDetails) {
+      onViewDetails(property);
+    } else if (property && property._id) {
+      console.warn(
+        "MapPopup: onViewDetails prop not provided, falling back to direct navigation for property:",
+        property._id
+      );
+      navigate(`/properties/details/${property._id}`);
+    } else {
+      console.error(
+        "MapPopup: Cannot view details, missing onViewDetails prop or property._id"
+      );
+    }
   };
 
   return (
     <Popup closeButton={true} minWidth={280} maxWidth={320}>
       <Box sx={{ p: 0.5 }}>
-        {/* Location Accuracy Indicator */}
         {property.locationAccuracy &&
           property.locationAccuracy !== "precise" && (
             <Box sx={{ mb: 1 }}>
@@ -146,7 +163,6 @@ const MapPopup = ({ property, onViewDetails }) => {
             </Box>
           )}
 
-        {/* Property Title */}
         <Typography
           variant="subtitle1"
           fontWeight="bold"
@@ -157,10 +173,9 @@ const MapPopup = ({ property, onViewDetails }) => {
             whiteSpace: "nowrap",
           }}
         >
-          {property.title || "Unnamed Property"}
+          {property.title || t("unnamed_property", "Unnamed Property")}
         </Typography>
 
-        {/* Location */}
         <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1 }}>
           <LocationOnIcon
             fontSize="small"
@@ -175,14 +190,14 @@ const MapPopup = ({ property, onViewDetails }) => {
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              lineHeight: 1.2,
+              lineHeight: 1.3,
             }}
+            title={locationString}
           >
             {locationString}
           </Typography>
         </Box>
 
-        {/* Price */}
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
           <MonetizationOnIcon
             fontSize="small"
@@ -197,10 +212,18 @@ const MapPopup = ({ property, onViewDetails }) => {
               label={
                 property.listingType === "rent"
                   ? t("for_rent", "For Rent")
-                  : t("for_sale", "For Sale")
+                  : property.listingType === "buy"
+                  ? t("for_sale", "For Sale")
+                  : t("status_sold", "Sold")
               }
               size="small"
-              color={property.listingType === "rent" ? "info" : "success"}
+              color={
+                property.listingType === "rent"
+                  ? "info"
+                  : property.listingType === "buy"
+                  ? "success"
+                  : "default"
+              }
               sx={{ ml: 1, height: 20, fontSize: "0.6rem" }}
             />
           )}
@@ -208,11 +231,10 @@ const MapPopup = ({ property, onViewDetails }) => {
 
         <Divider sx={{ my: 1 }} />
 
-        {/* Property Features */}
         <Stack
           direction="row"
-          spacing={2}
-          sx={{ mb: 1, justifyContent: "space-between" }}
+          spacing={{ xs: 1, sm: 1.5 }}
+          sx={{ mb: 1.5, justifyContent: "space-around", flexWrap: "wrap" }}
         >
           {!isLandOrCommercial && property.bedrooms !== undefined && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -220,23 +242,30 @@ const MapPopup = ({ property, onViewDetails }) => {
               <Typography variant="body2">{property.bedrooms}</Typography>
             </Box>
           )}
-
           {!isLandOrCommercial && property.bathrooms !== undefined && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <BathtubIcon fontSize="small" color="action" />
               <Typography variant="body2">{property.bathrooms}</Typography>
             </Box>
           )}
-
           {property.area !== undefined && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <SquareFootIcon fontSize="small" color="action" />
-              <Typography variant="body2">{property.area} ft²</Typography>
+              <Typography variant="body2">
+                {property.area} {t("sqft_unit", "ft²")}
+              </Typography>
             </Box>
           )}
-
           {property.propertyType && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                flexShrink: 1,
+                minWidth: 0,
+              }}
+            >
               <HomeWorkIcon fontSize="small" color="action" />
               <Typography
                 variant="body2"
@@ -244,17 +273,16 @@ const MapPopup = ({ property, onViewDetails }) => {
                   textOverflow: "ellipsis",
                   overflow: "hidden",
                   whiteSpace: "nowrap",
-                  maxWidth: "60px",
                 }}
+                title={property.propertyType}
               >
-                {property.propertyType}
+                {t(property.propertyType, property.propertyType)}
               </Typography>
             </Box>
           )}
         </Stack>
 
-        {/* Action Buttons */}
-        <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+        <Box sx={{ display: "flex", gap: 1, mt: 1.5 }}>
           <Button
             variant="outlined"
             size="small"
@@ -264,42 +292,42 @@ const MapPopup = ({ property, onViewDetails }) => {
               flex: 1,
               textTransform: "none",
               borderRadius: "8px",
-              fontSize: "0.8rem",
+              fontSize: "0.75rem",
+              p: "4px 8px",
             }}
           >
             {t("directions", "Directions")}
           </Button>
-
           <Button
             variant="contained"
             size="small"
-            onClick={handleViewDetails}
+            onClick={handleViewDetailsClick} // This line was previously causing the error
             sx={{
               flex: 1,
               textTransform: "none",
               borderRadius: "8px",
-              fontSize: "0.8rem",
+              fontSize: "0.75rem",
+              p: "4px 8px",
             }}
           >
             {t("view_details", "View Details")}
           </Button>
         </Box>
 
-        {/* Warning for district-level location */}
         {property.locationAccuracy === "district-level" && (
           <Typography
             variant="caption"
             color="error"
             sx={{
               display: "block",
-              mt: 1,
+              mt: 1.5,
               fontSize: "0.7rem",
               textAlign: "center",
             }}
           >
             {t(
               "location_approximate_note",
-              "Note: This is an approximate location. The exact property may be elsewhere in this district."
+              "Note: This is an approximate location."
             )}
           </Typography>
         )}
