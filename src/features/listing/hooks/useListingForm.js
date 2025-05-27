@@ -231,38 +231,45 @@ const useListingForm = () => {
     [formData, imageUrls] // Added imageUrls dependency for step 4 validation example
   );
 
-  const generateDescription = useCallback(async () => {
-    setLoadingAI(true);
-    setErrors((prev) => ({ ...prev, description: null })); // Clear previous description errors
-    try {
-      const payload = {
-        propertyData: {
-          basicInfo: {
-            /* ...formData fields ... */
+  // Accept language argument and send it to backend
+  const generateDescription = useCallback(
+    async (language = "en") => {
+      setLoadingAI(true);
+      setErrors((prev) => ({ ...prev, description: null })); // Clear previous description errors
+      try {
+        const payload = {
+          propertyData: {
+            basicInfo: {
+              /* ...formData fields ... */
+            },
+            location: {
+              /* ...formData fields ... */
+            },
+            features,
+            bangladeshDetails: formData.bangladeshDetails,
           },
-          location: {
-            /* ...formData fields ... */
-          },
-          features,
-          bangladeshDetails: formData.bangladeshDetails,
-        },
-      };
-      const res = await axios.post(
-        `${API_BASE_URL}/generate-description`,
-        payload
-      );
-      setFormData((prev) => ({ ...prev, description: res.data.description }));
-    } catch (error) {
-      console.error("Error generating description:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to generate description.",
-        severity: "error",
-      });
-    } finally {
-      setLoadingAI(false);
-    }
-  }, [formData, features]);
+          language, // <-- Pass language to backend
+        };
+        const res = await axios.post(
+          `${API_BASE_URL}/generate-description`,
+          payload
+        );
+        setFormData((prev) => ({ ...prev, description: res.data.description }));
+        return res.data.description;
+      } catch (error) {
+        console.error("Error generating description:", error);
+        setSnackbar({
+          open: true,
+          message: "Failed to generate description.",
+          severity: "error",
+        });
+        return null;
+      } finally {
+        setLoadingAI(false);
+      }
+    },
+    [formData, features]
+  );
 
   const handleNext = useCallback(() => {
     if (!validateStep(activeStep)) {

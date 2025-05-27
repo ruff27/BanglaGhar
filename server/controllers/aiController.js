@@ -5,6 +5,8 @@ const axios = require("axios");
 
 const NVIDIA_API_KEY = "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";
 const NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
+const GOOGLE_TRANSLATE_API_KEY = process.env.GOOGLE_TRANSLATE_API_KEY; // Set your Google Translate API key in env
+const GOOGLE_TRANSLATE_URL = "https://translation.googleapis.com/language/translate/v2";
 
 // Helper function to safely access nested properties
 const getSafe = (obj, path, defaultValue = "N/A") => {
@@ -134,7 +136,7 @@ const generatePropertyDescription = async (req, res) => {
 - Focus on clarity, warmth, and a strong sense of place.
 - Avoid sounding robotic, overly generic, or like a simple feature list.
 - give response in simple txt format, no markdown or code block
-- (IMPORTANT) PLEASE GIVE ME THE RESPONSE IN ${language} LANGUAGE. the translation should be accurate and natural, not just a direct word-for-word translation. if possible use google translate api to get the translation. if you can't use google translate api, then use your own translation model to get the translation. but please make sure the translation is accurate and natural.
+- (IMPORTANT) PLEASE GIVE ME THE RESPONSE IN ENGLISH LANGUAGE. DO NOT TRANSLATE. DO NOT USE BANGLA. ONLY ENGLISH.
 - avoid using like in the heart of dhaka or in the heart of dhaka city, instead use like in dhaka city or in dhaka or anything more specific.
 - can you analyse the the location of the property in whatever part of the city it lies and generate a description accoringly avoiding key phrases like in the heart of dhaka or in the heart of dhaka city, instead use like in dhaka city or in dhaka or anything like that.
 
@@ -186,7 +188,46 @@ ${formatBangladeshDetailsForPrompt(bdDetails)}`;
     };
     const response = await axios.post(NVIDIA_API_URL, payload, { headers });
     if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message && response.data.choices[0].message.content) {
-      const description = response.data.choices[0].message.content.trim();
+      let description = response.data.choices[0].message.content.trim();
+      // Normalize language code for Bangla
+      let normalizedLanguage = language;
+      if (["bangla", "bengali", "bn-BD", "bd", "bangladesh"].includes(language?.toLowerCase())) {
+        normalizedLanguage = "bn";
+      }
+      console.log("[AIController] Requested language:", language, "| Normalized:", normalizedLanguage);
+      // If language is not English, translate using Google Translate API
+      if (normalizedLanguage !== "en") {
+        try {
+          const qs = require("querystring");
+          const translateRes = await axios.post(
+            GOOGLE_TRANSLATE_URL,
+            qs.stringify({
+              q: description,
+              target: normalizedLanguage,
+              format: "text",
+              key: GOOGLE_TRANSLATE_API_KEY
+            }),
+            {
+              headers: { "Content-Type": "application/x-www-form-urlencoded" }
+            }
+          );
+          console.log("[AIController] Google Translate response:", translateRes.data);
+          if (
+            translateRes.data &&
+            translateRes.data.data &&
+            translateRes.data.data.translations &&
+            translateRes.data.data.translations[0]
+          ) {
+            description = translateRes.data.data.translations[0].translatedText;
+          }
+        } catch (translateErr) {
+          console.error(
+            "Translation error:",
+            translateErr?.response?.data || translateErr?.message || translateErr
+          );
+          // Fallback: return English if translation fails
+        }
+      }
       res.json({ description });
     } else {
       console.error("Invalid response structure from NVIDIA API:", response.data);
