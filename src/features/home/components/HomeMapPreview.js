@@ -1,22 +1,84 @@
-import React from "react";
-import { Box, Typography, Button, Container, Paper } from "@mui/material"; // Moved Paper import here
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Container,
+  Paper,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import axios from "axios"; // Import axios for API calls
 
-// Import the NEW MapComponent from its correct refactored location
-import MapComponent from "../../map/components/MapComponent"; // Corrected path
+// Import the MapComponent from its correct refactored location
+import MapComponent from "../../map/components/MapComponent";
+
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
 /**
  * HomeMapPreview Component
  *
- * Displays a preview of the Bangladesh map on the home page.
+ * Displays a preview of the map on the home page, now with fetched properties.
  */
 const HomeMapPreview = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation(); // Hook for internationalization
+  const { t } = useTranslation();
+
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPreviewProperties = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch a small number of properties for the preview
+        // For example, fetch 10 available featured properties or just recent ones
+        const response = await axios.get(`${API_BASE_URL}/properties`, {
+          params: {
+            limit: 10, // How many properties to show in the preview
+            featured: true, // Or use another filter like sort by createdAt
+            // includeUnavailable: false, // By default, your backend getAllProperties only shows available
+          },
+        });
+
+        // Ensure properties have position data for the map
+        const mappableProperties = (response.data || [])
+          .map((prop) => {
+            const property = prop.toObject ? prop.toObject() : prop;
+            if (!property.position && property.latitude && property.longitude) {
+              property.position = {
+                lat: property.latitude,
+                lng: property.longitude,
+              };
+            }
+            return property;
+          })
+          .filter((p) => p.position && p.position.lat && p.position.lng);
+
+        setProperties(mappableProperties);
+      } catch (err) {
+        console.error("Error fetching preview properties:", err);
+        setError(
+          t(
+            "map_preview_load_error",
+            "Could not load properties for map preview."
+          )
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreviewProperties();
+  }, [t]); // Added t to dependencies as it's used in error message
 
   return (
-    <Box sx={{ py: 6, backgroundColor: "#f8f9fa" /* Light background */ }}>
+    <Box sx={{ py: 6, backgroundColor: "#f8f9fa" }}>
       <Container maxWidth="lg">
         <Typography
           variant="h4"
@@ -25,8 +87,7 @@ const HomeMapPreview = () => {
           gutterBottom
           align="center"
         >
-          {t("explore_on_map_title", "Explore Properties on Map")}{" "}
-          {/* Example key */}
+          {t("explore_on_map_title", "Explore Properties on Map")}
         </Typography>
         <Typography
           variant="body1"
@@ -37,46 +98,71 @@ const HomeMapPreview = () => {
           {t(
             "explore_on_map_subtitle",
             "Find properties visually in your desired locations across Bangladesh."
-          )}{" "}
-          {/* Example key */}
+          )}
         </Typography>
         <Paper
-          elevation={3} // Add elevation for depth
+          elevation={3}
           sx={{
-            height: { xs: "300px", sm: "400px", md: "500px" }, // Responsive height
+            height: { xs: "300px", sm: "400px", md: "500px" },
             width: "100%",
             borderRadius: "12px",
-            overflow: "hidden", // Ensures map corners are rounded
+            overflow: "hidden",
             boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
             mb: 3,
+            position: "relative", // For loading/error overlay
           }}
         >
-          {/* Render the new MapComponent */}
-          {/* Pass minimal props needed for a preview, or none if it defaults okay */}
-          <MapComponent
-            properties={[]} // Pass empty array or fetched featured properties if needed
-            mapCenter={[23.8103, 90.4125]} // Default center
-            mapZoom={7} // Default zoom
-            // readOnly={true} // Maybe disable interactions
-            // userLocation={null} // Don't show user location in preview
-            // onMarkerClick={() => {}} // Disable marker clicks
-          />
+          {loading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <CircularProgress />
+              <Typography sx={{ ml: 2 }}>
+                {t("loading_map_preview", "Loading Map...")}
+              </Typography>
+            </Box>
+          ) : error ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+                p: 2,
+              }}
+            >
+              <Alert severity="error" sx={{ width: "100%" }}>
+                {error}
+              </Alert>
+            </Box>
+          ) : (
+            <MapComponent
+              properties={properties} // Pass the fetched properties
+              mapCenter={[23.8103, 90.4125]} // Default center for Bangladesh
+              mapZoom={7} // Default zoom for a country overview
+              // You might want to add a prop to MapComponent to disable map interactions if this is purely a preview
+              // onMarkerClick={() => {}} // Example: disable marker clicks in preview
+            />
+          )}
         </Paper>
         <Box sx={{ textAlign: "center" }}>
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate("/map")} // Navigate to the full map page route
+            onClick={() => navigate("/map")}
             sx={{ borderRadius: "8px", textTransform: "none", px: 3, py: 1 }}
           >
-            {t("open_full_map", "Open Full Map")} {/* Example key */}
+            {t("open_full_map", "Open Full Map")}
           </Button>
         </Box>
       </Container>
     </Box>
   );
 };
-
-// Removed Paper import from here
 
 export default HomeMapPreview;
