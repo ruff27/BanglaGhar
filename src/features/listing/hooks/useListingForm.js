@@ -196,14 +196,21 @@ const useListingForm = () => {
           break;
         case 3: // Specific Details (Bangladesh Context)
           newErrors.bangladeshDetails = {};
-          if (!bdDetails.propertyCondition)
-            newErrors.bangladeshDetails.propertyCondition =
-              "Property condition is required.";
-          if (!bdDetails.waterSource)
-            newErrors.bangladeshDetails.waterSource =
-              "Water source is required.";
-          if (!bdDetails.gasSource)
-            newErrors.bangladeshDetails.gasSource = "Gas source is required.";
+
+          if (needsBuildingSpecifics) {
+            // Only require these if it's not land/commercial
+            if (!bdDetails.propertyCondition)
+              newErrors.bangladeshDetails.propertyCondition =
+                "Property condition is required for buildings.";
+            if (!bdDetails.waterSource)
+              newErrors.bangladeshDetails.waterSource =
+                "Water source is required for buildings.";
+            if (!bdDetails.gasSource)
+              newErrors.bangladeshDetails.gasSource =
+                "Gas source is required for buildings.";
+          } else {
+          }
+
           if (Object.keys(newErrors.bangladeshDetails).length === 0) {
             delete newErrors.bangladeshDetails;
           }
@@ -412,22 +419,23 @@ const useListingForm = () => {
   const handleSubmit = useCallback(async () => {
     console.log("[useListingForm] handleSubmit called.");
     let allStepsValid = true;
+    // Validate all steps except the last one (Review step)
     for (let i = 0; i < steps.length - 1; i++) {
-      // Validate all steps except "Review"
+      const currentFormData = formData; // Use the formData from the hook's state
       const isLandOrCommercial =
-        formData.propertyType === "land" ||
-        formData.propertyType === "commercial";
+        currentFormData.propertyType === "land" ||
+        currentFormData.propertyType === "commercial";
       const skipStep = i === 2 && isLandOrCommercial; // Skip "Features" (index 2) for land/commercial
 
       if (!skipStep && !validateStep(i)) {
         allStepsValid = false;
-        setActiveStep(i);
+        setActiveStep(i); // Navigate to the step with validation errors
         setSnackbar({
           open: true,
           message: `Please review Step ${i + 1}: ${steps[i]} for errors.`,
           severity: "error",
         });
-        break;
+        break; // Stop validation on first error
       }
     }
 
@@ -459,27 +467,71 @@ const useListingForm = () => {
     setLoadingSubmit(true);
     setSnackbar({ open: false }); // Close any existing snackbar
 
+    // Ensure specific undefined/empty optional fields in bangladeshDetails have defaults if necessary
     const finalBangladeshDetails = { ...formData.bangladeshDetails };
     if (finalBangladeshDetails.backupPower === "")
-      finalBangladeshDetails.backupPower = "none";
+      finalBangladeshDetails.backupPower = "none"; //
     if (finalBangladeshDetails.sewerSystem === "")
-      finalBangladeshDetails.sewerSystem = "none";
+      finalBangladeshDetails.sewerSystem = "none"; //
     if (finalBangladeshDetails.parkingType === "")
-      finalBangladeshDetails.parkingType = "none";
+      finalBangladeshDetails.parkingType = "none"; //
     if (finalBangladeshDetails.propertyTenure === "")
-      finalBangladeshDetails.propertyTenure = "unknown";
+      finalBangladeshDetails.propertyTenure = "unknown"; //
 
+    // Prepare the final data payload
     const finalData = {
-      ...formData,
+      ...formData, // Spread existing formData
       bangladeshDetails: finalBangladeshDetails,
       features:
         formData.propertyType !== "land" &&
         formData.propertyType !== "commercial"
-          ? features
-          : {},
-      images: imageUrls, // Send the array of S3 URLs
-      createdBy: creatorEmail,
+          ? features // Include features state
+          : {}, // Send empty object for land/commercial
+      images: imageUrls, // Include the array of S3 image URLs
+      createdBy: creatorEmail, // Set createdBy from authenticated user
     };
+
+    // Convert numeric fields from string to number, handle optional fields
+    if (
+      finalData.price !== undefined &&
+      String(finalData.price).trim() !== ""
+    ) {
+      finalData.price = Number(finalData.price);
+    } else {
+      // Assuming price is required, prior validation should catch empty.
+      // If it could be optional & empty, you might delete it: delete finalData.price;
+    }
+
+    if (finalData.area !== undefined && String(finalData.area).trim() !== "") {
+      finalData.area = Number(finalData.area);
+    } else if (String(finalData.area).trim() === "") {
+      // If area is optional and submitted as an empty string, remove it from payload
+      // so backend doesn't try to validate/convert an empty string to a number.
+      delete finalData.area;
+    }
+
+    // Handle bedrooms and bathrooms based on property type
+    if (
+      formData.propertyType === "land" ||
+      formData.propertyType === "commercial"
+    ) {
+      delete finalData.bedrooms; // Remove if land/commercial
+      delete finalData.bathrooms; // Remove if land/commercial
+    } else {
+      // For other types, ensure bedrooms/bathrooms are numbers.
+      // Default to 0 if empty or not a valid number, aligning with schema defaults.
+      finalData.bedrooms =
+        String(formData.bedrooms).trim() === "" ||
+        isNaN(Number(formData.bedrooms))
+          ? 0
+          : Number(formData.bedrooms);
+      finalData.bathrooms =
+        String(formData.bathrooms).trim() === "" ||
+        isNaN(Number(formData.bathrooms))
+          ? 0
+          : Number(formData.bathrooms);
+    }
+
     console.log(
       "[useListingForm] Final data being submitted to /properties:",
       finalData
@@ -487,6 +539,7 @@ const useListingForm = () => {
 
     try {
       await axios.post(`${API_BASE_URL}/properties`, finalData, {
+        //
         headers: { Authorization: `Bearer ${idToken}` },
       });
       setSnackbar({
@@ -494,19 +547,32 @@ const useListingForm = () => {
         message: "Property listed successfully!",
         severity: "success",
       });
-      setTimeout(() => navigate("/user-profile"), 1500);
+      setTimeout(() => navigate("/user-profile"), 1500); // Or '/my-listings' or property detail page
     } catch (err) {
       const errorResponse = err.response;
       console.error(
         "Property submission error:",
         errorResponse ? errorResponse.data : err.message
       );
+
+      let detailedErrorMessages = "";
+      // Assuming backend sends validation errors in an 'errors' array like express-validator
+      if (
+        errorResponse?.data?.errors &&
+        Array.isArray(errorResponse.data.errors)
+      ) {
+        detailedErrorMessages = errorResponse.data.errors
+          .map((e) => `${e.path || "General"}: ${e.msg}`)
+          .join("; ");
+      }
+
       const errorMessage =
         errorResponse?.status === 401 || errorResponse?.status === 403
           ? `Authorization error (${errorResponse.status}). Please try logging in again.`
-          : errorResponse?.data?.message ||
-            errorResponse?.data?.error ||
-            "Property submission failed. Please try again.";
+          : detailedErrorMessages || // Show detailed validation errors first
+            errorResponse?.data?.message || // Then specific backend message
+            errorResponse?.data?.error || // Then general backend error
+            "Property submission failed. Please check your input and try again."; // Fallback
       setSnackbar({ open: true, message: errorMessage, severity: "error" });
     } finally {
       setLoadingSubmit(false);
@@ -519,7 +585,12 @@ const useListingForm = () => {
     navigate,
     validateStep,
     imageUrls,
-    steps, // Added steps dependency
+    steps, // Added 'steps' as it's used in the loop
+    activeStep, // Added 'activeStep' for setActiveStep
+    setActiveStep, // Added 'setActiveStep'
+    setSnackbar, // Added 'setSnackbar'
+    setLoadingSubmit, // Added 'setLoadingSubmit'
+    // API_BASE_URL is a const, not needed in deps array unless it can change
   ]);
 
   const handleCloseSnackbar = useCallback((_, reason) => {

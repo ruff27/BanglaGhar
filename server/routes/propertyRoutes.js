@@ -179,7 +179,7 @@ router.post(
       .withMessage("Invalid ownership papers status."),
     body("bangladeshDetails.propertyTenure")
       .optional()
-      .isIn(["freehold", "leasehold", ""]) // Allow empty string if it's truly optional and not selected
+      .isIn(["freehold", "leasehold", "unknown", ""]) // Add "unknown" here
       .withMessage("Invalid property tenure."),
   ],
   handleValidationErrors, //
