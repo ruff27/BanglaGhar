@@ -1,5 +1,4 @@
 // src/components/layout/ProfileMenu.js
-
 import React, { useState } from "react";
 import {
   IconButton,
@@ -10,142 +9,116 @@ import {
   ListItemIcon,
   Tooltip,
   ListItemText,
-  Badge, // Import Badge for future unread count
+  Badge,
 } from "@mui/material";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle"; //
-import FavoriteIcon from "@mui/icons-material/Favorite"; //
-import LogoutIcon from "@mui/icons-material/Logout"; //
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings"; //
-import ChatIcon from "@mui/icons-material/Chat"; // Import Chat icon
-import { useNavigate } from "react-router-dom"; //
-import { useAuth } from "../../context/AuthContext"; //
-import { useTranslation } from "react-i18next"; //
-// import myListings from "../../features/profile/hooks/useMyListings"; // This import seems unused in the provided ProfileMenu.js
-import HomeWorkIcon from "@mui/icons-material/HomeWork"; //
-// import { useChatContext } from '../../features/chat/context/ChatContext'; // For unread count later
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import ChatIcon from "@mui/icons-material/Chat";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useChatContext } from "../../features/chat/context/ChatContext";
+import { useTranslation } from "react-i18next";
+import HomeWorkIcon from "@mui/icons-material/HomeWork";
 
 export default function ProfileMenu({ handleLogout }) {
-  //
-  const [anchor, setAnchor] = useState(null); //
-  const navigate = useNavigate(); //
-  const { user } = useAuth(); //
-  const { t } = useTranslation(); //
-  // const { unreadMessagesCount } = useChatContext(); // Placeholder for future unread count
+  const [anchor, setAnchor] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { totalUnreadMessages, isChatLoading } = useChatContext();
+  const { t } = useTranslation();
 
-  const handleOpen = (e) => setAnchor(e.currentTarget); //
-  const handleClose = () => setAnchor(null); //
+  const handleOpen = (e) => setAnchor(e.currentTarget);
+  const handleClose = () => setAnchor(null);
 
   const go = (path) => {
-    //
-    navigate(path); //
-    handleClose(); //
+    navigate(path);
+    handleClose();
   };
 
   const triggerLogout = () => {
-    //
     if (handleLogout) {
-      //
-      handleLogout(); //
+      handleLogout();
     }
-    handleClose(); //
+    handleClose();
   };
+
+  // Determine badge visibility and content
+  const badgeInvisible = isChatLoading || totalUnreadMessages < 1;
+  const badgeContent = isChatLoading ? 0 : totalUnreadMessages; // Show 0 if loading, otherwise actual count
 
   return (
     <>
-      <Tooltip title="Account">
-        {" "}
-        {/* */}
+      <Tooltip title={t("account_tooltip", "Account")}>
         <IconButton onClick={handleOpen} sx={{ p: 0, ml: 2 }}>
-          {" "}
-          {/* */}
-          {/* Avatar with unread badge (badge invisible if count is 0) */}
           <Badge
-            badgeContent={0} // Replace with unreadMessagesCount later
+            badgeContent={badgeContent}
             color="error"
             overlap="circular"
-            variant="dot" // Use "dot" for a subtle indicator, or number for count
-            invisible={true} // Set to 'unreadMessagesCount < 1' later
+            invisible={badgeInvisible}
           >
             <Avatar sx={{ bgcolor: "primary.main" }}>
               {(
                 user?.displayName?.charAt(0) ||
-                user?.name?.charAt(0) ||
-                "#"
-              )?.toUpperCase()}
+                user?.name?.charAt(0) || // Fallback for user.name if displayName is not present
+                "U"
+              ) // Ultimate fallback
+                ?.toUpperCase()}
             </Avatar>
           </Badge>
         </IconButton>
       </Tooltip>
-      <Menu //
-        anchorEl={anchor} //
-        open={Boolean(anchor)} //
-        onClose={handleClose} //
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={handleClose}
         PaperProps={{
-          //
-          elevation: 3, //
+          elevation: 3,
           sx: {
-            //
-            mt: 1.5, //
-            minWidth: 200, // Increased minWidth slightly for new item with badge
-            overflow: "visible", //
-            "& .MuiAvatar-root": { width: 32, height: 32, ml: -0.5, mr: 1 }, //
+            mt: 1.5,
+            minWidth: 220, // Slightly wider for badge room
+            overflow: "visible",
+            "& .MuiAvatar-root": { width: 32, height: 32, ml: -0.5, mr: 1 },
           },
         }}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }} //
-        transformOrigin={{ vertical: "top", horizontal: "right" }} //
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <MenuItem onClick={() => go("/user-profile")}>
-          {" "}
-          {/* */}
           <ListItemIcon>
-            {" "}
-            {/* */}
-            <AccountCircleIcon fontSize="small" /> {/* */}
+            <AccountCircleIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>{t("nav_profile")}</ListItemText> {/* */}
+          <ListItemText>{t("nav_profile")}</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => go("/my-listings")}>
-          {" "}
-          {/* */}
           <ListItemIcon>
-            {" "}
-            {/* */}
-            <HomeWorkIcon fontSize="small" /> {/* */}
+            <HomeWorkIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>{t("my_listings", "My Listings")}</ListItemText>{" "}
-          {/* Added t() for consistency */}
+          <ListItemText>{t("my_listings", "My Listings")}</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => go("/saved")}>
-          {" "}
-          {/* */}
           <ListItemIcon>
-            {" "}
-            {/* */}
-            <FavoriteIcon fontSize="small" /> {/* */}
+            <FavoriteIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>{t("nav_saved")}</ListItemText> {/* */}
+          <ListItemText>{t("nav_saved")}</ListItemText>
         </MenuItem>
-        {/* New Chat/Messages Link */}
         <MenuItem onClick={() => go("/chat")}>
           <ListItemIcon>
-            {/* Replace 0 with actual unreadMessagesCount later */}
             <Badge
-              badgeContent={0}
+              badgeContent={badgeContent}
               color="error"
-              variant="dot"
-              invisible={true}
+              invisible={badgeInvisible}
             >
               <ChatIcon fontSize="small" />
             </Badge>
           </ListItemIcon>
-          <ListItemText>{t("nav_chat", "Chat")}</ListItemText>{" "}
-          {/* Ensure "nav_chat" is in your i18n files */}
+          <ListItemText>{t("nav_chat", "Chat")}</ListItemText>
         </MenuItem>
         {user?.isAdmin && [
-          // Return an array of items
           <Divider sx={{ my: 0.5 }} key="admin-divider" />,
           <MenuItem
-            onClick={() => go("/admin/pending-approvals")}
+            onClick={() => go("/admin/pending-approvals")} // Assuming this is your main admin page
             key="admin-dashboard-link"
           >
             <ListItemIcon>
@@ -156,16 +129,12 @@ export default function ProfileMenu({ handleLogout }) {
             </ListItemText>
           </MenuItem>,
         ]}
-        <Divider sx={{ my: 0.5 }} /> {/* */}
+        <Divider sx={{ my: 0.5 }} />
         <MenuItem onClick={triggerLogout} sx={{ color: "error.main" }}>
-          {" "}
-          {/* */}
           <ListItemIcon>
-            {" "}
-            {/* */}
-            <LogoutIcon fontSize="small" sx={{ color: "error.main" }} /> {/* */}
+            <LogoutIcon fontSize="small" sx={{ color: "error.main" }} />
           </ListItemIcon>
-          <ListItemText>{t("nav_logout")}</ListItemText> {/* */}
+          <ListItemText>{t("nav_logout")}</ListItemText>
         </MenuItem>
       </Menu>
     </>

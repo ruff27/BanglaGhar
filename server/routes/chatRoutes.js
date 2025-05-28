@@ -15,6 +15,14 @@ router.get(
   chatController.generateAblyToken
 );
 
+// Get a summary of all conversations for the logged-in user (for unread counts etc.)
+router.get(
+  "/conversations/summary",
+  authMiddleware,
+  fetchUserProfileMiddleware,
+  chatController.getConversationsSummaryForUser
+);
+
 // --- NEW CHAT AND MESSAGE ROUTES ---
 
 // Initiate or get an existing conversation

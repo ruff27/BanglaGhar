@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   List,
-  // ListItem, // Replaced by ListItemButton
   ListItemText,
   ListItemAvatar,
   Avatar,
@@ -12,62 +11,71 @@ import {
   Box,
   ListItemButton,
   ListItemIcon,
-  // Badge, // For unread messages later
-  Link, // Import MUI Link for styling consistency
+  Badge,
 } from "@mui/material";
-import ImageIcon from "@mui/icons-material/Image";
+import ImageIcon from "@mui/icons-material/Image"; // Default icon for property
 import BusinessIcon from "@mui/icons-material/Business";
-import LaunchIcon from "@mui/icons-material/Launch"; // Icon for "view property" link
-
-// NEW IMPORT for react-router-dom Link
+import LaunchIcon from "@mui/icons-material/Launch";
 import { Link as RouterLink } from "react-router-dom";
 
-import { useAuth } from "../../../context/AuthContext"; //
+import { useAuth } from "../../../context/AuthContext";
+import { useChatContext } from "../context/ChatContext";
 import { getConversationsForUser } from "../services/chatService";
 
 const ConversationList = ({
-  onSelectConversation,
-  currentUserProfileId,
-  activeConversationId,
+  currentUserProfileId, // Prop for current user's ID
+  // activeConversationId prop is no longer strictly needed here if read from context
 }) => {
-  const [conversations, setConversations] = useState([]); //
-  const [loading, setLoading] = useState(true); //
-  const [error, setError] = useState(null); //
-  const { idToken, user } = useAuth(); //
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { idToken, user } = useAuth();
+  const {
+    unreadCounts,
+    selectConversation: selectConversationFromContext, // Use this from context
+    activeConversationId, // Get active ID directly from context
+  } = useChatContext();
 
-  const actualCurrentUserId = currentUserProfileId || user?._id; //
+  // Use user._id from auth context if currentUserProfileId prop is not explicitly passed
+  const actualCurrentUserId = currentUserProfileId || user?._id;
+
+  // Renamed to avoid conflict with context's selectConversation
+  const handleListItemClick = useCallback(
+    (conv) => {
+      selectConversationFromContext(conv); // Directly use the function from context
+    },
+    [selectConversationFromContext]
+  );
 
   const fetchConversations = useCallback(async () => {
-    //
     if (!idToken) {
-      //
-      setLoading(false); //
-      return; //
+      setLoading(false);
+      return;
     }
-    setLoading(true); //
-    setError(null); //
+    setLoading(true);
+    setError(null);
     try {
-      const convos = await getConversationsForUser(idToken); //
-      setConversations((convoReults) => convos); //
-      console.log("[ConversationList] Fetched conversations:", convos); //
-      if (!activeConversationId && convos && convos.length > 0) {
-        //
-        onSelectConversation(convos[0]); //
-      }
+      const convos = await getConversationsForUser(idToken);
+      setConversations(convos);
+
+      // Auto-selection logic (optional, could be handled by ChatPage or based on requirements)
+      // If no conversation is active and there are fetched conversations, select the first one.
+      // This ensures a chat is displayed on load if available, on desktop.
+      // const currentActiveId = activeConversationId; // Read from context
+      // if (!currentActiveId && convos && convos.length > 0) {
+      //    handleListItemClick(convos[0]);
+      // }
     } catch (err) {
-      console.error("[ConversationList] Error fetching conversations:", err); //
-      setError(err.message || "Failed to load conversations."); //
+      setError(err.message || "Failed to load conversations.");
     } finally {
-      setLoading(false); //
+      setLoading(false);
     }
-  }, [idToken, onSelectConversation, activeConversationId]); //
+  }, [idToken /*, activeConversationId, handleListItemClick */]); // Dependencies for fetchConversations
 
   useEffect(() => {
-    //
-    fetchConversations(); //
-  }, [fetchConversations]); //
+    fetchConversations();
+  }, [fetchConversations]);
 
-  // Loading, error, and empty states remain the same as in the previous version of ConversationList.js
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
@@ -99,54 +107,55 @@ const ConversationList = ({
         overflowY: "auto",
       }}
     >
-      {" "}
-      {/* */}
       {conversations.map((conv) => {
-        if (!conv || !conv.participants) return null; //
+        if (!conv || !conv.participants) return null;
 
         const otherParticipant = conv.participants.find(
           (p) => p && p._id !== actualCurrentUserId
-        ); //
+        );
         const displayName =
           otherParticipant?.displayName ||
           otherParticipant?.email ||
-          "Unknown User"; //
-        const profilePicUrl = otherParticipant?.profilePictureUrl; //
+          "Unknown User";
+        const profilePicUrl = otherParticipant?.profilePictureUrl;
 
-        const lastMessageText = conv.lastMessage?.text || "No messages yet..."; //
-        const lastMessageSender = conv.lastMessage?.senderId; //
-        let lastMessagePrefix = ""; //
+        const lastMessageText = conv.lastMessage?.text || "No messages yet...";
+        const lastMessageSender = conv.lastMessage?.senderId;
+        let lastMessagePrefix = "";
 
         if (lastMessageSender) {
-          //
           if (lastMessageSender._id === actualCurrentUserId) {
-            //
-            lastMessagePrefix = "You: "; //
+            lastMessagePrefix = "You: ";
           }
         }
 
-        const propertyTitle = conv.property?.title; //
+        const propertyTitle = conv.property?.title;
         const propertyImage = conv.property?.images?.[0]
-          ? `/pictures/${conv.property.images[0]}`
-          : null; //
-        const propertyId = conv.property?._id; // Get property ID for the link
+          ? `/pictures/${conv.property.images[0]}` // Ensure this path is correct for your setup
+          : null;
+        const propertyId = conv.property?._id;
+
+        const unreadCount = unreadCounts[conv._id] || 0;
 
         return (
           <ListItemButton
             key={conv._id}
-            onClick={() => onSelectConversation(conv)}
-            selected={activeConversationId === conv._id}
+            onClick={() => handleListItemClick(conv)} // Updated to use handleListItemClick
+            selected={activeConversationId === conv._id} // Use activeConversationId from context
             divider
-            sx={{ alignItems: "flex-start", py: 1.5 }} //
+            sx={{ alignItems: "flex-start", py: 1.5 }}
           >
             <ListItemAvatar sx={{ mt: 0.5 }}>
-              {" "}
-              {/* */}
-              <Avatar alt={displayName} src={profilePicUrl}>
-                {" "}
-                {/* */}
-                {!profilePicUrl && displayName.charAt(0).toUpperCase()} {/* */}
-              </Avatar>
+              <Badge
+                badgeContent={unreadCount}
+                color="error"
+                invisible={unreadCount === 0}
+                overlap="circular"
+              >
+                <Avatar alt={displayName} src={profilePicUrl}>
+                  {!profilePicUrl && displayName.charAt(0).toUpperCase()}
+                </Avatar>
+              </Badge>
             </ListItemAvatar>
             <ListItemText
               primary={
@@ -155,79 +164,74 @@ const ConversationList = ({
                   component="div"
                   noWrap
                   fontWeight={
-                    activeConversationId === conv._id ? "bold" : "normal"
+                    activeConversationId === conv._id || unreadCount > 0
+                      ? "bold"
+                      : "normal"
                   }
+                  color={unreadCount > 0 ? "primary.main" : "text.primary"}
                 >
-                  {" "}
-                  {/* */}
                   {displayName}
                 </Typography>
               }
               secondary={
                 <>
-                  {propertyId &&
-                    propertyTitle && ( // Check for propertyId as well for link
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 0.5 }}
+                  {propertyId && propertyTitle && (
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", mb: 0.5 }}
+                    >
+                      <BusinessIcon
+                        sx={{
+                          fontSize: "0.9rem",
+                          verticalAlign: "middle",
+                          mr: 0.5,
+                          color: "text.secondary",
+                        }}
+                      />
+                      <Typography
+                        component={RouterLink}
+                        to={`/properties/details/${propertyId}`}
+                        variant="caption"
+                        color="text.secondary"
+                        onClick={(event) => event.stopPropagation()}
+                        sx={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          flexShrink: 1,
+                          minWidth: 0,
+                          textDecoration: "none",
+                          "&:hover": { textDecoration: "underline" },
+                        }}
+                        title={`Regarding: ${propertyTitle}`}
                       >
-                        <BusinessIcon
-                          sx={{
-                            fontSize: "0.9rem",
-                            verticalAlign: "middle",
-                            mr: 0.5,
-                            color: "text.secondary",
-                          }}
-                        />{" "}
-                        {/* */}
-                        <Link
-                          component={RouterLink}
-                          to={`/properties/details/${propertyId}`} // Navigate to property detail page
-                          variant="caption"
-                          color="text.secondary"
-                          underline="hover"
-                          onClick={(event) => event.stopPropagation()} // Prevents ListItemButton onClick
-                          sx={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            flexShrink: 1, // Allow shrinking if space is tight
-                            minWidth: 0, // Important for textOverflow with flex items
-                          }}
-                          title={`Regarding: ${propertyTitle}`} // Tooltip for full title if truncated
-                        >
-                          Regarding: {propertyTitle}
-                        </Link>
-                        <LaunchIcon
-                          sx={{
-                            fontSize: "0.8rem",
-                            ml: 0.5,
-                            color: "text.secondary",
-                            flexShrink: 0,
-                          }}
-                        />
-                      </Box>
-                    )}
+                        Regarding: {propertyTitle}
+                      </Typography>
+                      <LaunchIcon
+                        sx={{
+                          fontSize: "0.8rem",
+                          ml: 0.5,
+                          color: "text.secondary",
+                          flexShrink: 0,
+                        }}
+                      />
+                    </Box>
+                  )}
                   <Typography
                     sx={{ display: "block" }}
                     component="span"
                     variant="body2"
-                    color={
-                      activeConversationId === conv._id
-                        ? "text.primary"
-                        : "text.secondary"
-                    }
+                    color={unreadCount > 0 ? "text.primary" : "text.secondary"}
                     noWrap
+                    fontWeight={unreadCount > 0 ? "bold" : "normal"}
                   >
-                    {" "}
-                    {/* */}
                     {lastMessagePrefix}
                     {lastMessageText}
                   </Typography>
                 </>
               }
-              secondaryTypographyProps={{ component: "div" }} // Ensure secondary can render complex children
+              secondaryTypographyProps={{ component: "div" }}
             />
-            {propertyImage && ( //
+            {propertyImage && (
               <ListItemIcon
                 sx={{
                   minWidth: "40px",
@@ -236,17 +240,13 @@ const ConversationList = ({
                   display: { xs: "none", sm: "flex" },
                 }}
               >
-                {" "}
-                {/* */}
                 <Avatar
                   variant="rounded"
                   src={propertyImage}
                   alt="Property"
                   sx={{ width: 36, height: 36 }}
                 >
-                  {" "}
-                  {/* */}
-                  <ImageIcon /> {/* */}
+                  <ImageIcon />
                 </Avatar>
               </ListItemIcon>
             )}

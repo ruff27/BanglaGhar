@@ -1,9 +1,18 @@
 // src/features/chat/context/ChatContext.js
-import React, { createContext, useContext, useState, useCallback } from "react";
-import useAblyClient from "../hooks/useAblyClient"; //
-import { useSnackbar } from "../../../context/SnackbarContext"; // Import useSnackbar here
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+import useAblyClient from "../hooks/useAblyClient";
+import { useSnackbar } from "../../../context/SnackbarContext";
+import { useAuth } from "../../../context/AuthContext";
+import { getConversationsSummary } from "../services/chatService";
 
 const ChatContext = createContext(null);
+const LAST_SEEN_MESSAGES_KEY_PREFIX = "chatApp_lastSeenMessages_";
 
 export const useChatContext = () => {
   const context = useContext(ChatContext);
@@ -14,76 +23,271 @@ export const useChatContext = () => {
 };
 
 export const ChatProvider = ({ children }) => {
-  const { ably, isAblyConnected, ablyError } = useAblyClient(); // This hook still manages the Ably client
-  const { showSnackbar } = useSnackbar(); // Get showSnackbar function
+  const { ably, isAblyConnected, ablyError } = useAblyClient();
+  const { showSnackbar } = useSnackbar();
+  const { user, isLoggedIn, idToken } = useAuth();
 
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [activeConversationData, setActiveConversationData] = useState(null);
-  // You might also want to store activeConversationData here if needed globally by other components
-  // const [activeConversationData, setActiveConversationData] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [totalUnreadMessages, setTotalUnreadMessages] = useState(0);
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+  const [detailedUnreadConversations, setDetailedUnreadConversations] =
+    useState([]);
+
+  const getLocalStorageKey = useCallback(() => {
+    return user?._id ? `${LAST_SEEN_MESSAGES_KEY_PREFIX}${user._id}` : null;
+  }, [user?._id]);
+
+  useEffect(() => {
+    let total = 0;
+    Object.values(unreadCounts).forEach((count) => (total += count || 0));
+    setTotalUnreadMessages(total);
+  }, [unreadCounts]);
+
+  // Side effect to update localStorage when a conversation is active and data is loaded
+  useEffect(() => {
+    const storageKey = getLocalStorageKey();
+    if (
+      storageKey &&
+      activeConversationId &&
+      activeConversationData?.lastMessage?.createdAt
+    ) {
+      try {
+        const seenTimestamps = JSON.parse(
+          localStorage.getItem(storageKey) || "{}"
+        );
+        const newTimestamp = new Date(
+          activeConversationData.lastMessage.createdAt
+        ).getTime();
+        if (
+          !seenTimestamps[activeConversationId] ||
+          newTimestamp > seenTimestamps[activeConversationId]
+        ) {
+          seenTimestamps[activeConversationId] = newTimestamp;
+          localStorage.setItem(storageKey, JSON.stringify(seenTimestamps));
+        }
+      } catch (e) {
+        console.error(
+          "Error updating localStorage for active conversation's last message:",
+          e
+        );
+      }
+    }
+  }, [activeConversationData, activeConversationId, getLocalStorageKey]);
 
   const selectConversation = useCallback(
     (conversationData) => {
+      let idToSet = null;
+      let dataToSet = null;
+
       if (conversationData && conversationData._id) {
-        console.log(
-          "[ChatContext] Setting active conversation:",
-          conversationData
-        );
-        setActiveConversationId(conversationData._id);
-        setActiveConversationData(conversationData); // Store the whole object
+        idToSet = conversationData._id;
+        const keys = Object.keys(conversationData);
+        // If only _id is present, it's just an ID wrapper. dataToSet becomes null,
+        // indicating ChatWindow should fetch full details.
+        // Otherwise, assume it's richer initial data.
+        dataToSet =
+          keys.length === 1 && keys[0] === "_id" ? null : conversationData;
+      } else if (typeof conversationData === "string" && conversationData) {
+        idToSet = conversationData; // A raw ID string was passed
+        dataToSet = null;
       } else if (conversationData === null) {
-        console.log("[ChatContext] Clearing active conversation.");
+        // Explicitly clearing selection
         setActiveConversationId(null);
-        setActiveConversationData(null); // Clear the object too
+        setActiveConversationData(null);
+        return;
       } else {
-        // This case might occur if only an ID is passed, but ChatPage now tries to pass the object.
-        // If conversationData is just an ID string (e.g., from URL param not yet resolved to full object):
-        if (typeof conversationData === "string" && conversationData) {
-          // Check if it's just an ID string
-          console.log(
-            "[ChatContext] Setting active conversationId by ID string:",
-            conversationData
-          );
-          setActiveConversationId(conversationData);
-          setActiveConversationData(null); // Full data would need to be fetched by ChatWindow/ConversationList
-        } else {
-          console.warn(
-            "[ChatContext] Attempted to select invalid or incomplete conversation data:",
-            conversationData
-          );
-        }
+        // console.warn("[ChatContext] selectConversation: Invalid data:", conversationData);
+        return; // Invalid data, do nothing
+      }
+
+      // These are direct state updates. React handles preventing re-renders if values are identical.
+      setActiveConversationId(idToSet);
+      setActiveConversationData(dataToSet);
+
+      if (idToSet) {
+        setUnreadCounts((prevCounts) => {
+          if (prevCounts[idToSet] && prevCounts[idToSet] > 0) {
+            const newCounts = { ...prevCounts };
+            delete newCounts[idToSet];
+            return newCounts;
+          }
+          return prevCounts;
+        });
+        setDetailedUnreadConversations((prevDetails) =>
+          prevDetails.filter((convo) => convo.id !== idToSet)
+        );
       }
     },
-    [activeConversationId]
+    // This function's reference is now stable as it only depends on state setters.
+    [
+      setActiveConversationId,
+      setActiveConversationData,
+      setUnreadCounts,
+      setDetailedUnreadConversations,
+    ]
   );
 
-  // This function will be called by useAblyClient when a notification arrives
+  const updateDetailedUnreadConversations = useCallback(
+    (summary, currentUnreadCounts, currentUserId) => {
+      const unreadConvDetails = summary
+        .filter((convo) => currentUnreadCounts[convo._id] > 0)
+        .map((convo) => {
+          const otherParticipant = convo.participants.find(
+            (p) => p && p._id !== currentUserId
+          );
+          return {
+            id: convo._id,
+            displayName:
+              otherParticipant?.displayName ||
+              otherParticipant?.email ||
+              "Unknown User",
+            lastMessageText:
+              convo.lastMessage?.text?.substring(0, 35) +
+                (convo.lastMessage?.text?.length > 35 ? "..." : "") ||
+              "New message",
+            profilePictureUrl: otherParticipant?.profilePictureUrl,
+            count: currentUnreadCounts[convo._id],
+            // Store more complete data from summary for potential use by selectConversation
+            participants: convo.participants,
+            lastMessage: convo.lastMessage,
+            property: convo.property,
+            _id: convo._id, // Ensure _id is also at the top level for convenience
+          };
+        });
+      setDetailedUnreadConversations(unreadConvDetails);
+    },
+    []
+  );
+
+  const fetchInitialUnreadDetails = useCallback(
+    async (token, currentUserId) => {
+      const storageKey = getLocalStorageKey();
+      if (!currentUserId || !storageKey || isInitialLoadComplete) {
+        if (!isInitialLoadComplete) setIsInitialLoadComplete(true);
+        return;
+      }
+      try {
+        const conversationsSummary = await getConversationsSummary(token);
+        const initialUnread = {};
+        const seenTimestamps = JSON.parse(
+          localStorage.getItem(storageKey) || "{}"
+        );
+        conversationsSummary.forEach((convo) => {
+          if (
+            convo.lastMessage &&
+            convo.lastMessage.senderId?._id !== currentUserId
+          ) {
+            const lastMessageTime = new Date(
+              convo.lastMessage.createdAt
+            ).getTime();
+            const lastSeenTime = seenTimestamps[convo._id] || 0;
+            if (lastMessageTime > lastSeenTime) {
+              initialUnread[convo._id] = (initialUnread[convo._id] || 0) + 1;
+            }
+          }
+        });
+        setUnreadCounts(initialUnread);
+        updateDetailedUnreadConversations(
+          conversationsSummary,
+          initialUnread,
+          currentUserId
+        );
+      } catch (error) {
+        console.error(
+          "[ChatContext] Failed to fetch initial unread details:",
+          error
+        );
+        showSnackbar("Could not load chat summary.", "error");
+      } finally {
+        setIsInitialLoadComplete(true);
+      }
+    },
+    [
+      showSnackbar,
+      updateDetailedUnreadConversations,
+      getLocalStorageKey,
+      isInitialLoadComplete,
+    ]
+  );
+
   const handleIncomingMessageNotification = useCallback(
     (notificationData) => {
-      console.log(
-        "[ChatContext] Handling incoming message notification:",
-        notificationData
-      );
-      console.log(
-        "[ChatContext] Current activeConversationId:",
-        activeConversationId
-      );
+      if (!notificationData || !notificationData.conversationId || !user?._id)
+        return;
+      const {
+        conversationId: incomingConvId,
+        senderDisplayName,
+        body,
+        senderId,
+        timestamp,
+      } = notificationData;
+      if (senderId === user._id) return;
 
-      // Only show snackbar if the notification is for a DIFFERENT conversation
-      // or if no conversation is active (activeConversationId is null)
-      if (activeConversationId !== notificationData.conversationId) {
+      if (activeConversationId !== incomingConvId) {
         showSnackbar(
-          `${notificationData.title || "New Message"}: ${
-            notificationData.body || ""
+          `${senderDisplayName || "New Message"}: ${
+            body || "You have a new message."
           }`,
           "info"
         );
+        setUnreadCounts((prevCounts) => ({
+          ...prevCounts,
+          [incomingConvId]: (prevCounts[incomingConvId] || 0) + 1,
+        }));
+      } else {
+        const storageKey = getLocalStorageKey();
+        if (storageKey && timestamp) {
+          try {
+            const seenTimestamps = JSON.parse(
+              localStorage.getItem(storageKey) || "{}"
+            );
+            seenTimestamps[incomingConvId] = new Date(timestamp).getTime();
+            localStorage.setItem(storageKey, JSON.stringify(seenTimestamps));
+          } catch (e) {
+            console.error(
+              "Error updating localStorage for active chat notification:",
+              e
+            );
+          }
+        }
       }
-      // Here, you would also typically trigger logic to update unread counts for the specific conversationId
-      // e.g., incrementUnreadCount(notificationData.conversationId);
     },
-    [activeConversationId, showSnackbar]
+    [
+      activeConversationId,
+      showSnackbar,
+      user?._id,
+      getLocalStorageKey,
+      setUnreadCounts,
+    ] // Added setUnreadCounts
   );
+
+  useEffect(() => {
+    const storageKey = getLocalStorageKey();
+    if (
+      isLoggedIn &&
+      idToken &&
+      user?._id &&
+      storageKey &&
+      !isInitialLoadComplete
+    ) {
+      fetchInitialUnreadDetails(idToken, user._id);
+    } else if (!isLoggedIn && isInitialLoadComplete) {
+      setUnreadCounts({});
+      setDetailedUnreadConversations([]);
+      setIsInitialLoadComplete(false);
+      setActiveConversationId(null);
+      setActiveConversationData(null);
+    }
+  }, [
+    isLoggedIn,
+    idToken,
+    user,
+    fetchInitialUnreadDetails,
+    isInitialLoadComplete,
+    getLocalStorageKey,
+  ]);
 
   return (
     <ChatContext.Provider
@@ -91,11 +295,17 @@ export const ChatProvider = ({ children }) => {
         ably,
         isAblyConnected,
         ablyError,
-        activeConversationId, // Provide activeConversationId
+        activeConversationId,
         activeConversationData,
-        // activeConversationData, // Provide if you store it here
-        selectConversation, // Provide function to set active conversation
-        handleIncomingMessageNotification, // Provide handler for Ably hook
+        selectConversation, // Reference is now stable
+        handleIncomingMessageNotification,
+        unreadCounts,
+        totalUnreadMessages,
+        detailedUnreadConversations,
+        updateDetailedUnreadConversations,
+        isChatLoading:
+          !isInitialLoadComplete ||
+          (isLoggedIn && !isAblyConnected && !ablyError),
       }}
     >
       {children}

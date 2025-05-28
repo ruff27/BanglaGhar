@@ -141,6 +141,28 @@ export const getConversationsForUser = async (authToken) => {
  * @param {number} [limit=30] - The number of messages per page.
  * @returns {Promise<object>} An object containing messages and pagination info.
  */
+export const getConversationsSummary = async (authToken) => {
+  if (!authToken) throw new Error("Authentication token is required.");
+
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/chat/conversations/summary`,
+      {
+        headers: { Authorization: `Bearer ${authToken}` },
+      }
+    );
+    return response.data; // Expected: Array of conversation objects
+  } catch (error) {
+    console.error(
+      "Error fetching conversations summary:",
+      error.response?.data || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch conversations summary."
+    );
+  }
+};
+
 export const getMessagesInConversation = async (
   authToken,
   conversationId,

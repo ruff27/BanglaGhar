@@ -315,3 +315,43 @@ exports.getMessagesInConversation = async (req, res) => {
     });
   }
 };
+
+// get conversation summary for user
+exports.getConversationsSummaryForUser = async (req, res) => {
+  if (!req.userProfile || !req.userProfile._id) {
+    return res
+      .status(401)
+      .json({ message: "User profile not found. Authentication required." });
+  }
+  const userId = req.userProfile._id;
+
+  try {
+    const conversations = await Conversation.find({ participants: userId })
+      .populate({
+        path: "participants",
+        select: "displayName email cognitoSub profilePictureUrl _id", // Ensure _id is selected
+      })
+      .populate({
+        path: "lastMessage",
+        populate: {
+          path: "senderId",
+          select: "displayName email cognitoSub _id", // Ensure _id is selected
+        },
+      })
+      .populate({
+        path: "property",
+        select: "title _id images", // Select fields you need for property
+      })
+      .sort({ updatedAt: -1 }); // Sort by most recent activity
+
+    // The 'conversations' variable now holds the data in the format
+    // the frontend will expect for the summary.
+    res.status(200).json(conversations);
+  } catch (error) {
+    console.error("Error fetching conversations summary for user:", error);
+    res.status(500).json({
+      message: "Server error fetching conversations summary.",
+      error: error.message,
+    });
+  }
+};

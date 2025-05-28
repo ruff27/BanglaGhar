@@ -1,5 +1,5 @@
 // src/features/chat/ChatPage.js
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -11,19 +11,22 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
-  IconButton,
-} from "@mui/material"; // Added useTheme, useMediaQuery, IconButton
-import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // For back button on mobile chat window
+} from "@mui/material";
+
 import { useAuth } from "../../context/AuthContext";
 import { useChatContext } from "./context/ChatContext";
 
-import ConversationList from "./components/ConversationList";
-import ChatWindow from "./components/ChatWindow";
+import ConversationList from "./components/ConversationList"; // Assuming this is the correct path
+import ChatWindow from "./components/ChatWindow"; // Assuming this is the correct path
+// import AblyConnectionStatus from "./components/AblyConnectionStatus"; // Optional: For debugging
 
 const ChatPage = () => {
   const location = useLocation();
   const params = useParams();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobileView = useMediaQuery(theme.breakpoints.down("sm"));
+
   const { isLoggedIn, isLoading: isAuthLoading, user } = useAuth();
   const {
     isAblyConnected,
@@ -31,14 +34,11 @@ const ChatPage = () => {
     activeConversationData,
     activeConversationId,
     selectConversation,
+    isChatLoading,
   } = useChatContext();
 
-  const theme = useTheme();
-  // Check if the screen is small (mobile view)
-  // theme.breakpoints.down('sm') usually means 'xs' and 'sm'
-  const isMobileView = useMediaQuery(theme.breakpoints.down("sm"));
+  const processedStateForIdRef = useRef(null);
 
-  // Effect to handle incoming conversationId from route state or params
   useEffect(() => {
     if (isAuthLoading) return;
 
@@ -47,66 +47,78 @@ const ChatPage = () => {
       return;
     }
 
-    const stateConversationId = location.state?.conversationId;
+    const paramConvId = params.conversationId;
+    const stateConvId = location.state?.conversationId;
     const stateInitialData = location.state?.initialConversationData;
-    const paramConversationId = params.conversationId;
 
-    let conversationToSelect = null;
-    let dataToSelect = null;
+    let targetId = null;
+    let dataForSelection = null;
 
-    if (stateConversationId) {
-      console.log(
-        "[ChatPage] Received conversation from state:",
-        stateInitialData || stateConversationId
-      );
-      conversationToSelect = stateConversationId;
-      dataToSelect = stateInitialData || { _id: stateConversationId };
-      // Clear location state after processing it
-      navigate(location.pathname, { replace: true, state: {} });
-    } else if (paramConversationId) {
-      console.log(
-        "[ChatPage] Received conversationId from URL param:",
-        paramConversationId
-      );
-      conversationToSelect = paramConversationId;
-      dataToSelect = { _id: paramConversationId };
+    if (paramConvId) {
+      // If URL specifies a conversation ID
+      targetId = paramConvId;
+      if (
+        stateConvId === paramConvId &&
+        stateInitialData &&
+        processedStateForIdRef.current !== paramConvId
+      ) {
+        dataForSelection = stateInitialData;
+        processedStateForIdRef.current = paramConvId;
+        navigate(location.pathname, { replace: true, state: {} });
+      } else {
+        dataForSelection = { _id: targetId };
+      }
+    } else {
+      // No conversation ID in URL params (e.g., on base /chat path)
+      processedStateForIdRef.current = null;
+      // Important: DO NOT call selectConversation(null) here based on isMobileView.
+      // If a user clicks an item in ConversationList, activeConversationId will be set.
+      // This useEffect should not clear it if the URL doesn't have an ID.
+      // The display logic in JSX handles showing/hiding panels based on activeConversationId.
+      // selectConversation(null) is handled by explicit actions like handleMobileBackToConversations.
+      return; // No specific conversation ID from URL to process further in this effect.
     }
 
-    if (conversationToSelect) {
-      // If a conversation is directly specified (e.g. navigated from property or URL)
-      // select it. This will also make ChatWindow visible on mobile if isMobileView is true.
-      selectConversation(dataToSelect);
-    } else if (!activeConversationId && !isMobileView) {
-      // If no conversation is active AND we are on desktop,
-      // ConversationList might auto-select the first one later.
-      // On mobile, we want to show the list first if no specific conversation is targeted.
+    if (targetId) {
+      const isNewDataForSameActiveId =
+        targetId === activeConversationId &&
+        dataForSelection &&
+        activeConversationData &&
+        JSON.stringify(dataForSelection) !==
+          JSON.stringify(activeConversationData);
+
+      const isDifferentActiveId = targetId !== activeConversationId;
+
+      if (isDifferentActiveId || isNewDataForSameActiveId) {
+        selectConversation(dataForSelection);
+      }
     }
   }, [
-    location.state,
     params.conversationId,
+    location.state,
+    location.pathname,
     isLoggedIn,
     isAuthLoading,
     navigate,
-    selectConversation,
-    location.pathname,
+    selectConversation, // Stable reference from ChatContext is crucial
     activeConversationId,
-    isMobileView,
-  ]); // Added activeConversationId and isMobileView
+    activeConversationData,
+    // isMobileView was removed from this specific effect's dependencies as the primary logic
+    // for no paramConvId path was simplified to not alter selection.
+  ]);
 
-  // Handler for mobile view to go back from ChatWindow to ConversationList
   const handleMobileBackToConversations = () => {
-    console.log(
-      "[ChatPage] handleMobileBackToConversations called. Clearing active conversation."
-    ); // <<< ADD THIS LOG
     selectConversation(null);
+    if (params.conversationId) {
+      navigate("/chat");
+    }
   };
 
-  // Loading and error states (same as before)
   if (isAuthLoading) {
     return (
       <Container sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>Loading authentication...</Typography>
+        <Typography sx={{ mt: 1 }}>Loading authentication...</Typography>
       </Container>
     );
   }
@@ -114,6 +126,14 @@ const ChatPage = () => {
     return (
       <Container sx={{ textAlign: "center", mt: 5 }}>
         <Alert severity="warning">Please log in to access your chats.</Alert>
+      </Container>
+    );
+  }
+  if (isChatLoading && !activeConversationId) {
+    return (
+      <Container sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 1 }}>Loading chat features...</Typography>
       </Container>
     );
   }
@@ -129,11 +149,11 @@ const ChatPage = () => {
       </Container>
     );
   }
-  if (!isAblyConnected) {
+  if (!isAblyConnected && !ablyError && isLoggedIn && !isChatLoading) {
     return (
       <Container sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>Connecting to chat service...</Typography>
+        <Typography sx={{ mt: 1 }}>Connecting to chat service...</Typography>
       </Container>
     );
   }
@@ -142,28 +162,20 @@ const ChatPage = () => {
     <Container
       maxWidth="xl"
       sx={{
-        mt: { xs: 0, sm: 2, md: 4 }, // Adjust top margin for mobile
+        mt: { xs: 0, sm: 2, md: 4 },
         mb: { xs: 0, sm: 2, md: 4 },
-        height: {
-          // Full height for mobile, subtracting potential header/footer on larger screens
-          xs: "calc(100vh - 56px)", // Assuming 56px for mobile AppBar
-          sm: "calc(100vh - 64px - 32px)", // AppBar (64) + Margins (32)
-        },
+        height: { xs: "calc(100vh - 56px)", sm: "calc(100vh - 64px - 32px)" },
         display: "flex",
-        p: { xs: 0, sm: 1, md: 2 }, // No padding on xs for edge-to-edge
+        p: { xs: 0, sm: 1, md: 2 },
       }}
     >
+      {/* Optional: For debugging Ably connection independently */}
+      {/* <AblyConnectionStatus /> */}
       <Grid
         container
         spacing={0}
-        sx={{
-          height: "100%",
-          flexGrow: 1,
-          overflow: "hidden" /* Prevent double scrollbars */,
-        }}
+        sx={{ height: "100%", flexGrow: 1, overflow: "hidden" }}
       >
-        {/* Conversation List Column */}
-        {/* On mobile, show if no active conversation OR if not mobile view */}
         <Grid
           item
           xs={12}
@@ -172,9 +184,9 @@ const ChatPage = () => {
           sx={{
             height: "100%",
             borderRight: { sm: `1px solid ${theme.palette.divider}` },
-            display: isMobileView && activeConversationId ? "none" : "flex", // Hide on mobile if a chat is active
+            display: isMobileView && activeConversationId ? "none" : "flex", // HIDE list if chat active on mobile
             flexDirection: "column",
-            backgroundColor: "background.paper", // Add a background for clarity
+            backgroundColor: "background.paper",
           }}
         >
           <Paper
@@ -185,15 +197,12 @@ const ChatPage = () => {
           </Paper>
           <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
             <ConversationList
-              onSelectConversation={selectConversation}
               currentUserProfileId={user?._id}
-              activeConversationId={activeConversationId}
+              // activeConversationId is used by ConversationList internally from context now
             />
           </Box>
         </Grid>
 
-        {/* Chat Window Column */}
-        {/* On mobile, show only if an active conversation IS selected OR if not mobile view */}
         <Grid
           item
           xs={12}
@@ -201,24 +210,21 @@ const ChatPage = () => {
           md={9}
           sx={{
             height: "100%",
-            display: isMobileView && !activeConversationId ? "none" : "flex", // Hide on mobile if no chat is active
+            display: isMobileView && !activeConversationId ? "none" : "flex", // HIDE window if no chat active on mobile
             flexDirection: "column",
           }}
         >
           {activeConversationId ? (
             <ChatWindow
-              key={activeConversationId} // Ensures ChatWindow re-mounts with new state for new convo
+              key={activeConversationId}
               conversationId={activeConversationId}
               initialConversationData={activeConversationData}
-              // Pass initialConversationData if ChatPage receives it and activeId matches
               currentUserProfileId={user?._id}
-              // Pass a handler for mobile back buttonc
               onMobileBack={
                 isMobileView ? handleMobileBackToConversations : undefined
               }
             />
           ) : (
-            // This placeholder is mainly for desktop view if no chat is selected initially
             !isMobileView && (
               <Box
                 sx={{
@@ -226,9 +232,14 @@ const ChatPage = () => {
                   alignItems: "center",
                   justifyContent: "center",
                   height: "100%",
+                  p: 2,
                 }}
               >
-                <Typography variant="h6" color="text.secondary">
+                <Typography
+                  variant="h6"
+                  color="text.secondary"
+                  textAlign="center"
+                >
                   Select a conversation to start chatting
                 </Typography>
               </Box>
