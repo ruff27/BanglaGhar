@@ -1,23 +1,17 @@
-// server/middleware/checkListingApprovalMiddleware.js
-
 const checkListingApprovalMiddleware = (req, res, next) => {
-  // Ensure fetchUserProfileMiddleware has run and attached userProfile
   if (!req.userProfile) {
     console.error(
       "CheckListingApprovalMiddleware Error: req.userProfile not found. Ensure fetchUserProfileMiddleware runs first."
     );
-    // This indicates a problem earlier in the middleware chain
     return res.status(500).json({ message: "User profile data is missing." });
   }
 
   const approvalStatus = req.userProfile.approvalStatus;
 
   if (approvalStatus === "approved") {
-    // User is approved, allow request to proceed
     console.log(`User ${req.userProfile.email} is approved for listing.`);
     next();
   } else {
-    // User is not approved, send a 403 Forbidden response
     console.log(
       `User ${req.userProfile.email} denied listing. Status: ${approvalStatus}`
     );

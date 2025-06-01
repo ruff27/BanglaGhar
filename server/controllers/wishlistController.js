@@ -1,8 +1,6 @@
-// server/controllers/wishlistController.js
-
 const mongoose = require("mongoose");
 const Wishlist = require("../models/Wishlist");
-const Property = require("../models/property"); // for populate()
+const Property = require("../models/property"); 
 
 exports.addToWishlist = async (req, res) => {
   try {
