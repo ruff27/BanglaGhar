@@ -1,4 +1,3 @@
-// src/features/chat/ChatPage.js
 import React, { useEffect, useRef } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import {
@@ -16,9 +15,8 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useChatContext } from "./context/ChatContext";
 
-import ConversationList from "./components/ConversationList"; // Assuming this is the correct path
-import ChatWindow from "./components/ChatWindow"; // Assuming this is the correct path
-// import AblyConnectionStatus from "./components/AblyConnectionStatus"; // Optional: For debugging
+import ConversationList from "./components/ConversationList"; 
+import ChatWindow from "./components/ChatWindow";
 
 const ChatPage = () => {
   const location = useLocation();
@@ -55,7 +53,6 @@ const ChatPage = () => {
     let dataForSelection = null;
 
     if (paramConvId) {
-      // If URL specifies a conversation ID
       targetId = paramConvId;
       if (
         stateConvId === paramConvId &&
@@ -69,14 +66,8 @@ const ChatPage = () => {
         dataForSelection = { _id: targetId };
       }
     } else {
-      // No conversation ID in URL params (e.g., on base /chat path)
       processedStateForIdRef.current = null;
-      // Important: DO NOT call selectConversation(null) here based on isMobileView.
-      // If a user clicks an item in ConversationList, activeConversationId will be set.
-      // This useEffect should not clear it if the URL doesn't have an ID.
-      // The display logic in JSX handles showing/hiding panels based on activeConversationId.
-      // selectConversation(null) is handled by explicit actions like handleMobileBackToConversations.
-      return; // No specific conversation ID from URL to process further in this effect.
+      return;
     }
 
     if (targetId) {
@@ -100,11 +91,9 @@ const ChatPage = () => {
     isLoggedIn,
     isAuthLoading,
     navigate,
-    selectConversation, // Stable reference from ChatContext is crucial
+    selectConversation, 
     activeConversationId,
     activeConversationData,
-    // isMobileView was removed from this specific effect's dependencies as the primary logic
-    // for no paramConvId path was simplified to not alter selection.
   ]);
 
   const handleMobileBackToConversations = () => {
@@ -169,7 +158,6 @@ const ChatPage = () => {
         p: { xs: 0, sm: 1, md: 2 },
       }}
     >
-      {/* Optional: For debugging Ably connection independently */}
       {/* <AblyConnectionStatus /> */}
       <Grid
         container
@@ -184,7 +172,7 @@ const ChatPage = () => {
           sx={{
             height: "100%",
             borderRight: { sm: `1px solid ${theme.palette.divider}` },
-            display: isMobileView && activeConversationId ? "none" : "flex", // HIDE list if chat active on mobile
+            display: isMobileView && activeConversationId ? "none" : "flex", 
             flexDirection: "column",
             backgroundColor: "background.paper",
           }}
@@ -198,7 +186,6 @@ const ChatPage = () => {
           <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
             <ConversationList
               currentUserProfileId={user?._id}
-              // activeConversationId is used by ConversationList internally from context now
             />
           </Box>
         </Grid>
@@ -210,7 +197,7 @@ const ChatPage = () => {
           md={9}
           sx={{
             height: "100%",
-            display: isMobileView && !activeConversationId ? "none" : "flex", // HIDE window if no chat active on mobile
+            display: isMobileView && !activeConversationId ? "none" : "flex", 
             flexDirection: "column",
           }}
         >

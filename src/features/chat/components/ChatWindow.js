@@ -1,4 +1,3 @@
-// src/features/chat/components/ChatWindow.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
@@ -9,34 +8,29 @@ import {
   CircularProgress,
   Alert,
   List,
-  // ListItem, // No longer directly used for mapping messages
-  // ListItemText, // No longer directly used for mapping messages
-  Avatar, // Still used in Header
-  // ListItemAvatar,
+  Avatar,
   Divider,
-  IconButton, // Added from previous version
-} from "@mui/material"; //
-import SendIcon from "@mui/icons-material/Send"; //
+  IconButton, 
+} from "@mui/material"; 
+import SendIcon from "@mui/icons-material/Send"; 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useAuth } from "../../../context/AuthContext"; //
-import { useChatContext } from "../context/ChatContext"; //
+import { useAuth } from "../../../context/AuthContext"; 
+import { useChatContext } from "../context/ChatContext"; 
 import {
   getMessagesInConversation,
   postMessageToConversation,
-} from "../services/chatService"; //
+} from "../services/chatService"; 
 
-// NEW IMPORT
-import MessageItem from "./MessageItem"; // Import the new component
+import MessageItem from "./MessageItem";
 
-const MESSAGES_PER_PAGE = 20; //
+const MESSAGES_PER_PAGE = 20; 
 
 const ChatWindow = ({
   conversationId,
   initialConversationData,
   currentUserProfileId,
-  onMobileBack, // NEW PROP: Handler for mobile back button
+  onMobileBack, 
 }) => {
-  // ... (all existing state, refs, hooks, and functions like fetchMessages, handleSendMessage, etc. remain the same)
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loadingInitialMessages, setLoadingInitialMessages] = useState(true);
@@ -68,7 +62,6 @@ const ChatWindow = ({
 
   const fetchMessages = useCallback(
     async (pageToFetch) => {
-      // ... (fetchMessages logic as per your last working version)
       console.log(
         `[ChatWindow] ENTERING fetchMessages for conversation ${conversationId}, page: ${pageToFetch}`
       );
@@ -222,7 +215,6 @@ const ChatWindow = ({
 
   const handleSendMessage = useCallback(
     async (e) => {
-      // ... (handleSendMessage logic same as your last working version)
       e.preventDefault();
       if (
         !newMessage.trim() ||
@@ -291,7 +283,6 @@ const ChatWindow = ({
   );
 
   const handleLoadMoreMessages = useCallback(() => {
-    // ... (handleLoadMoreMessages logic same)
     if (!loadingMoreMessages && hasMoreMessages) {
       if (messageListRef.current) {
         prevScrollHeightRef.current = messageListRef.current.scrollHeight;
@@ -301,7 +292,6 @@ const ChatWindow = ({
   }, [loadingMoreMessages, hasMoreMessages, fetchMessages, currentPage]);
 
   useEffect(() => {
-    // ... (scroll listener logic same)
     const listEl = messageListRef.current;
     const handleScroll = () => {
       if (
@@ -330,7 +320,6 @@ const ChatWindow = ({
     handleLoadMoreMessages,
   ]);
 
-  // JSX Part
   return (
     <Paper
       elevation={0}
@@ -345,13 +334,13 @@ const ChatWindow = ({
       {/* Header */}
       <Box
         sx={{
-          p: 1.5, // Standardized padding
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`, // Use theme divider
+          p: 1.5, 
+          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
           backgroundColor: "background.paper",
           display: "flex",
           alignItems: "center",
-          gap: 1.5, // Consistent gap
-          flexShrink: 0, // Prevent header from shrinking
+          gap: 1.5, 
+          flexShrink: 0, 
         }}
       >
         {onMobileBack && (
@@ -361,7 +350,6 @@ const ChatWindow = ({
             size="medium"
           >
             {" "}
-            {/* Adjusted margin */}
             <ArrowBackIcon />
           </IconButton>
         )}
@@ -392,7 +380,7 @@ const ChatWindow = ({
           <Avatar sx={{ width: 36, height: 36, bgcolor: "grey.300" }}>?</Avatar>
         )}
         <Typography
-          variant="subtitle1" // Consistent with mobile drawer, or h6 if preferred
+          variant="subtitle1"
           sx={{
             fontWeight: 600,
             flexGrow: 1,
@@ -403,25 +391,21 @@ const ChatWindow = ({
         >
           {chatWindowTitle}
         </Typography>
-        {/* Optional: More actions icon */}
-        {/* <IconButton size="small"><MoreVertIcon /></IconButton> */}
       </Box>
 
-      {/* Message List */}
       <List
         ref={messageListRef}
         sx={{
           flexGrow: 1,
           overflowY: "auto",
-          p: { xs: 1, sm: 1.5, md: 2 }, // Responsive padding for message list
-          bgcolor: "#f7f9fc", // A very light, slightly off-white/blueish background for chat area
+          p: { xs: 1, sm: 1.5, md: 2 }, 
+          bgcolor: "#f7f9fc", 
           position: "relative",
-          minHeight: "300px", //
+          minHeight: "300px", 
         }}
       >
-        {/* Load More Button (styling can be reviewed if needed) */}
         {hasMoreMessages &&
-          !loadingInitialMessages && ( //
+          !loadingInitialMessages && ( 
             <Box sx={{ textAlign: "center", my: 1.5 }}>
               <Button
                 onClick={handleLoadMoreMessages}
@@ -437,8 +421,6 @@ const ChatWindow = ({
               </Button>
             </Box>
           )}
-        {/* Loading and Empty States (styling can be reviewed if needed) */}
-        {/* ... same as before ... */}
         {loadingInitialMessages && (
           <Box
             sx={{
@@ -451,7 +433,6 @@ const ChatWindow = ({
             }}
           >
             {" "}
-            {/* Account for load more button space */}
             <CircularProgress />
             <Typography sx={{ mt: 2, color: "text.secondary" }}>
               Loading messages...
@@ -483,19 +464,18 @@ const ChatWindow = ({
         {!loadingInitialMessages &&
           messages.map(
             (
-              msg //
+              msg 
             ) => (
-              <MessageItem // Using the refined MessageItem
-                key={msg._id || msg.optimisticId} //
+              <MessageItem 
+                key={msg._id || msg.optimisticId} 
                 message={msg}
                 isCurrentUser={msg.senderId?._id === currentUserProfileId}
               />
             )
           )}
-        <div ref={messagesEndRef} /> {/* */}
+        <div ref={messagesEndRef} /> 
       </List>
 
-      {/* Error Alert - styling can be reviewed if needed */}
       {error && messages.length > 0 && (
         <Alert
           severity="warning"
@@ -509,15 +489,14 @@ const ChatWindow = ({
         </Alert>
       )}
 
-      {/* Message Input Area */}
       <Box
         component="form"
         onSubmit={handleSendMessage}
         sx={{
           p: { xs: 1, sm: 1.5 },
           borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-          backgroundColor: "background.paper", // Keep consistent with header
-          flexShrink: 0, // Prevent input area from shrinking
+          backgroundColor: "background.paper", 
+          flexShrink: 0, 
         }}
       >
         <TextField
@@ -525,13 +504,12 @@ const ChatWindow = ({
           variant="outlined"
           size="small"
           placeholder="Type a message..."
-          value={newMessage} //
-          onChange={(e) => setNewMessage(e.target.value)} //
+          value={newMessage} 
+          onChange={(e) => setNewMessage(e.target.value)} 
           autoFocus
-          multiline //
-          maxRows={4} //
+          multiline 
+          maxRows={4} 
           InputProps={{
-            //
             endAdornment: (
               <IconButton
                 type="submit"
