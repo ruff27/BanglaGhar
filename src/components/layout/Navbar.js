@@ -35,6 +35,8 @@ import ContactsIcon from "@mui/icons-material/Contacts";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
 import { useTranslation } from "react-i18next";
 import UploadIdModal from "../../features/profile/components/UploadIdModal";
+import Logo from '../../pictures/logo.png';
+
 
 function HideOnScroll(props) {
   const { children } = props;
@@ -124,10 +126,10 @@ const Navbar = () => {
         navigate("/list-property");
         break;
       case "pending":
-        alert(t("listing_pending_approval")); 
+        alert(t("listing_pending_approval"));
         break;
       case "rejected":
-        alert(t("listing_rejected_contact_support")); 
+        alert(t("listing_rejected_contact_support"));
         break;
       case "not_started":
       default:
@@ -189,21 +191,29 @@ const Navbar = () => {
         <NavbarContainer position="sticky">
           <Container maxWidth="xl">
             <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-              <Typography
-                variant="h5"
-                noWrap
-                component={RouterLink}
-                to="/"
-                sx={{
-                  mr: 2,
-                  fontWeight: 700,
-                  color: "inherit",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                }}
-              >
-                BanglaGhor
-              </Typography>
+              <RouterLink to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+                <img
+                  src={Logo}
+                  alt="BanglaGhor Logo"
+                  style={{
+                    height: '40px',
+                    marginRight: '10px'
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  noWrap
+                  sx={{
+                    fontWeight: 700,
+                    color: "black",
+                    textDecoration: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  BanglaGhor
+                </Typography>
+              </RouterLink>
+
               {/* Desktop Navigation Area */}
               <Box
                 sx={{
