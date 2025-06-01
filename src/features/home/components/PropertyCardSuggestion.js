@@ -1,32 +1,22 @@
 import React from "react";
-import { Box, Typography } from "@mui/material"; // Removed unused Button import
+import { Box, Typography } from "@mui/material"; 
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
-/**
- * PropertyCardSuggestion Component
- *
- * A compact card used to display property suggestions, typically in a dropdown.
- * Uses PUBLIC_URL for reliable image paths from the public folder.
- * Includes image error handling.
- */
+
 const PropertyCardSuggestion = ({ property, onSelect }) => {
-  const { t } = useTranslation(); // Initialize translation
-  // Construct image source using PUBLIC_URL for assets in the public folder
+  const { t } = useTranslation(); 
   const placeholderImg = `${process.env.PUBLIC_URL}/pictures/placeholder.png`;
-  const imgSrc = property?.images?.[0] // Optional chaining for safety
+  const imgSrc = property?.images?.[0] 
     ? `${process.env.PUBLIC_URL}/pictures/${property.images[0]}`
     : placeholderImg;
 
-  // Image error handler
   const handleImageError = (e) => {
-    e.target.onerror = null; // Prevent infinite loop if placeholder also fails
+    e.target.onerror = null; 
     e.target.src = placeholderImg;
   };
 
-  // Basic validation for property object
   if (!property || !property.title) {
-    // Optionally render a loading/error state or null
     return null;
   }
 
@@ -41,27 +31,24 @@ const PropertyCardSuggestion = ({ property, onSelect }) => {
         "&:hover": { bgcolor: "action.hover" },
         "&:last-child": { borderBottom: 0 },
       }}
-      onClick={onSelect} // Trigger selection handler on click
+      onClick={onSelect} 
     >
-      {/* Property Image */}
       <Box
         component="img"
         src={imgSrc}
         alt={property.title}
-        onError={handleImageError} // Added error handler
+        onError={handleImageError} 
         sx={{
           width: 50,
           height: 50,
           borderRadius: "4px",
           mr: 1.5,
           objectFit: "cover",
-          flexShrink: 0, // Prevent image from shrinking
+          flexShrink: 0, 
         }}
       />
-      {/* Property Details */}
       <Box sx={{ overflow: "hidden" }}>
         {" "}
-        {/* Prevent text overflow issues */}
         <Typography variant="body2" fontWeight="500" noWrap>
           {property.title}
         </Typography>
@@ -72,7 +59,6 @@ const PropertyCardSuggestion = ({ property, onSelect }) => {
           noWrap
         >
           <LocationOnIcon sx={{ fontSize: "0.8rem", mr: 0.5, flexShrink: 0 }} />
-          {/* Kept fallback text as is, no key found */}
           {property.location || "Location not specified"}
         </Typography>
       </Box>

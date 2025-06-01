@@ -1,8 +1,7 @@
-// src/features/home/components/FeaturedProperties.js
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Container, // Using standard Container (no disableGutters)
+  Container, 
   Typography,
   Grid,
   Button,
@@ -13,7 +12,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../context/AuthContext";
-import PropertyCard from "../../properties/components/PropertyCard"; // Using the original reverted version
+import PropertyCard from "../../properties/components/PropertyCard"; 
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -27,7 +26,6 @@ const FeaturedProperties = () => {
   const [error, setError] = useState(null);
   const [wishlist, setWishlist] = useState([]);
 
-  // --- Fetch featured properties ---
   useEffect(() => {
     const fetchFeatured = async () => {
       setLoading(true);
@@ -52,9 +50,8 @@ const FeaturedProperties = () => {
       }
     };
     fetchFeatured();
-  }, [t]); // Keep t if used in error strings potentially
+  }, [t]); 
 
-  // Fetch user's wishlist if logged in
   useEffect(() => {
     const fetchWishlist = async () => {
       if (isLoggedIn && user?.email) {
@@ -73,7 +70,6 @@ const FeaturedProperties = () => {
     fetchWishlist();
   }, [isLoggedIn, user]);
 
-  // Function to handle wishlist toggle
   const toggleWishlist = async (propertyId) => {
     if (!isLoggedIn || !user?.email) {
       navigate("/login");
@@ -100,27 +96,22 @@ const FeaturedProperties = () => {
     }
   };
 
-  // Function to handle viewing property details
   const handleViewDetails = (property) => {
     const mode = property.listingType || "rent";
     navigate(`/properties/${mode}?open=${property._id}`);
   };
 
   return (
-    // Section container
     <Box sx={{ py: 6, bgcolor: "rgba(43, 123, 140, 0.03)" }}>
-      {/* Standard Container - let it handle its default padding */}
       <Container maxWidth="lg">
-        {/* Header Box - No manual padding needed */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 4, // Margin bottom before the grid
+            mb: 4, 
             flexWrap: "wrap",
             gap: 2,
-            // Removed manual px padding
           }}
         >
           <Box>
@@ -147,30 +138,23 @@ const FeaturedProperties = () => {
           </Button>
         </Box>
 
-        {/* Loading Indicator */}
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", my: 5 }}>
             <CircularProgress />
           </Box>
         )}
-        {/* Error Message - No manual padding needed */}
         {error && (
-          // <Box sx={{ px: { xs: 2, sm: 3 } }}> Removed padding wrapper
           <Typography color="error" sx={{ textAlign: "center", my: 5 }}>
             {error}
           </Typography>
-          // </Box>
         )}
 
-        {/* Property Grid - Use simpler responsive spacing */}
         {!loading && !error && properties.length > 0 && (
           <Grid
             container
-            spacing={{ xs: 0, sm: 3 }} // xs=0 removes ALL grid spacing/padding on mobile
-            // Removed manual px padding from sx prop here
+            spacing={{ xs: 0, sm: 3 }} 
           >
             {properties.map((property) => (
-              // Add Bottom Margin to Grid Item for mobile vertical spacing
               <Grid
                 item
                 xs={12}
@@ -178,10 +162,8 @@ const FeaturedProperties = () => {
                 md={4}
                 lg={3}
                 key={property._id}
-                sx={{ mb: { xs: 3, sm: 0 } }} // Add margin-bottom: 24px (3*8px) on xs only
-                                               // Adjust the '3' value for more/less space
+                sx={{ mb: { xs: 3, sm: 0 } }}
               >
-                {/* Render the original PropertyCard */}
                 <PropertyCard
                   property={property}
                   isWishlisted={wishlist.includes(property._id)}
@@ -192,9 +174,7 @@ const FeaturedProperties = () => {
           </Grid>
         )}
 
-        {/* No Properties Message - No manual padding needed */}
         {!loading && !error && properties.length === 0 && (
-          // <Box sx={{ px: { xs: 2, sm: 3 } }}> Removed padding wrapper
           <Typography
             sx={{ textAlign: "center", my: 5, color: "text.secondary" }}
           >
