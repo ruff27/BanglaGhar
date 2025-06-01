@@ -1,4 +1,3 @@
-// src/features/chat/components/ConversationList.js
 import React, { useEffect, useState, useCallback } from "react";
 import {
   List,
@@ -13,36 +12,31 @@ import {
   ListItemIcon,
   Badge,
 } from "@mui/material";
-import ImageIcon from "@mui/icons-material/Image"; // Default icon for property
+import ImageIcon from "@mui/icons-material/Image";
 import BusinessIcon from "@mui/icons-material/Business";
 import LaunchIcon from "@mui/icons-material/Launch";
 import { Link as RouterLink } from "react-router-dom";
-
 import { useAuth } from "../../../context/AuthContext";
 import { useChatContext } from "../context/ChatContext";
 import { getConversationsForUser } from "../services/chatService";
 
-const ConversationList = ({
-  currentUserProfileId, // Prop for current user's ID
-  // activeConversationId prop is no longer strictly needed here if read from context
-}) => {
+const ConversationList = ({ currentUserProfileId }) => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { idToken, user } = useAuth();
   const {
     unreadCounts,
-    selectConversation: selectConversationFromContext, // Use this from context
-    activeConversationId, // Get active ID directly from context
+    selectConversation: selectConversationFromContext,
+    activeConversationId,
+    markMessagesAsRead,
   } = useChatContext();
 
-  // Use user._id from auth context if currentUserProfileId prop is not explicitly passed
   const actualCurrentUserId = currentUserProfileId || user?._id;
 
-  // Renamed to avoid conflict with context's selectConversation
   const handleListItemClick = useCallback(
     (conv) => {
-      selectConversationFromContext(conv); // Directly use the function from context
+      selectConversationFromContext(conv);
     },
     [selectConversationFromContext]
   );
@@ -57,20 +51,12 @@ const ConversationList = ({
     try {
       const convos = await getConversationsForUser(idToken);
       setConversations(convos);
-
-      // Auto-selection logic (optional, could be handled by ChatPage or based on requirements)
-      // If no conversation is active and there are fetched conversations, select the first one.
-      // This ensures a chat is displayed on load if available, on desktop.
-      // const currentActiveId = activeConversationId; // Read from context
-      // if (!currentActiveId && convos && convos.length > 0) {
-      //    handleListItemClick(convos[0]);
-      // }
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
     } finally {
       setLoading(false);
     }
-  }, [idToken /*, activeConversationId, handleListItemClick */]); // Dependencies for fetchConversations
+  }, [idToken]);
 
   useEffect(() => {
     fetchConversations();
@@ -118,7 +104,6 @@ const ConversationList = ({
           otherParticipant?.email ||
           "Unknown User";
         const profilePicUrl = otherParticipant?.profilePictureUrl;
-
         const lastMessageText = conv.lastMessage?.text || "No messages yet...";
         const lastMessageSender = conv.lastMessage?.senderId;
         let lastMessagePrefix = "";
@@ -131,17 +116,16 @@ const ConversationList = ({
 
         const propertyTitle = conv.property?.title;
         const propertyImage = conv.property?.images?.[0]
-          ? `/pictures/${conv.property.images[0]}` // Ensure this path is correct for your setup
+          ? `/pictures/${conv.property.images[0]}`
           : null;
         const propertyId = conv.property?._id;
-
         const unreadCount = unreadCounts[conv._id] || 0;
 
         return (
           <ListItemButton
             key={conv._id}
-            onClick={() => handleListItemClick(conv)} // Updated to use handleListItemClick
-            selected={activeConversationId === conv._id} // Use activeConversationId from context
+            onClick={() => handleListItemClick(conv)}
+            selected={activeConversationId === conv._id}
             divider
             sx={{ alignItems: "flex-start", py: 1.5 }}
           >

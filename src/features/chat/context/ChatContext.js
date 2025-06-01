@@ -5,7 +5,9 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
 } from "react";
+import axios from "axios";
 import useAblyClient from "../hooks/useAblyClient";
 import { useSnackbar } from "../../../context/SnackbarContext";
 import { useAuth } from "../../../context/AuthContext";
@@ -13,6 +15,8 @@ import { getConversationsSummary } from "../services/chatService";
 
 const ChatContext = createContext(null);
 const LAST_SEEN_MESSAGES_KEY_PREFIX = "chatApp_lastSeenMessages_";
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
 export const useChatContext = () => {
   const context = useContext(ChatContext);
@@ -35,9 +39,16 @@ export const ChatProvider = ({ children }) => {
   const [detailedUnreadConversations, setDetailedUnreadConversations] =
     useState([]);
 
-  const getLocalStorageKey = useCallback(() => {
-    return user?._id ? `${LAST_SEEN_MESSAGES_KEY_PREFIX}${user._id}` : null;
-  }, [user?._id]);
+  const activeConversationIdRef = useRef(null);
+
+  const getLocalStorageKey = useCallback(
+    (suffix = "") => {
+      return user?._id
+        ? `${LAST_SEEN_MESSAGES_KEY_PREFIX}${user._id}${suffix}`
+        : null;
+    },
+    [user?._id]
+  );
 
   useEffect(() => {
     let total = 0;
@@ -45,36 +56,126 @@ export const ChatProvider = ({ children }) => {
     setTotalUnreadMessages(total);
   }, [unreadCounts]);
 
-  // Side effect to update localStorage when a conversation is active and data is loaded
+  // Load initial unread counts from dedicated localStorage for counts
   useEffect(() => {
-    const storageKey = getLocalStorageKey();
+    if (isLoggedIn && user?._id) {
+      // Ensure user is logged in before accessing localStorage
+      const countsStorageKey = getLocalStorageKey("_counts");
+      if (countsStorageKey) {
+        const savedUnread = localStorage.getItem(countsStorageKey);
+        if (savedUnread) {
+          try {
+            setUnreadCounts(JSON.parse(savedUnread));
+          } catch (e) {
+            console.error("Failed to parse unread counts from localStorage", e);
+            localStorage.removeItem(countsStorageKey);
+          }
+        }
+      }
+    }
+  }, [isLoggedIn, user?._id, getLocalStorageKey]); // Rerun if user changes
+
+  // Persist unread counts to dedicated localStorage for counts
+  useEffect(() => {
+    if (isLoggedIn && user?._id) {
+      // Ensure user is logged in
+      const countsStorageKey = getLocalStorageKey("_counts");
+      if (countsStorageKey) {
+        localStorage.setItem(countsStorageKey, JSON.stringify(unreadCounts));
+      }
+    }
+  }, [unreadCounts, isLoggedIn, user?._id, getLocalStorageKey]);
+
+  // Effect to update "seen timestamp" in localStorage if activeConversationData provides a more precise last message time.
+  useEffect(() => {
+    const seenTimestampsStorageKey = getLocalStorageKey(); // Key for timestamps
     if (
-      storageKey &&
+      seenTimestampsStorageKey &&
       activeConversationId &&
       activeConversationData?.lastMessage?.createdAt
     ) {
       try {
         const seenTimestamps = JSON.parse(
-          localStorage.getItem(storageKey) || "{}"
+          localStorage.getItem(seenTimestampsStorageKey) || "{}"
         );
         const newTimestamp = new Date(
           activeConversationData.lastMessage.createdAt
         ).getTime();
+
         if (
           !seenTimestamps[activeConversationId] ||
           newTimestamp > seenTimestamps[activeConversationId]
         ) {
           seenTimestamps[activeConversationId] = newTimestamp;
-          localStorage.setItem(storageKey, JSON.stringify(seenTimestamps));
+          localStorage.setItem(
+            seenTimestampsStorageKey,
+            JSON.stringify(seenTimestamps)
+          );
         }
       } catch (e) {
         console.error(
-          "Error updating localStorage for active conversation's last message:",
+          "Error updating localStorage (timestamps) for active conversation's last message:",
           e
         );
       }
     }
   }, [activeConversationData, activeConversationId, getLocalStorageKey]);
+
+  const markMessagesAsRead = useCallback(
+    async (conversationIdToMark) => {
+      if (!idToken || !conversationIdToMark) return;
+
+      try {
+        await axios.post(
+          `${API_BASE_URL}/chat/conversations/${conversationIdToMark}/mark-read`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${idToken}` },
+          }
+        );
+
+        setUnreadCounts((prevCounts) => {
+          if (prevCounts[conversationIdToMark]) {
+            const newCounts = { ...prevCounts };
+            delete newCounts[conversationIdToMark];
+            return newCounts;
+          }
+          return prevCounts;
+        });
+
+        const seenTimestampsStorageKey = getLocalStorageKey(); // Key for timestamps
+        if (seenTimestampsStorageKey) {
+          const seenTimestamps = JSON.parse(
+            localStorage.getItem(seenTimestampsStorageKey) || "{}"
+          );
+          const now = new Date().getTime();
+          // Update if 'now' is greater, or if no existing timestamp.
+          // This ensures we record that the user has "seen" the conversation up to this point.
+          if (
+            !seenTimestamps[conversationIdToMark] ||
+            now > seenTimestamps[conversationIdToMark]
+          ) {
+            seenTimestamps[conversationIdToMark] = now;
+            localStorage.setItem(
+              seenTimestampsStorageKey,
+              JSON.stringify(seenTimestamps)
+            );
+          }
+        }
+      } catch (error) {
+        console.error(
+          `[ChatContext] Error marking messages as read for ${conversationIdToMark}:`,
+          error
+        );
+        showSnackbar(
+          error.response?.data?.message ||
+            "Failed to mark conversation as read.",
+          "error"
+        );
+      }
+    },
+    [idToken, getLocalStorageKey, showSnackbar]
+  );
 
   const selectConversation = useCallback(
     (conversationData) => {
@@ -84,49 +185,50 @@ export const ChatProvider = ({ children }) => {
       if (conversationData && conversationData._id) {
         idToSet = conversationData._id;
         const keys = Object.keys(conversationData);
-        // If only _id is present, it's just an ID wrapper. dataToSet becomes null,
-        // indicating ChatWindow should fetch full details.
-        // Otherwise, assume it's richer initial data.
         dataToSet =
           keys.length === 1 && keys[0] === "_id" ? null : conversationData;
       } else if (typeof conversationData === "string" && conversationData) {
-        idToSet = conversationData; // A raw ID string was passed
+        idToSet = conversationData;
         dataToSet = null;
       } else if (conversationData === null) {
-        // Explicitly clearing selection
+        activeConversationIdRef.current = null;
         setActiveConversationId(null);
         setActiveConversationData(null);
         return;
       } else {
-        // console.warn("[ChatContext] selectConversation: Invalid data:", conversationData);
-        return; // Invalid data, do nothing
+        return; // Invalid data
       }
 
-      // These are direct state updates. React handles preventing re-renders if values are identical.
+      const previouslyActiveId = activeConversationIdRef.current;
+      activeConversationIdRef.current = idToSet;
+
       setActiveConversationId(idToSet);
       setActiveConversationData(dataToSet);
 
       if (idToSet) {
-        setUnreadCounts((prevCounts) => {
-          if (prevCounts[idToSet] && prevCounts[idToSet] > 0) {
-            const newCounts = { ...prevCounts };
-            delete newCounts[idToSet];
-            return newCounts;
-          }
-          return prevCounts;
-        });
+        // If the conversation was locally marked as unread OR it's a different conversation being selected,
+        // call markMessagesAsRead. This ensures backend and localStorage "seen timestamp" are updated.
+        if (
+          (unreadCounts[idToSet] && unreadCounts[idToSet] > 0) ||
+          previouslyActiveId !== idToSet
+        ) {
+          markMessagesAsRead(idToSet);
+        }
+        // If it wasn't in local unreadCounts (e.g. fresh load, no unread from DB) but is a *new* selection,
+        // still call markMessagesAsRead to update its "seen" timestamp to now.
+        else if (
+          !unreadCounts.hasOwnProperty(idToSet) &&
+          previouslyActiveId !== idToSet
+        ) {
+          markMessagesAsRead(idToSet);
+        }
+
         setDetailedUnreadConversations((prevDetails) =>
           prevDetails.filter((convo) => convo.id !== idToSet)
         );
       }
     },
-    // This function's reference is now stable as it only depends on state setters.
-    [
-      setActiveConversationId,
-      setActiveConversationData,
-      setUnreadCounts,
-      setDetailedUnreadConversations,
-    ]
+    [unreadCounts, markMessagesAsRead]
   );
 
   const updateDetailedUnreadConversations = useCallback(
@@ -149,11 +251,10 @@ export const ChatProvider = ({ children }) => {
               "New message",
             profilePictureUrl: otherParticipant?.profilePictureUrl,
             count: currentUnreadCounts[convo._id],
-            // Store more complete data from summary for potential use by selectConversation
             participants: convo.participants,
             lastMessage: convo.lastMessage,
             property: convo.property,
-            _id: convo._id, // Ensure _id is also at the top level for convenience
+            _id: convo._id,
           };
         });
       setDetailedUnreadConversations(unreadConvDetails);
@@ -163,17 +264,30 @@ export const ChatProvider = ({ children }) => {
 
   const fetchInitialUnreadDetails = useCallback(
     async (token, currentUserId) => {
-      const storageKey = getLocalStorageKey();
-      if (!currentUserId || !storageKey || isInitialLoadComplete) {
+      const seenTimestampsStorageKey = getLocalStorageKey(); // Key for "seen timestamps"
+      const countsStorageKey = getLocalStorageKey("_counts"); // Key for persisted "unread counts"
+
+      if (
+        !currentUserId ||
+        !seenTimestampsStorageKey ||
+        !countsStorageKey ||
+        isInitialLoadComplete
+      ) {
         if (!isInitialLoadComplete) setIsInitialLoadComplete(true);
         return;
       }
+
       try {
         const conversationsSummary = await getConversationsSummary(token);
-        const initialUnread = {};
+        let newUnreadCounts = {};
         const seenTimestamps = JSON.parse(
-          localStorage.getItem(storageKey) || "{}"
+          localStorage.getItem(seenTimestampsStorageKey) || "{}"
         );
+        const persistedCounts = JSON.parse(
+          localStorage.getItem(countsStorageKey) || "{}"
+        );
+
+        // Determine unread based on summary and seen timestamps
         conversationsSummary.forEach((convo) => {
           if (
             convo.lastMessage &&
@@ -183,15 +297,40 @@ export const ChatProvider = ({ children }) => {
               convo.lastMessage.createdAt
             ).getTime();
             const lastSeenTime = seenTimestamps[convo._id] || 0;
+
             if (lastMessageTime > lastSeenTime) {
-              initialUnread[convo._id] = (initialUnread[convo._id] || 0) + 1;
+              // This conversation has newer messages than last seen time
+              // For count, we can take the persisted count if it exists and is > 0,
+              // otherwise, default to 1 (or a more sophisticated server-provided unread count if available)
+              newUnreadCounts[convo._id] = Math.max(
+                persistedCounts[convo._id] || 0,
+                1
+              );
             }
           }
         });
-        setUnreadCounts(initialUnread);
+
+        // Ensure any counts from persistedCounts (e.g. from offline notifications) for conversations
+        // that are *not* deemed unread by the summary+seenTimestamps logic are cleared.
+        // And also, if a conversation from persistedCounts is no longer in summary, clear its count.
+        for (const convoId in persistedCounts) {
+          const convoInSummary = conversationsSummary.find(
+            (c) => c._id === convoId
+          );
+          if (!convoInSummary) {
+            // No longer exists or accessible
+            if (newUnreadCounts[convoId]) delete newUnreadCounts[convoId]; // Should already not be there
+          } else if (!newUnreadCounts[convoId]) {
+            // Exists in summary but summary+seenTimestamps deemed it read
+            // If persistedCounts had it, but our new logic says it's read, it's read.
+            // newUnreadCounts already reflects this state.
+          }
+        }
+
+        setUnreadCounts(newUnreadCounts);
         updateDetailedUnreadConversations(
           conversationsSummary,
-          initialUnread,
+          newUnreadCounts,
           currentUserId
         );
       } catch (error) {
@@ -199,7 +338,10 @@ export const ChatProvider = ({ children }) => {
           "[ChatContext] Failed to fetch initial unread details:",
           error
         );
-        showSnackbar("Could not load chat summary.", "error");
+        showSnackbar(
+          error.response?.data?.message || "Could not load chat summary.",
+          "error"
+        );
       } finally {
         setIsInitialLoadComplete(true);
       }
@@ -216,6 +358,7 @@ export const ChatProvider = ({ children }) => {
     (notificationData) => {
       if (!notificationData || !notificationData.conversationId || !user?._id)
         return;
+
       const {
         conversationId: incomingConvId,
         senderDisplayName,
@@ -223,6 +366,7 @@ export const ChatProvider = ({ children }) => {
         senderId,
         timestamp,
       } = notificationData;
+
       if (senderId === user._id) return;
 
       if (activeConversationId !== incomingConvId) {
@@ -237,48 +381,47 @@ export const ChatProvider = ({ children }) => {
           [incomingConvId]: (prevCounts[incomingConvId] || 0) + 1,
         }));
       } else {
-        const storageKey = getLocalStorageKey();
-        if (storageKey && timestamp) {
+        // Conversation is active, update its "last seen" timestamp to this new message's timestamp
+        const seenTimestampsStorageKey = getLocalStorageKey(); // Key for timestamps
+        if (seenTimestampsStorageKey && timestamp) {
           try {
             const seenTimestamps = JSON.parse(
-              localStorage.getItem(storageKey) || "{}"
+              localStorage.getItem(seenTimestampsStorageKey) || "{}"
             );
-            seenTimestamps[incomingConvId] = new Date(timestamp).getTime();
-            localStorage.setItem(storageKey, JSON.stringify(seenTimestamps));
+            const newMsgTime = new Date(timestamp).getTime();
+            if (
+              !seenTimestamps[incomingConvId] ||
+              newMsgTime > seenTimestamps[incomingConvId]
+            ) {
+              seenTimestamps[incomingConvId] = newMsgTime;
+              localStorage.setItem(
+                seenTimestampsStorageKey,
+                JSON.stringify(seenTimestamps)
+              );
+            }
           } catch (e) {
             console.error(
-              "Error updating localStorage for active chat notification:",
+              "Error updating localStorage (timestamps) for active chat notification:",
               e
             );
           }
         }
       }
     },
-    [
-      activeConversationId,
-      showSnackbar,
-      user?._id,
-      getLocalStorageKey,
-      setUnreadCounts,
-    ] // Added setUnreadCounts
+    [activeConversationId, showSnackbar, user?._id, getLocalStorageKey]
   );
 
   useEffect(() => {
-    const storageKey = getLocalStorageKey();
-    if (
-      isLoggedIn &&
-      idToken &&
-      user?._id &&
-      storageKey &&
-      !isInitialLoadComplete
-    ) {
+    if (isLoggedIn && idToken && user?._id && !isInitialLoadComplete) {
       fetchInitialUnreadDetails(idToken, user._id);
     } else if (!isLoggedIn && isInitialLoadComplete) {
       setUnreadCounts({});
       setDetailedUnreadConversations([]);
-      setIsInitialLoadComplete(false);
       setActiveConversationId(null);
       setActiveConversationData(null);
+      setIsInitialLoadComplete(false);
+      activeConversationIdRef.current = null;
+      // Note: localStorage is not cleared on logout by default here.
     }
   }, [
     isLoggedIn,
@@ -286,7 +429,6 @@ export const ChatProvider = ({ children }) => {
     user,
     fetchInitialUnreadDetails,
     isInitialLoadComplete,
-    getLocalStorageKey,
   ]);
 
   return (
@@ -297,15 +439,19 @@ export const ChatProvider = ({ children }) => {
         ablyError,
         activeConversationId,
         activeConversationData,
-        selectConversation, // Reference is now stable
+        selectConversation,
         handleIncomingMessageNotification,
         unreadCounts,
         totalUnreadMessages,
         detailedUnreadConversations,
         updateDetailedUnreadConversations,
+        markMessagesAsRead,
         isChatLoading:
-          !isInitialLoadComplete ||
-          (isLoggedIn && !isAblyConnected && !ablyError),
+          (isLoggedIn && !isInitialLoadComplete) ||
+          (isLoggedIn &&
+            !isAblyConnected &&
+            !ablyError &&
+            isInitialLoadComplete),
       }}
     >
       {children}
