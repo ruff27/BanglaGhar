@@ -1,6 +1,6 @@
 const UserProfile = require("../models/UserProfile");
 const path = require("path");
-const Property = require("../models/property");
+const Property = require("../models/property.js");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const s3Client = new S3Client({

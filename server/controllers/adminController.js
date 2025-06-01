@@ -145,7 +145,9 @@ exports.approveUser = async (req, res) => {
       return res.status(404).json({ message: "User profile not found." });
     }
     if (userProfile.approvalStatus !== "pending") {
-      console.log(`User ${userId} is not pending approval (status: ${userProfile.approvalStatus}). No action taken.`);
+      console.log(
+        `User ${userId} is not pending approval (status: ${userProfile.approvalStatus}). No action taken.`
+      );
       return res.status(200).json({
         message: `User is already ${userProfile.approvalStatus}.`,
         profile: userProfile,
@@ -153,7 +155,9 @@ exports.approveUser = async (req, res) => {
     }
     userProfile.approvalStatus = "approved";
     await userProfile.save();
-    console.log(`Admin ${req.user.email} approved user ${userId} (${userProfile.email})`);
+    console.log(
+      `Admin ${req.user.email} approved user ${userId} (${userProfile.email})`
+    );
     res.status(200).json({ message: "User approved successfully.", profile: userProfile });
   } catch (error) {
     console.error(`Error approving user ${userId}:`, error);
@@ -172,7 +176,9 @@ exports.rejectUser = async (req, res) => {
       return res.status(404).json({ message: "User profile not found." });
     }
     if (userProfile.approvalStatus !== "pending") {
-      console.log(`User ${userId} is not pending approval (status: ${userProfile.approvalStatus}). No action taken.`);
+      console.log(
+        `User ${userId} is not pending approval (status: ${userProfile.approvalStatus}). No action taken.`
+      );
       return res.status(200).json({
         message: `User is already ${userProfile.approvalStatus}.`,
         profile: userProfile,
@@ -180,7 +186,9 @@ exports.rejectUser = async (req, res) => {
     }
     userProfile.approvalStatus = "rejected";
     await userProfile.save();
-    console.log(`Admin ${req.user.email} rejected user ${userId} (${userProfile.email})`);
+    console.log(
+      `Admin ${req.user.email} rejected user ${userId} (${userProfile.email})`
+    );
     res.status(200).json({ message: "User rejected successfully.", profile: userProfile });
   } catch (error) {
     console.error(`Error rejecting user ${userId}:`, error);
@@ -293,7 +301,10 @@ exports.updateUserStatus = async (req, res) => {
     }
     Object.assign(userProfile, updates);
     const updatedUserProfile = await userProfile.save();
-    console.log(`Admin ${req.user.email} updated status for user ${userId}. New status:`, updates);
+    console.log(
+      `Admin ${req.user.email} updated status for user ${userId}. New status:`,
+      updates
+    );
     const responseProfile = await UserProfile.findById(userId).select(
       "name email createdAt displayName isAdmin approvalStatus accountStatus _id "
     );
@@ -400,7 +411,9 @@ exports.updateListingVisibility = async (req, res) => {
     }
     property.isHidden = isHidden;
     await property.save();
-    console.log(`Admin ${req.user.email} updated visibility for listing ${listingId} to isHidden=${isHidden}.`);
+    console.log(
+      `Admin ${req.user.email} updated visibility for listing ${listingId} to isHidden=${isHidden}.`
+    );
     res.status(200).json({
       message: `Listing visibility updated successfully.`,
       listing: { _id: property._id, isHidden: property.isHidden },
@@ -459,7 +472,9 @@ exports.featureListing = async (req, res) => {
             { _id: { $in: idsToUnfeature } },
             { $set: { featuredAt: null } }
           );
-          console.log(`Unfeatured ${updateResult.modifiedCount} oldest listing(s).`);
+          console.log(
+            `Unfeatured ${updateResult.modifiedCount} oldest listing(s).`
+          );
         }
       }
       property.featuredAt = new Date();
@@ -501,12 +516,18 @@ exports.deleteMultipleListings = async (req, res) => {
       _id: { $in: validIds },
     });
     if (deleteResult.deletedCount === 0) {
-      console.log(`Admin ${req.user.email} attempted to delete listings, but none matched the provided IDs:`, validIds);
+      console.log(
+        `Admin ${req.user.email} attempted to delete listings, but none matched the provided IDs:`,
+        validIds
+      );
       return res
         .status(404)
         .json({ message: "No matching listings found to delete." });
     }
-    console.log(`Admin ${req.user.email} deleted ${deleteResult.deletedCount} listing(s):`, validIds);
+    console.log(
+      `Admin ${req.user.email} deleted ${deleteResult.deletedCount} listing(s):`,
+      validIds
+    );
     res.status(200).json({
       message: `${deleteResult.deletedCount} listing(s) deleted successfully.`,
       deletedCount: deleteResult.deletedCount,

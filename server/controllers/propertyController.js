@@ -1,4 +1,4 @@
-const Property = require("../models/property");
+const Property = require("../models/property.js");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
