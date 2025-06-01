@@ -96,7 +96,6 @@ const useChangePassword = () => {
         confirmPassword,
       });
 
-      // Detailed validation
       if (!name) {
         setError("Please enter your name.");
         return;
@@ -215,9 +214,7 @@ const useChangePassword = () => {
     [email, name, temporaryPassword, newPassword, confirmPassword, login, navigate]
   );
 
-  /**
-   * Handles closing the success snackbar.
-   */
+
   const handleCloseSnackbar = useCallback((event, reason) => {
     if (reason === "clickaway") {
       return;

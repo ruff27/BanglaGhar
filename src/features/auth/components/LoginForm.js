@@ -4,13 +4,12 @@ import {
   TextField,
   Button,
   styled,
-  CircularProgress, // Import CircularProgress for loading indicator
+  CircularProgress,
 } from "@mui/material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
 
-// --- Styled Components (Copied from original Login.js - specific to form button) ---
 const StyledButton = styled(Button)(({ theme }) => ({
-  margin: theme.spacing(3, 0, 2), // Keep original spacing
+  margin: theme.spacing(3, 0, 2),
   padding: theme.spacing(1.5),
   borderRadius: "8px",
   textTransform: "none",
@@ -24,7 +23,6 @@ const StyledButton = styled(Button)(({ theme }) => ({
     transform: "translateY(-2px)", // Slight lift effect
   },
   "&:disabled": {
-    // Style for disabled state
     backgroundColor: theme.palette.action.disabledBackground,
     boxShadow: "none",
     color: theme.palette.action.disabled,
@@ -51,56 +49,51 @@ const LoginForm = ({
   onSubmit,
   isSubmitting,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation();
 
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
-      {/* Email Field */}
+
       <TextField
         margin="normal"
         required
         fullWidth
-        id="email" // Add id for accessibility
-        label={t("email")} // Applied translation
-        name="email" // Add name attribute
-        autoComplete="email" // Enable browser autofill
-        autoFocus // Keep autofocus on email
+        id="email"
+        label={t("email")} 
+        name="email" 
+        autoComplete="email" 
+        autoFocus
         variant="outlined"
         value={email}
         onChange={onEmailChange}
-        disabled={isSubmitting} // Disable field during submission
+        disabled={isSubmitting} 
         sx={{ mb: 2 }}
-        // Add aria-describedby if linking error messages
       />
-      {/* Password Field */}
       <TextField
         margin="normal"
         required
         fullWidth
-        id="password" // Add id
-        label={t("password")} // Applied translation
-        name="password" // Add name attribute
+        id="password" 
+        label={t("password")}
+        name="password" 
         type="password"
-        autoComplete="current-password" // Enable browser autofill
+        autoComplete="current-password" 
         variant="outlined"
         value={password}
         onChange={onPasswordChange}
-        disabled={isSubmitting} // Disable field during submission
+        disabled={isSubmitting} 
         sx={{ mb: 2 }}
-        // Add aria-describedby if linking error messages
       />
 
-      {/* Submit Button */}
       <StyledButton
         type="submit"
         fullWidth
         variant="contained"
-        disabled={isSubmitting} // Disable button when submitting
+        disabled={isSubmitting} 
         startIcon={
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
-        } // Show loader
+        } 
       >
-        {/* Applied translation */}
         {isSubmitting ? t("sending") : t("sign_in")}
       </StyledButton>
     </Box>

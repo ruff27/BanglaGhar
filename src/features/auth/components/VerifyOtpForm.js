@@ -6,9 +6,8 @@ import {
   styled,
   CircularProgress,
 } from "@mui/material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
-// --- Styled Components (Copied from original VerifyOtp.js - specific to form button) ---
 const StyledButton = styled(Button)(({ theme }) => ({
   margin: theme.spacing(3, 0, 2),
   padding: theme.spacing(1.5),
@@ -24,7 +23,6 @@ const StyledButton = styled(Button)(({ theme }) => ({
     transform: "translateY(-2px)",
   },
   "&:disabled": {
-    // Style for disabled state
     backgroundColor: theme.palette.action.disabledBackground,
     boxShadow: "none",
     color: theme.palette.action.disabled,
@@ -43,26 +41,25 @@ const StyledButton = styled(Button)(({ theme }) => ({
  * 
  */
 const VerifyOtpForm = ({ otp, onOtpChange, onSubmit, isSubmitting }) => {
-  const { t } = useTranslation(); // Initialize translation
-
+  const { t } = useTranslation(); 
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
       <TextField
         margin="normal"
         required
         fullWidth
-        id="otp" // Add id
-        label={t("enter_otp")} // Applied translation
-        name="otp" // Add name
+        id="otp" 
+        label={t("enter_otp")} 
+        name="otp" 
         variant="outlined"
         value={otp}
         onChange={onOtpChange}
         disabled={isSubmitting}
         inputProps={{
-          maxLength: 6, // Enforce max length visually
-          inputMode: "numeric", // Hint for numeric keyboard on mobile
-          pattern: "[0-9]*", // Pattern for numeric input
-          autoComplete: "one-time-code", // Hint for OTP autofill
+          maxLength: 6, 
+          inputMode: "numeric", 
+          pattern: "[0-9]*", 
+          autoComplete: "one-time-code", 
         }}
         sx={{ mb: 2 }}
       />
@@ -76,7 +73,6 @@ const VerifyOtpForm = ({ otp, onOtpChange, onSubmit, isSubmitting }) => {
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
         }
       >
-        {/* Applied translation */}
         {isSubmitting ? t("sending") : t("verify_otp")}
       </StyledButton>
     </Box>
