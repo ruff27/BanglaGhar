@@ -1,4 +1,3 @@
-// src/admin/pages/DashboardOverview.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -15,13 +14,13 @@ import {
   Avatar,
 } from "@mui/material";
 import {
-  HomeWork as HomeWorkIcon, // Property Listings
-  PersonOutline as PersonOutlineIcon, // Total Users
-  HourglassEmpty as HourglassEmptyIcon, // Pending Users
-  NewReleases as NewReleasesIcon, // Recent Listings
-  PersonAddAlt1 as PersonAddAlt1Icon, // Recent Users
+  HomeWork as HomeWorkIcon,
+  PersonOutline as PersonOutlineIcon,
+  HourglassEmpty as HourglassEmptyIcon,
+  NewReleases as NewReleasesIcon,
+  PersonAddAlt1 as PersonAddAlt1Icon,
 } from "@mui/icons-material";
-import { useAuth } from "../../context/AuthContext"; // Adjust path if needed
+import { useAuth } from "../../context/AuthContext";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -90,7 +89,6 @@ const DashboardOverview = () => {
       )}
 
       <Grid container spacing={3}>
-        {/* Total Active Listings */}
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Total Active Listings"
@@ -101,7 +99,6 @@ const DashboardOverview = () => {
           />
         </Grid>
 
-        {/* Pending Approval Users */}
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Users Pending Approval"
@@ -112,7 +109,6 @@ const DashboardOverview = () => {
           />
         </Grid>
 
-        {/* Total Registered Users */}
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Total Registered Users"
@@ -140,15 +136,11 @@ const DashboardOverview = () => {
             title="New Users (Last 7 Days)"
             value={stats?.recentUsersCount}
             icon={<PersonAddAlt1Icon />}
-            color="secondary" // Use another color if desired
+            color="secondary"
             loading={loading}
           />
         </Grid>
-
-        {/* Add more stats cards here if needed */}
       </Grid>
-
-      {/* You could add charts or other widgets below */}
     </Container>
   );
 };
