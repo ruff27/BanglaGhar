@@ -10,24 +10,21 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Send } from "@mui/icons-material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
-// --- Styled Components ---
+
 const ContactTextField = styled(TextField)(({ theme }) => ({
-  // ... (styling kept as is)
-  marginBottom: theme.spacing(2), // Keep consistent spacing
+  marginBottom: theme.spacing(2), 
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
-      // Default border
-      // borderColor: theme.palette.divider, // Example: Subtle border
+     
     },
     "&:hover fieldset": {
-      // borderColor: theme.palette.text.secondary, // Example: Border on hover
+    
     },
     "&.Mui-focused fieldset": {
-      // Border when focused
       borderColor: theme.palette.primary.main,
-      borderWidth: "1px", // Ensure focus border width is standard
+      borderWidth: "1px", 
     },
   },
 }));
@@ -41,12 +38,12 @@ const StyledSubmitButton = styled(Button)(({ theme }) => ({
   transition: "all 0.3s ease",
   "&:hover": {
     backgroundColor: theme.palette.primary.dark,
-    transform: "scale(1.05)", // Subtle scale on hover
+    transform: "scale(1.05)", 
   },
   "&:disabled": {
     backgroundColor: theme.palette.action.disabledBackground,
     color: theme.palette.action.disabled,
-    cursor: "not-allowed", // Indicate disabled state
+    cursor: "not-allowed", 
   },
 }));
 
@@ -60,7 +57,7 @@ const ContactForm = ({
   handleSubmit,
   isSubmitting,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Paper
@@ -111,7 +108,7 @@ const ContactForm = ({
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label={t("name")} // Applied
+              label={t("name")} 
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -119,13 +116,13 @@ const ContactForm = ({
               variant="outlined"
               error={!!formErrors.name}
               helperText={formErrors.name || " "}
-              inputProps={{ "aria-label": t("name") }} // Applied
+              inputProps={{ "aria-label": t("name") }} 
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label={t("email")} // Applied
+              label={t("email")} 
               name="email"
               type="email"
               value={formData.email}
@@ -134,26 +131,26 @@ const ContactForm = ({
               variant="outlined"
               error={!!formErrors.email}
               helperText={formErrors.email || " "}
-              inputProps={{ "aria-label": t("email") }} // Applied
+              inputProps={{ "aria-label": t("email") }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label="Phone Number (Optional)" // Kept as is, no key
+              label="Phone Number (Optional)" 
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               variant="outlined"
               error={!!formErrors.phone}
               helperText={formErrors.phone || " "}
-              inputProps={{ "aria-label": "Phone Number" }} // Kept as is
+              inputProps={{ "aria-label": "Phone Number" }} 
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <ContactTextField
               fullWidth
-              label="Subject" // Kept as is, no key
+              label="Subject"
               name="subject"
               value={formData.subject}
               onChange={handleChange}
@@ -161,13 +158,13 @@ const ContactForm = ({
               variant="outlined"
               error={!!formErrors.subject}
               helperText={formErrors.subject || " "}
-              inputProps={{ "aria-label": "Subject" }} // Kept as is
+              inputProps={{ "aria-label": "Subject" }} 
             />
           </Grid>
           <Grid item xs={12}>
             <ContactTextField
               fullWidth
-              label="Your Message" // Kept as is, no key
+              label="Your Message" 
               name="message"
               value={formData.message}
               onChange={handleChange}
@@ -177,7 +174,7 @@ const ContactForm = ({
               variant="outlined"
               error={!!formErrors.message}
               helperText={formErrors.message || " "}
-              inputProps={{ "aria-label": "Your Message" }} // Kept as is
+              inputProps={{ "aria-label": "Your Message" }}
             />
           </Grid>
         </Grid>

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext"; // Adjust path as needed
+import { useAuth } from "../../../context/AuthContext"; 
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -12,11 +12,11 @@ const useEditPropertyForm = (propertyId) => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [validationErrors, setValidationErrors] = useState({}); // For field-specific errors
+  const [validationErrors, setValidationErrors] = useState({}); 
   const { idToken } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch existing property data
+  
   useEffect(() => {
     const fetchProperty = async () => {
       if (!propertyId || !idToken) {
@@ -62,7 +62,6 @@ const useEditPropertyForm = (propertyId) => {
     [validationErrors]
   );
 
-  // Placeholder for nested changes, adapt from your useListingForm hook
   const handleFeaturesChange = useCallback((e) => {
     const { name, checked } = e.target;
     setPropertyData((prev) => ({
@@ -99,19 +98,12 @@ const useEditPropertyForm = (propertyId) => {
     setError(null);
     setValidationErrors({});
 
-    // Only send fields that are meant to be updated.
-    // The backend propertyController.updateProperty uses req.body directly.
-    // It merges with existing data if geocoding is triggered by address field changes.
-    // Otherwise, it just updates the fields provided.
-    // Ensure propertyData contains all necessary fields the backend might validate, even if unchanged.
-    // Or, construct a specific payload of only changed fields if your backend supports partial updates more granularly.
 
     const payload = { ...propertyData };
-    // Remove fields that shouldn't be sent or are managed by backend (like createdBy, createdAt, updatedAt)
     delete payload.createdBy;
     delete payload.createdAt;
     delete payload.updatedAt;
-    delete payload._id; // Don't send _id in the body for an update
+    delete payload._id; 
     delete payload.__v;
 
     try {
@@ -119,12 +111,11 @@ const useEditPropertyForm = (propertyId) => {
         headers: { Authorization: `Bearer ${idToken}` },
       });
       setIsSubmitting(false);
-      return true; // Indicate success
+      return true; 
     } catch (err) {
       console.error("Error updating property:", err.response || err);
       const errData = err.response?.data;
       if (errData?.details && typeof errData.details === "object") {
-        // For express-validator type errors
         setValidationErrors(errData.details);
         setError(
           errData.error || "Validation failed. Please check the fields."
@@ -133,13 +124,13 @@ const useEditPropertyForm = (propertyId) => {
         setError(errData?.error || "Failed to update property.");
       }
       setIsSubmitting(false);
-      return false; // Indicate failure
+      return false; 
     }
   };
 
   return {
     propertyData,
-    setPropertyData, // Expose this for direct manipulation if needed (e.g. for image uploads)
+    setPropertyData, 
     initialLoading,
     isSubmitting,
     error,

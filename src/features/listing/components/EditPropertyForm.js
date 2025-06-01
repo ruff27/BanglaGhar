@@ -1,4 +1,4 @@
-// src/features/listing/components/EditPropertyForm.js (New File)
+
 import React from "react";
 import {
   TextField,
@@ -18,16 +18,15 @@ import Typography from "@mui/material/Typography";
 const EditPropertyForm = ({
   formData,
   onInputChange,
-  // onFeaturesChange, // Add if you allow editing these
-  // onBangladeshDetailsChange, // Add if you allow editing these
+
   onSubmit,
   isSubmitting,
   validationErrors = {},
-  // setFormDataDirectly // For complex fields like images
+  
 }) => {
   const { t } = useTranslation();
 
-  // Assuming formData is not null here, EditPropertyPage should handle null case
+  
   if (!formData)
     return <Typography>{t("loading_form", "Loading form...")}</Typography>;
 
@@ -73,7 +72,7 @@ const EditPropertyForm = ({
               label={t("listing_status_label", "Listing Status")}
               onChange={onInputChange}
               MenuProps={{
-                disableScrollLock: true, // This prevents the default scroll locking behavior
+                disableScrollLock: true, 
                 anchorOrigin: {
                   vertical: "bottom",
                   horizontal: "left",
@@ -85,7 +84,7 @@ const EditPropertyForm = ({
                 PaperProps: {
                   style: {
                     maxHeight: 250,
-                    width: "auto", // Or set a specific width if needed
+                    width: "auto", 
                   },
                 },
               }}

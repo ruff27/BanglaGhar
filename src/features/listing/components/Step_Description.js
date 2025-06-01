@@ -1,4 +1,3 @@
-// src/features/ListPropertyPage/components/Step_Description.js
 import React, { useState } from "react";
 import {
   Grid,

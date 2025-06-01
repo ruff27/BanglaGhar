@@ -4,7 +4,7 @@ import { IconButton, Tooltip } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { alpha } from "@mui/material/styles";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 /**
  * WishlistButton Component
@@ -19,12 +19,10 @@ const WishlistButton = ({ isWishlisted, onClick, sx = {} }) => {
 
   return (
     <Tooltip
-      // Tooltip titles kept as is, no keys found
       title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
       arrow
     >
       <IconButton
-        // Aria labels kept as is, no keys found
         aria-label={isWishlisted ? "remove from favorites" : "add to favorites"}
         onClick={handleClick}
         sx={{

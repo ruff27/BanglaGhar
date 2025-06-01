@@ -1,6 +1,4 @@
-// src/features/listing/ListPropertyPage.js
-
-import React, { useEffect, useState } from "react"; // Keep useEffect if needed elsewhere, otherwise remove
+import React, { useEffect, useState } from "react"; 
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -16,23 +14,23 @@ import {
   alpha,
   Alert,
   useTheme,
-  CircularProgress, // Keep if used for loadingSubmit/loadingAI
+  CircularProgress, 
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
-import InfoIcon from "@mui/icons-material/Info"; // Example for Basic Info
-import LocationOnIcon from "@mui/icons-material/LocationOn"; // Example for Location
-import ListAltIcon from "@mui/icons-material/ListAlt"; // Example for Features
-import DescriptionIcon from "@mui/icons-material/Description"; // Example for Description
-import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary"; // Example for Images
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; // Example for Review
-import ArticleIcon from "@mui/icons-material/Article"; // Example for Specific Details
+import InfoIcon from "@mui/icons-material/Info"; 
+import LocationOnIcon from "@mui/icons-material/LocationOn"; 
+import ListAltIcon from "@mui/icons-material/ListAlt"; 
+import DescriptionIcon from "@mui/icons-material/Description"; 
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary"; 
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; 
+import ArticleIcon from "@mui/icons-material/Article"; 
 
-// Import Auth Hook - Still needed to get user info for the form hook
+
 import { useAuth } from "./../../context/AuthContext";
 
-// Import Listing Form Hook and Step Components
+
 import useListingForm from "./hooks/useListingForm";
 import Step1_Details from "./components/Step1_Details";
 import Step2_Location from "./components/Step2_Location";
@@ -43,24 +41,22 @@ import Step_Description from "./components/Step_Description";
 import Step5_Review from "./components/Step5_Review";
 import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 
-// Styled components (keep as is)
+
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   borderRadius: "16px",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)", // Adjusted shadow slightly
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)", 
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
 
-  // --- Apply New Background & Border ---
-  backgroundColor: "#D9F2F0", // Soft Teal / Pale Blue-Green (Choose one, e.g., D9F2F0)
-  // Or use the other option:rgb(237, 246, 245)
+  
+  backgroundColor: "#D9F2F0", 
 
-  border: `1px solid #A0DAD6`, // Slightly darker teal border
-
-  // Remove previous background styles if any
-  background: "none", // Override potential gradients/images
+  border: `1px solid #A0DAD6`, 
+  
+  background: "none", 
   "&::before": {
-    display: "none", // Ensure pseudo-element background is off
+    display: "none", 
   },
 }));
 
@@ -76,7 +72,7 @@ const ListPropertyPage = () => {
   // const { user, isLoggedIn } = useAuth(); // isLoggedIn is no longer needed here
   const navigate = useNavigate(); // Keep navigate if used elsewhere
   const theme = useTheme();
-  // Check if screen is small breakpoint ('sm') or smaller
+  
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [isCancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
@@ -85,8 +81,8 @@ const ListPropertyPage = () => {
     steps,
     formData,
     features,
-    imageUrls, // Should be an empty array [] initially from useListingForm
-    imageUploadStates, // Should be an empty object {} initially
+    imageUrls, 
+    imageUploadStates, 
     handleImageFileSelected,
     removeImageByUrl,
     errors,
@@ -100,7 +96,7 @@ const ListPropertyPage = () => {
     handleBack,
     handleSubmit,
     handleCloseSnackbar,
-    // validateStep, // This was in the hook but not explicitly destructured here before, add if needed
+    
   } = useListingForm();
 
   const currentStepLabel =
@@ -108,34 +104,34 @@ const ListPropertyPage = () => {
 
   const currentStepTitle = t(
     `step_${currentStepLabel.toLowerCase().replace(/ /g, "_")}`,
-    currentStepLabel // Fallback text is the raw label
+    currentStepLabel 
   );
 
   const stepIcons = [
-    InfoIcon, // Step 0: Basic Info
-    LocationOnIcon, // Step 1: Location
-    ListAltIcon, // Step 2: Features
-    ArticleIcon, // Step 3: Specific Details
-    PhotoLibraryIcon, // Step 4: Upload Photos
-    DescriptionIcon, // Step 5: Description
-    CheckCircleOutlineIcon, // Step 6: Review
+    InfoIcon, 
+    LocationOnIcon, 
+    ListAltIcon, 
+    ArticleIcon, 
+    PhotoLibraryIcon, 
+    DescriptionIcon, 
+    CheckCircleOutlineIcon, 
   ];
   const CurrentStepIcon = stepIcons[activeStep] || InfoIcon;
 
   const handleCancelListing = () => {
-    setCancelConfirmOpen(true); // Open the dialog instead of navigating directly
+    setCancelConfirmOpen(true); 
   };
 
   const confirmCancelListing = () => {
-    setCancelConfirmOpen(false); // Close the dialog
-    navigate("/home"); // Navigate to the home page or dashboard
+    setCancelConfirmOpen(false); 
+    navigate("/home"); 
   };
 
   const closeCancelConfirmDialog = () => {
     setCancelConfirmOpen(false);
   };
 
-  // --- Function to render the content for the current step - Updated ---
+  
   const getStepContent = (step) => {
     const isLandOrCommercial =
       formData.propertyType === "land" ||
@@ -199,11 +195,11 @@ const ListPropertyPage = () => {
         );
         return (
           <Step4_Images
-            imageUrls={imageUrls} // Pass the new S3 URLs array
-            imageUploadStates={imageUploadStates} // Pass the upload status tracker
-            handleImageFileSelected={handleImageFileSelected} // Pass the new S3 upload handler
-            removeImageByUrl={removeImageByUrl} // Pass the new S3 URL removal handler
-            errors={errors} // Pass errors object (might contain errors.images)
+            imageUrls={imageUrls} 
+            imageUploadStates={imageUploadStates} 
+            handleImageFileSelected={handleImageFileSelected} 
+            removeImageByUrl={removeImageByUrl} 
+            errors={errors} 
           />
         );
       case 5: // Description
@@ -221,7 +217,7 @@ const ListPropertyPage = () => {
           <Step5_Review
             formData={formData}
             features={features}
-            images={imageUrls} // Pass S3 URLs to the review component
+            images={imageUrls} 
           />
         );
       default:
@@ -230,11 +226,7 @@ const ListPropertyPage = () => {
     }
   };
 
-  // --- REMOVED Conditional Rendering Based on Login ---
-  // The `if (!isLoggedIn)` block that showed "Checking authentication..." is removed.
-  // ---
-
-  // Render the form stepper (assuming user is authenticated if this page loads)
+  
   return (
     <Container maxWidth="md">
       <StyledPaper>
@@ -244,21 +236,21 @@ const ListPropertyPage = () => {
           align="center"
           gutterBottom
           sx={{
-            color: "#2C3E50", // Deep Teal or Charcoal
+            color: "#2C3E50", 
             fontWeight: 700,
           }}
         >
           {t("list_your_property")}
         </Typography>
         {isMobile ? (
-          // --- Mobile View: Updated Icon & Title ---
+         
           <Box
             sx={{
-              my: 3, // Vertical margin
+              my: 3, 
               display: "flex",
-              flexDirection: "column", // Stack icon/title
+              flexDirection: "column", 
               alignItems: "center",
-              gap: 0.5, // Space between icon and title
+              gap: 0.5, 
             }}
           >
             {/* Ensure CurrentStepIcon and currentStepTitle are correctly defined and available in this scope */}
@@ -272,7 +264,7 @@ const ListPropertyPage = () => {
               component="div"
               sx={{
                 fontWeight: 600,
-                color: "#2C3E50", // Deep Teal / Charcoal text color
+                color: "#2C3E50", 
               }}
             >
               {currentStepTitle}
@@ -318,7 +310,7 @@ const ListPropertyPage = () => {
           <Button
             variant="outlined"
             color="error"
-            onClick={() => setCancelConfirmOpen(true)} // Ensure setCancelConfirmOpen is from useState
+            onClick={() => setCancelConfirmOpen(true)} 
             disabled={loadingSubmit || loadingAI}
             sx={{ borderRadius: "8px", textTransform: "none", mx: 2 }}
           >
@@ -333,7 +325,7 @@ const ListPropertyPage = () => {
             onClick={
               activeStep === steps.length - 1 ? handleSubmit : handleNext
             }
-            sx={{ ml: "auto" }} // Push to the right
+            sx={{ ml: "auto" }} 
           >
             {loadingSubmit ? (
               <CircularProgress size={24} color="inherit" />
@@ -378,7 +370,7 @@ const ListPropertyPage = () => {
         cancelText={t("no_continue_editing", "No, Continue Editing")}
         confirmButtonProps={{ color: "error" }}
         cancelButtonProps={{ color: "primary" }}
-        isConfirming={false} // Usually false for a cancel dialog, unless there's an async action on confirm
+        isConfirming={false} 
       />
     </Container>
   );

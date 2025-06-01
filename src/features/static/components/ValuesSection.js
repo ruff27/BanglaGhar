@@ -19,7 +19,7 @@ const ValueCard = styled(Paper)(({ theme }) => ({
 }));
 
 const ValuesSection = () => {
-  const { t } = useTranslation(); // Load translation hook
+  const { t } = useTranslation();
   const values = t("values_section.values", { returnObjects: true });
 
   const icons = [

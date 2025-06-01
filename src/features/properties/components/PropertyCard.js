@@ -1,4 +1,3 @@
-// src/features/Properties/components/PropertyCard.js
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
@@ -31,36 +30,29 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
     return null;
   }
 
-  const placeholderImg = `/pictures/placeholder.png`; // Make sure this placeholder exists in public/pictures/
+  const placeholderImg = `/pictures/placeholder.png`;
 
   // --- CORRECTED IMAGE SOURCE LOGIC ---
-  let imgSrc = placeholderImg; // Default to placeholder
+  let imgSrc = placeholderImg;
 
   if (Array.isArray(property.images) && property.images.length > 0) {
     const firstImage = property.images[0];
-    // Check if the first image is a valid, absolute URL (likely from S3)
+    
     if (
       firstImage &&
       (firstImage.startsWith("http://") || firstImage.startsWith("https://"))
     ) {
-      imgSrc = firstImage; // Use the S3 URL directly
+      imgSrc = firstImage; 
     }
-    // If you had a previous system with local paths and want to support them (optional):
-    // else if (firstImage) {
-    //   imgSrc = `/pictures/${firstImage}`; // Or however local paths were resolved
-    // }
   }
   // --- END CORRECTION ---
 
   const handleImageError = (e) => {
-    // This will now only trigger if the S3 image itself fails to load
-    // (e.g., S3 object not public, or URL truly broken)
-    // or if the placeholder itself is missing.
     console.error(
       "Error loading image, falling back to placeholder. Failed URL:",
       e.target.currentSrc || e.target.src
     );
-    e.target.onerror = null; // Prevent infinite loop if placeholder also fails
+    e.target.onerror = null; 
     e.target.src = placeholderImg;
   };
 
@@ -149,7 +141,7 @@ const PropertyCard = ({ property, isWishlisted, onWishlistToggle }) => {
           )}
           <CardMedia
             component="img"
-            image={imgSrc} // This will now be the direct S3 URL or the placeholder
+            image={imgSrc} 
             alt={property.title || "Property image"}
             onError={handleImageError}
             sx={{

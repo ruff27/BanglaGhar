@@ -7,7 +7,6 @@ import {
   Select,
   MenuItem,
   FormHelperText,
-  // Removed Button, CircularProgress, AutoFixHighIcon
   Box,
   Typography,
   InputAdornment,
@@ -17,7 +16,6 @@ import { useTranslation } from "react-i18next";
 const Step1_Details = ({ formData, errors, handleChange }) => {
   const { t } = useTranslation();
 
-  // Determine if Bedrooms/Bathrooms should be shown
   const showBedBath =
     formData.propertyType !== "land" && formData.propertyType !== "commercial";
 

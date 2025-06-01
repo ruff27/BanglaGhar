@@ -1,21 +1,18 @@
-// src/features/profile/UserProfilePage.js
-import React, { useState } from "react"; // <<< Added useState import
+import React, { useState } from "react"; 
 import {
   Container,
   Paper,
   Typography,
-  Box, // <<< Use Box directly
-  CircularProgress, // <<< Use CircularProgress directly
-  Alert, // <<< Use Alert directly
+  Box, 
+  CircularProgress, 
+  Alert, 
   Snackbar,
   Button,
-  Grid, // <<< Import Grid
-  Divider, // <<< Import Divider
+  Grid, 
+  Divider, 
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-
-// Import Hook and Components
 import useProfileManagement from "./hooks/useProfileManagement";
 import ProfilePicture from "./components/ProfilePicture";
 import ProfileDisplay from "./components/ProfileDisplay";
@@ -24,7 +21,6 @@ import EditNameDialog from "./components/EditNameDialog";
 import ChangePasswordDialog from "./components/ChangePasswordDialog";
 import DeleteAccountDialog from "./components/DeleteAccountDialog";
 
-// Styled Paper (Unchanged)
 const ProfilePaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: theme.shadows[3],
@@ -39,7 +35,6 @@ const ProfilePaper = styled(Paper)(({ theme }) => ({
 
 const UserProfilePage = () => {
   const { t } = useTranslation();
-  // Destructure hook returns (ensure these match the hook's return object)
   const {
     profileData,
     loading,
@@ -67,7 +62,6 @@ const UserProfilePage = () => {
     handleUpdatePicture,
   } = useProfileManagement();
 
-  // Snackbar state (Unchanged)
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -81,9 +75,7 @@ const UserProfilePage = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  // --- Main Profile Loading/Error Handling (Unchanged) ---
   if (loading && !profileData) {
-    // Show loading only if profileData isn't already loaded
     return (
       <Container sx={{ display: "flex", justifyContent: "center", py: 5 }}>
         <CircularProgress />
@@ -104,11 +96,6 @@ const UserProfilePage = () => {
       </Container>
     );
   }
-  // Allow rendering even if profileData is null initially if not loading and no error
-  // Components downstream should handle null profileData if necessary
-
-  // --- Render My Listings Section ---
-  // Use standard MUI component names, variables come from hook destructuring
 
   return (
     <Container component="main" maxWidth="md" sx={{ py: 4 }}>
@@ -125,8 +112,8 @@ const UserProfilePage = () => {
         {/* Conditionally render profile picture only if profileData exists */}
         {profileData && (
           <ProfilePicture
-            picture={profileData.picture} // Assuming 'picture' holds the image URL/base64
-            name={profileData.displayName || profileData.name} // Prioritize displayName
+            picture={profileData.picture} 
+            name={profileData.displayName || profileData.name} 
             onPictureChange={handleUpdatePicture}
             isUpdating={isUpdating}
             onError={(msg) => handleShowSnackbar(msg, "error")}

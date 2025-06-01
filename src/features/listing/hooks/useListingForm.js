@@ -1,8 +1,7 @@
-// src/features/listing/hooks/useListingForm.js
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
+import { useAuth } from "../../../context/AuthContext";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
@@ -57,11 +56,10 @@ const initialFormData = {
     rooftopAccess: "no",
     naturalLight: "",
     ownershipPapers: "unknown",
-    propertyTenure: "unknown", // Ensure this is the intended default and matches enum if applicable
+    propertyTenure: "unknown", 
     recentRenovations: "",
     nearbyDevelopments: "",
     reasonForSelling: "",
-    // propertyTenure was duplicated in your original file, ensure this is the correct one.
   },
   createdBy: "",
 };
@@ -82,8 +80,8 @@ const useListingForm = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [features, setFeatures] = useState(initialFeatures);
 
-  const [imageUrls, setImageUrls] = useState([]); // Stores S3 URLs
-  const [imageUploadStates, setImageUploadStates] = useState({}); // Tracks { [tempId]: { loading, error, url, fileName } }
+  const [imageUrls, setImageUrls] = useState([]); 
+  const [imageUploadStates, setImageUploadStates] = useState({}); 
 
   const [errors, setErrors] = useState({});
   const [loadingAI, setLoadingAI] = useState(false);
@@ -194,11 +192,11 @@ const useListingForm = () => {
           if (!currentFormData.postalCode.trim())
             newErrors.postalCode = "Postal Code is required.";
           break;
-        case 3: // Specific Details (Bangladesh Context)
+        case 3: 
           newErrors.bangladeshDetails = {};
 
           if (needsBuildingSpecifics) {
-            // Only require these if it's not land/commercial
+            
             if (!bdDetails.propertyCondition)
               newErrors.bangladeshDetails.propertyCondition =
                 "Property condition is required for buildings.";
@@ -215,10 +213,9 @@ const useListingForm = () => {
             delete newErrors.bangladeshDetails;
           }
           break;
-        // Add other case validations as needed for other steps, e.g., images
+        
         case 4: // Upload Photos
           if (imageUrls.length === 0) {
-            // Example: require at least one image
             newErrors.images = "At least one image is recommended.";
           }
           break;
@@ -228,14 +225,13 @@ const useListingForm = () => {
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },
-    [formData, imageUrls] // Added imageUrls dependency for step 4 validation example
+    [formData, imageUrls] 
   );
 
-  // Accept language argument and send it to backend
   const generateDescription = useCallback(
     async (language = "en") => {
       setLoadingAI(true);
-      setErrors((prev) => ({ ...prev, description: null })); // Clear previous description errors
+      setErrors((prev) => ({ ...prev, description: null })); 
       try {
         const payload = {
           propertyData: {
@@ -281,13 +277,13 @@ const useListingForm = () => {
       return;
     }
     let nextStepIndex = activeStep + 1;
-    // Skip 'Features' step for 'land' or 'commercial' property types
+  
     if (
-      activeStep === 1 && // If current step is 'Location' (index 1)
+      activeStep === 1 && 
       (formData.propertyType === "land" ||
         formData.propertyType === "commercial")
     ) {
-      nextStepIndex = 3; // Skip to 'Specific Details' (index 3)
+      nextStepIndex = 3; 
     }
     if (nextStepIndex < steps.length) {
       setActiveStep(nextStepIndex);
@@ -296,7 +292,7 @@ const useListingForm = () => {
 
   const handleBack = useCallback(() => {
     let prevStepIndex = activeStep - 1;
-    // If current step is 'Specific Details' (index 3) and property is 'land' or 'commercial', skip back to 'Location' (index 1)
+
     if (
       activeStep === 3 &&
       (formData.propertyType === "land" ||
@@ -407,7 +403,7 @@ const useListingForm = () => {
       }
     },
     [idToken, imageUrls, errors.images]
-  ); // Added imageUrls to dependencies
+  ); 
 
   const removeImageByUrl = useCallback((urlToRemove) => {
     console.log("[useListingForm] Removing image by URL:", urlToRemove);
@@ -426,23 +422,23 @@ const useListingForm = () => {
   const handleSubmit = useCallback(async () => {
     console.log("[useListingForm] handleSubmit called.");
     let allStepsValid = true;
-    // Validate all steps except the last one (Review step)
+    
     for (let i = 0; i < steps.length - 1; i++) {
-      const currentFormData = formData; // Use the formData from the hook's state
+      const currentFormData = formData; 
       const isLandOrCommercial =
         currentFormData.propertyType === "land" ||
         currentFormData.propertyType === "commercial";
-      const skipStep = i === 2 && isLandOrCommercial; // Skip "Features" (index 2) for land/commercial
+      const skipStep = i === 2 && isLandOrCommercial; 
 
       if (!skipStep && !validateStep(i)) {
         allStepsValid = false;
-        setActiveStep(i); // Navigate to the step with validation errors
+        setActiveStep(i); 
         setSnackbar({
           open: true,
           message: `Please review Step ${i + 1}: ${steps[i]} for errors.`,
           severity: "error",
         });
-        break; // Stop validation on first error
+        break; 
       }
     }
 
@@ -472,9 +468,9 @@ const useListingForm = () => {
     }
 
     setLoadingSubmit(true);
-    setSnackbar({ open: false }); // Close any existing snackbar
+    setSnackbar({ open: false }); 
 
-    // Ensure specific undefined/empty optional fields in bangladeshDetails have defaults if necessary
+    
     const finalBangladeshDetails = { ...formData.bangladeshDetails };
     if (finalBangladeshDetails.backupPower === "")
       finalBangladeshDetails.backupPower = "none"; //
@@ -485,48 +481,44 @@ const useListingForm = () => {
     if (finalBangladeshDetails.propertyTenure === "")
       finalBangladeshDetails.propertyTenure = "unknown"; //
 
-    // Prepare the final data payload
+    
     const finalData = {
-      ...formData, // Spread existing formData
+      ...formData, 
       bangladeshDetails: finalBangladeshDetails,
       features:
         formData.propertyType !== "land" &&
         formData.propertyType !== "commercial"
-          ? features // Include features state
-          : {}, // Send empty object for land/commercial
-      images: imageUrls, // Include the array of S3 image URLs
-      createdBy: creatorEmail, // Set createdBy from authenticated user
+          ? features 
+          : {}, 
+      images: imageUrls, 
+      createdBy: creatorEmail, 
     };
 
-    // Convert numeric fields from string to number, handle optional fields
+    
     if (
       finalData.price !== undefined &&
       String(finalData.price).trim() !== ""
     ) {
       finalData.price = Number(finalData.price);
     } else {
-      // Assuming price is required, prior validation should catch empty.
-      // If it could be optional & empty, you might delete it: delete finalData.price;
+      
     }
 
     if (finalData.area !== undefined && String(finalData.area).trim() !== "") {
       finalData.area = Number(finalData.area);
     } else if (String(finalData.area).trim() === "") {
-      // If area is optional and submitted as an empty string, remove it from payload
-      // so backend doesn't try to validate/convert an empty string to a number.
+      
       delete finalData.area;
     }
 
-    // Handle bedrooms and bathrooms based on property type
     if (
       formData.propertyType === "land" ||
       formData.propertyType === "commercial"
     ) {
-      delete finalData.bedrooms; // Remove if land/commercial
-      delete finalData.bathrooms; // Remove if land/commercial
+      delete finalData.bedrooms; 
+      delete finalData.bathrooms; 
     } else {
-      // For other types, ensure bedrooms/bathrooms are numbers.
-      // Default to 0 if empty or not a valid number, aligning with schema defaults.
+      
       finalData.bedrooms =
         String(formData.bedrooms).trim() === "" ||
         isNaN(Number(formData.bedrooms))
@@ -554,7 +546,7 @@ const useListingForm = () => {
         message: "Property listed successfully!",
         severity: "success",
       });
-      setTimeout(() => navigate("/user-profile"), 1500); // Or '/my-listings' or property detail page
+      setTimeout(() => navigate("/user-profile"), 1500); 
     } catch (err) {
       const errorResponse = err.response;
       console.error(
@@ -563,7 +555,7 @@ const useListingForm = () => {
       );
 
       let detailedErrorMessages = "";
-      // Assuming backend sends validation errors in an 'errors' array like express-validator
+      
       if (
         errorResponse?.data?.errors &&
         Array.isArray(errorResponse.data.errors)
@@ -576,10 +568,10 @@ const useListingForm = () => {
       const errorMessage =
         errorResponse?.status === 401 || errorResponse?.status === 403
           ? `Authorization error (${errorResponse.status}). Please try logging in again.`
-          : detailedErrorMessages || // Show detailed validation errors first
-            errorResponse?.data?.message || // Then specific backend message
-            errorResponse?.data?.error || // Then general backend error
-            "Property submission failed. Please check your input and try again."; // Fallback
+          : detailedErrorMessages || 
+            errorResponse?.data?.message || 
+            errorResponse?.data?.error || 
+            "Property submission failed. Please check your input and try again."; 
       setSnackbar({ open: true, message: errorMessage, severity: "error" });
     } finally {
       setLoadingSubmit(false);
@@ -592,12 +584,12 @@ const useListingForm = () => {
     navigate,
     validateStep,
     imageUrls,
-    steps, // Added 'steps' as it's used in the loop
-    activeStep, // Added 'activeStep' for setActiveStep
-    setActiveStep, // Added 'setActiveStep'
-    setSnackbar, // Added 'setSnackbar'
-    setLoadingSubmit, // Added 'setLoadingSubmit'
-    // API_BASE_URL is a const, not needed in deps array unless it can change
+    steps, 
+    activeStep, 
+    setActiveStep, 
+    setSnackbar, 
+    setLoadingSubmit, 
+    
   ]);
 
   const handleCloseSnackbar = useCallback((_, reason) => {
@@ -610,16 +602,16 @@ const useListingForm = () => {
     steps,
     formData,
     features,
-    imageUrls, // For Step4_Images to display S3 images
-    imageUploadStates, // For Step4_Images to show upload progress/status
+    imageUrls, 
+    imageUploadStates, 
     errors,
     loadingAI,
     loadingSubmit,
     snackbar,
     handleChange,
     handleFeatureChange,
-    handleImageFileSelected, // Pass this to Step4_Images
-    removeImageByUrl, // Pass this to Step4_Images
+    handleImageFileSelected, 
+    removeImageByUrl, 
     generateDescription,
     handleNext,
     handleBack,

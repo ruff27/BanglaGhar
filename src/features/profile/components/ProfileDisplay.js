@@ -14,14 +14,14 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 const ProfileDisplay = ({ profileData }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
   if (!profileData) return null;
 
   const isVerified = profileData.email_verified === "true";
-  console.log("ProfileDisplay profileData:", profileData); // Debug log
+  console.log("ProfileDisplay profileData:", profileData); 
   return (
     <Paper
       elevation={0}
@@ -44,10 +44,10 @@ const ProfileDisplay = ({ profileData }) => {
           </ListItemIcon>
           {/* Applied translation */}
           <ListItemText
-            primary={t("display_name_label", "Display Name")} // Use a more specific key if available
+            primary={t("display_name_label", "Display Name")} 
             secondary={
               profileData.displayName || profileData.name || t("not_set", "-")
-            } // Prioritize displayName, fallback to Cognito name, then placeholder
+            } 
           />
         </ListItem>
         <Divider component="li" />

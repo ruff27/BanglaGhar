@@ -43,7 +43,7 @@ const formatDisplayPrice = (price, listingType) => {
 const getPropertyPosition = (property) => {
   if (!property) return null;
   
-  // First try position.lat/lng format
+
   if (property.position && 
       typeof property.position.lat === 'number' && 
       typeof property.position.lng === 'number') {
@@ -53,7 +53,6 @@ const getPropertyPosition = (property) => {
     };
   }
   
-  // Then try latitude/longitude format
   if (typeof property.latitude === 'number' && 
       typeof property.longitude === 'number') {
     return {
@@ -71,13 +70,10 @@ const getPropertyPosition = (property) => {
 const constructLocationString = (property) => {
   if (!property) return "Location unavailable";
   
-  // If the property already has a pre-constructed address string, use it
   if (property.address) return property.address;
   
-  // If the property has a location field, use it (legacy support)
   if (property.location) return property.location;
   
-  // Otherwise construct from individual fields
   const locationParts = [
     property.addressLine1,
     property.addressLine2,
@@ -97,8 +93,6 @@ const constructLocationString = (property) => {
  */
 const normalizePosition = (position) => {
   if (!position) return null;
-  
-  // Handle object format {lat, lng}
   if (typeof position === 'object') {
     if (typeof position.lat === 'number' && typeof position.lng === 'number') {
       return {
@@ -155,47 +149,41 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // If no property is selected, return null
   if (!selectedProperty) {
     return null;
   }
 
-  // Default image handling
   const placeholderImg = `/pictures/placeholder.png`;
   const imgSrc =
     Array.isArray(selectedProperty.images) && selectedProperty.images.length > 0
       ? `/pictures/${selectedProperty.images[0]}`
       : placeholderImg;
   
-  // Get location string using the helper function
   const locationString = constructLocationString(selectedProperty);
   
-  // Property type check
   const isLandOrCommercial = 
     selectedProperty.propertyType === "land" || 
     selectedProperty.propertyType === "commercial";
   
-  // Price formatting
   const formattedPrice = formatDisplayPrice(
     selectedProperty.price, 
-    selectedProperty.listingType || selectedProperty.mode // Support both new and old property formats
+    selectedProperty.listingType || selectedProperty.mode
   );
   
-  // Get position data in a consistent format
   const positionData = getPropertyPosition(selectedProperty);
   const stablePosition = positionData ? normalizePosition(positionData) : null;
 
-  // Get location accuracy information
+  
   const locationAccuracy = selectedProperty.locationAccuracy || "unknown";
   const accuracyInfo = getLocationAccuracyInfo(locationAccuracy);
 
-  // Image error handler
+  
   const handleImageError = (e) => {
     e.target.onerror = null;
     e.target.src = placeholderImg;
   };
 
-  // Navigation handler with proper error handling
+  
   const navigateToPropertyPage = () => {
     if (!selectedProperty._id) {
       console.error("Cannot navigate - property ID is missing");
@@ -204,17 +192,17 @@ const PropertyInfoPanel = ({ selectedProperty }) => {
     navigate(`/properties/details/${selectedProperty._id}`);
   };
 
-  // Get directions handler with position validation
+  
   const getDirections = () => {
     let destination = '';
     
-    // Try to use address for more accurate directions
+    
     if (locationString && locationString !== "Location details not available" && locationString !== "Location unavailable") {
-      // Use the address string directly, encoded for a URL
+      
       destination = encodeURIComponent(locationString);
       console.log(`Using address for directions: ${locationString}`);
     } else if (stablePosition) {
-      // Fall back to coordinates if no valid address
+      
       destination = `${stablePosition.lat},${stablePosition.lng}`;
       console.log(`Using coordinates for directions: ${destination}`);
     } else {

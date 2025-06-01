@@ -6,22 +6,21 @@ import {
   Typography,
   Box,
   FormGroup,
-  FormControl, // Added
-  InputLabel, // Added
-  Select, // Added
-  MenuItem, // Added
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-// Pass formData to check property type if needed for display logic within the step
+
 const Step3_Features = ({ features, handleFeatureChange, formData }) => {
   const { t } = useTranslation();
 
-  // Check if the step should be rendered based on property type
+  
   const isApplicable =
     formData.propertyType !== "land" && formData.propertyType !== "commercial";
 
-  // Define feature list (excluding 'furnished' as it's handled separately)
   const checkboxFeatureList = [
     { key: "parking", labelKey: "parking" },
     { key: "garden", labelKey: "garden" },
@@ -31,7 +30,7 @@ const Step3_Features = ({ features, handleFeatureChange, formData }) => {
   ];
 
   if (!isApplicable) {
-    // Although skipped by navigation, good practice to handle direct render attempt
+    
     return (
       <Box>
         <Typography variant="h6" gutterBottom>
@@ -79,10 +78,10 @@ const Step3_Features = ({ features, handleFeatureChange, formData }) => {
               <Select
                 labelId="furnished-label"
                 id="furnished"
-                name="furnished" // Matches the key in features state
-                value={features.furnished || "no"} // Controlled component
+                name="furnished" 
+                value={features.furnished || "no"} 
                 label={t("furnished", "Furnished Status")}
-                onChange={handleFeatureChange} // Use the specific handler
+                onChange={handleFeatureChange} 
               >
                 <MenuItem value="no">
                   {t("furnished_no", "Not Furnished")}

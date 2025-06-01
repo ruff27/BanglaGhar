@@ -1,4 +1,3 @@
-// src/features/Properties/pages/PropertiesPage.js
 import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {

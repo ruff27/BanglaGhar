@@ -1,8 +1,7 @@
-// src/features/map/MapPage.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   useParams,
-  useNavigate, // Removed useLocation as it wasn't actively used for query params here
+  useNavigate, 
 } from "react-router-dom";
 import {
   Box,
@@ -29,20 +28,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import InfoIcon from "@mui/icons-material/Info";
 import { useTranslation } from "react-i18next";
-
-// Import components and hooks
 import MapComponent from "./components/MapComponent";
 import PropertyInfoPanel from "./components/PropertyInfoPanel";
-import FilterSidebar from "../properties/components/FilterSidebar"; // Adjust path if needed
+import FilterSidebar from "../properties/components/FilterSidebar"; 
 import useMapData from "./hooks/useMapData";
-// Removed axios and divisionCenters, as useMapData handles this
-// Removed API_BASE_URL, as useMapData handles this
-
-// Helper function to construct a complete address string (can be moved to a utils file)
 const constructAddressString = (property) => {
   if (!property) return "Location unavailable";
-  if (property.address) return property.address; // If already constructed
-  if (property.location) return property.location; // Legacy
+  if (property.address) return property.address; 
+  if (property.location) return property.location; 
 
   const addressParts = [
     property.addressLine1,
@@ -58,20 +51,20 @@ const constructAddressString = (property) => {
 };
 
 const MapPage = () => {
-  const { propertyCode } = useParams(); // For directly loading a specific property
+  const { propertyCode } = useParams(); 
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState("");
-  // propertyTypeFilter is for listingType (rent/buy/sold)
+  
   const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  // Detailed filters from FilterSidebar
+  
   const [detailedFilters, setDetailedFilters] = useState({
     priceRange: [0, 50000000],
     bedrooms: "any",
     bathrooms: "any",
-    propertyType: "any", // This is for actual property type (apartment, house, etc.)
+    propertyType: "any", 
   });
   const [notification, setNotification] = useState({
     open: false,
@@ -80,9 +73,9 @@ const MapPage = () => {
   });
   const [showLocationInfo, setShowLocationInfo] = useState(false);
 
-  // Use the map data hook, passing propertyCode if present in URL
+
   const {
-    properties: allMappableProperties, // Renamed to clarify these are pre-processed by the hook
+    properties: allMappableProperties, 
     loading,
     error,
     userLocation,
@@ -90,13 +83,12 @@ const MapPage = () => {
     mapZoom,
     selectedProperty,
     locateUser,
-    handleSelectProperty, // This now expects a processed property from allMappableProperties
+    handleSelectProperty, 
     clearSelectedProperty,
     handleMapMove,
-    fetchPropertyByCode, // Hook exposes this if needed
+    fetchPropertyByCode, 
   } = useMapData(propertyCode);
 
-  // Effect to handle notifications for specific property loading results from useMapData
   useEffect(() => {
     if (propertyCode && selectedProperty?._id === propertyCode) {
       const message =
@@ -122,14 +114,9 @@ const MapPage = () => {
           : "info";
       showNotification(message, severity);
     } else if (propertyCode && !loading && !selectedProperty) {
-      // If propertyCode was given, loading finished, but no selectedProperty (means fetch failed or no location)
-      // Error state from useMapData hook should primarily handle this.
-      // This is a fallback or supplemental notification.
-      // showNotification(error || `Could not load property ${propertyCode}. It may not have a valid location.`, "error");
+      
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [propertyCode, selectedProperty, loading, t]); // Removed 'error' and 'showNotification' to simplify, relying on hook's error state
-
+  }, [propertyCode, selectedProperty, loading, t]); 
   const showNotification = useCallback((message, severity = "info") => {
     setNotification({ open: true, message, severity });
   }, []);
@@ -195,7 +182,6 @@ const MapPage = () => {
       ) {
         bathMatch = false;
       }
-      // This 'propertyType' is from the detailedFilters (e.g., apartment, house)
       const typeMatch =
         detailedFilters.propertyType === "any" ||
         (p.propertyType &&
@@ -208,7 +194,6 @@ const MapPage = () => {
     // 3. Apply Search Query
     if (searchQuery && searchQuery.trim() !== "") {
       const sq = searchQuery.toLowerCase().trim();
-      // Ensure address field is available for searching
       const propsWithAddress = propsToFilter.map((p) => ({
         ...p,
         addressForSearch: constructAddressString(p),
@@ -230,7 +215,7 @@ const MapPage = () => {
   const handlePropertyTypeFilterChange = (event, newType) => {
     if (newType !== null) {
       setPropertyTypeFilter(newType);
-      clearSelectedProperty(); // Clear selection when changing main type filter
+      clearSelectedProperty(); 
     }
   };
   const handleCloseNotification = () =>
@@ -253,20 +238,15 @@ const MapPage = () => {
 
   const clearAllPageFilters = () => {
     setSearchQuery("");
-    setPropertyTypeFilter("all"); // Reset listingType filter
-    handleResetDetailedFilters(); // Reset detailed filters from sidebar
+    setPropertyTypeFilter("all"); 
+    handleResetDetailedFilters(); 
     clearSelectedProperty();
-    // Optionally reset map to default view if not viewing a specific property by URL
-    // if (!propertyCode) {
-    //   handleMapMove(DEFAULT_CENTER, DEFAULT_ZOOM); // Assuming DEFAULT_CENTER, DEFAULT_ZOOM are defined
-    // }
   };
   const handleBack = () => navigate(-1);
 
-  // This is passed to MapComponent -> MapMarker for clicks on markers
+
   const onMarkerPropertySelect = useCallback(
     (property) => {
-      // The property object from allMappableProperties is already processed
       handleSelectProperty(property);
     },
     [handleSelectProperty]
@@ -429,7 +409,7 @@ const MapPage = () => {
           boxShadow: 1,
         }}
       >
-        {loading && !selectedProperty ? ( // Show full map loader only if not already showing a selected property
+        {loading && !selectedProperty ? ( 
           <Box
             sx={{
               height: "100%",
@@ -447,13 +427,12 @@ const MapPage = () => {
         ) : (
           <MapComponent
             properties={filteredMapProperties}
-            mapCenter={mapCenter} // mapCenter is [lat,lng] from useMapData
+            mapCenter={mapCenter} 
             mapZoom={mapZoom}
-            userLocation={userLocation} // userLocation is {lat,lng} from useMapData
+            userLocation={userLocation} 
             selectedProperty={selectedProperty}
             onMarkerClick={onMarkerPropertySelect}
             onMapMove={handleMapMove}
-            // showLocationAccuracy prop can be removed if markers don't need it directly
           />
         )}
         {selectedProperty && (

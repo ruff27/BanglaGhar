@@ -1,4 +1,3 @@
-// src/features/ListPropertyPage/components/Step_Bangladesh_Details.js
 import React from "react";
 import {
   Grid,
@@ -21,8 +20,8 @@ import { useTranslation } from "react-i18next";
 
 const Step_Bangladesh_Details = ({ formData, errors, handleChange }) => {
   const { t } = useTranslation();
-  const bdDetails = formData.bangladeshDetails || {}; // Use empty object fallback
-  const bdErrors = errors || {}; // Use empty object fallback for errors
+  const bdDetails = formData.bangladeshDetails || {}; 
+  const bdErrors = errors || {}; 
 
   return (
     <Box>

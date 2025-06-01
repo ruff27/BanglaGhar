@@ -1,35 +1,20 @@
-// src/features/map/components/MapMarker.js
 import React, { useMemo } from "react";
-import { Marker, Popup, useMap } from "react-leaflet"; // Added useMap
+import { Marker, Popup, useMap } from "react-leaflet"; 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-// Removed useNavigate as direct navigation is handled by onMarkerClick -> handleSelectProperty -> PropertyInfoPanel
-import PlaceIcon from "@mui/icons-material/Place"; // Default MUI icon
+import PlaceIcon from "@mui/icons-material/Place"; 
 import { renderToString } from "react-dom/server";
-import MapPopupContent from "./MapPopup"; // Assuming MapPopup.js is renamed or this is the content component
+import MapPopupContent from "./MapPopup"; 
 
-// Helper to create Leaflet icon from MUI icon based on selection and accuracy
 const createLeafletIcon = (property, isSelected) => {
   let iconColor;
-  let iconSize = isSelected ? 38 : 30; // Slightly larger when selected
+  let iconSize = isSelected ? 38 : 30; 
 
   if (isSelected) {
-    iconColor = "#E91E63"; // Pink/Magenta for selected (or your preferred selected color)
+    iconColor = "#E91E63"; 
   } else {
-    iconColor = "#1976D2"; // Default Blue for all unselected pins (or your preferred default color)
-    // The original accuracy-based coloring for unselected pins is removed to meet the new requirement.
-    // switch (property?.locationAccuracy) {
-    //   case "approximate":
-    //     iconColor = "#FFA000";
-    //     break;
-    //   case "district-level":
-    //     iconColor = "#D32F2F";
-    //     break;
-    //   case "precise":
-    //   default:
-    //     iconColor = "#1976D2";
-    //     break;
-    // }
+    iconColor = "#1976D2"; 
+    
   }
 
   const iconHtml = renderToString(
@@ -50,14 +35,14 @@ const createLeafletIcon = (property, isSelected) => {
   });
 };
 
-// MapMarker expects property.position to be {lat, lng}
+
 const MapMarker = ({ property, isSelected, onClick }) => {
   const map = useMap(); // Get map instance for flyTo
 
-  // Position should be directly from property.position (which is {lat, lng})
+  
   const position = property?.position;
 
-  // Memoize icon creation
+  
   const icon = useMemo(() => {
     return createLeafletIcon(property, isSelected);
   }, [property, isSelected]);
@@ -78,9 +63,9 @@ const MapMarker = ({ property, isSelected, onClick }) => {
 
   const handleMarkerClick = () => {
     if (onClick) {
-      onClick(property); // This is onPropertySelect from MapPage
+      onClick(property); 
     }
-    // Fly to the marker's position smoothly
+    
     map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 15), {
       animate: true,
       duration: 0.8,
@@ -89,12 +74,12 @@ const MapMarker = ({ property, isSelected, onClick }) => {
 
   return (
     <Marker
-      position={[position.lat, position.lng]} // Leaflet expects [lat, lng] array
+      position={[position.lat, position.lng]} 
       icon={icon}
       eventHandlers={{
         click: handleMarkerClick,
       }}
-      zIndexOffset={isSelected ? 1000 : 0} // Bring selected marker to front
+      zIndexOffset={isSelected ? 1000 : 0} 
     >
       {/* The MapPopup component will be rendered by PropertyInfoPanel or similar, not directly here for this design
           If you want a direct leaflet popup on click without the panel, you can add it here.

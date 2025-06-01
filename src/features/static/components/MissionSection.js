@@ -3,23 +3,23 @@ import { Box, Typography, Grid, Paper } from "@mui/material";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
 import { styled } from "@mui/material/styles";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 const AnimatedBox = styled(Box)(({ theme }) => ({
-  // ... (styling kept as is)
+  
   transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: theme.shadows[4],
   },
-  height: "100%", // Ensure boxes have same height if needed
+  height: "100%", 
 }));
 
 /**
  * MissionSection Component
  */
 const MissionSection = () => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation();
 
   return (
     <Box sx={{ py: 6 }}>

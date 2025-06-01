@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
+import { useAuth } from "../../../context/AuthContext"; 
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:5001/api"; // Use environment variable
+  process.env.REACT_APP_API_URL || "http://localhost:5001/api"; 
 
 /**
  * Custom Hook to manage user's wishlist state and actions.
@@ -13,12 +13,10 @@ const API_BASE_URL =
 const useWishlist = () => {
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
-  // Stores only the IDs of wishlisted properties for quick checking
   const [wishlistIds, setWishlistIds] = useState(new Set());
   const [loadingWishlist, setLoadingWishlist] = useState(false);
   const [wishlistError, setWishlistError] = useState(null);
 
-  // Function to fetch wishlist IDs
   const fetchWishlistIds = useCallback(async () => {
     if (isLoggedIn && user?.email) {
       setLoadingWishlist(true);
@@ -28,12 +26,10 @@ const useWishlist = () => {
         const response = await axios.get(
           `${API_BASE_URL}/users/${user.email}/wishlist`
         );
-        // Expect response.data.wishlist to be an array of objects or strings
         if (response.data && Array.isArray(response.data.wishlist)) {
-          // Extract only the IDs into a Set for efficient lookup
-          const ids = response.data.wishlist.map((item) => item?._id || item); // Handle object or string IDs
+          const ids = response.data.wishlist.map((item) => item?._id || item); 
           setWishlistIds(new Set(ids));
-          console.log("Fetched wishlist IDs:", ids); // Debug log
+          console.log("Fetched wishlist IDs:", ids); 
         } else {
           console.warn(
             "Unexpected response structure for wishlist IDs:",
@@ -44,19 +40,19 @@ const useWishlist = () => {
       } catch (error) {
         console.error("Error fetching wishlist IDs:", error);
         setWishlistError("Could not load wishlist status.");
-        setWishlistIds(new Set()); // Clear wishlist on error
+        setWishlistIds(new Set()); 
       } finally {
         setLoadingWishlist(false);
       }
     } else {
-      setWishlistIds(new Set()); // Clear wishlist if user logs out
+      setWishlistIds(new Set()); 
     }
-  }, [isLoggedIn, user]); // Dependencies
+  }, [isLoggedIn, user]); 
 
-  // Fetch wishlist on initial load or auth change
+  
   useEffect(() => {
     fetchWishlistIds();
-  }, [fetchWishlistIds]); // Depend on the memoized fetch function
+  }, [fetchWishlistIds]); 
 
   /**
    * Toggles the wishlist status for a given property ID.
@@ -82,8 +78,8 @@ const useWishlist = () => {
       const isInWishlist = wishlistIds.has(propertyId);
       const username = user.email;
 
-      // Optimistic UI update
-      const originalWishlistIds = new Set(wishlistIds); // Keep backup
+  
+      const originalWishlistIds = new Set(wishlistIds); 
       let updatedWishlistIds;
       if (isInWishlist) {
         updatedWishlistIds = new Set(wishlistIds);
@@ -92,14 +88,13 @@ const useWishlist = () => {
         updatedWishlistIds = new Set(wishlistIds);
         updatedWishlistIds.add(propertyId);
       }
-      setWishlistIds(updatedWishlistIds); // Update UI immediately
+      setWishlistIds(updatedWishlistIds); 
 
       try {
         if (isInWishlist) {
-          // --- Remove from Wishlist ---
           console.log(`Removing ${propertyId} for ${username}`); // Debug log
           await axios.delete(`${API_BASE_URL}/users/${username}/wishlist`, {
-            data: { propertyId }, // Send propertyId in request body
+            data: { propertyId }, 
           });
           console.log(`Removed ${propertyId} successfully`); // Debug log
           if (callback) callback("Removed from wishlist", "info");
@@ -107,32 +102,27 @@ const useWishlist = () => {
           // --- Add to Wishlist ---
           console.log(`Adding ${propertyId} for ${username}`); // Debug log
           await axios.post(`${API_BASE_URL}/users/${username}/wishlist`, {
-            propertyId, // Send propertyId in request body
+            propertyId,
           });
-          console.log(`Added ${propertyId} successfully`); // Debug log
+          console.log(`Added ${propertyId} successfully`);
           if (callback) callback("Added to wishlist", "success");
         }
-        // No need to set state again if API call was successful
       } catch (error) {
         console.error(
           "Error updating wishlist via API:",
           error.response?.data || error.message
         );
-        // *** Revert optimistic update on error ***
         setWishlistIds(originalWishlistIds);
         if (callback)
           callback("Failed to update wishlist. Please try again.", "error");
       }
     },
-    [isLoggedIn, user, navigate, wishlistIds] // Include wishlistIds
+    [isLoggedIn, user, navigate, wishlistIds]
   );
 
-  // Function to explicitly refetch wishlist IDs (can be used after login/logout or manual refresh)
   const refreshWishlist = useCallback(() => {
     fetchWishlistIds();
   }, [fetchWishlistIds]);
-
-  // Return the Set of IDs and the toggle function
   return {
     wishlistIds,
     toggleWishlist,

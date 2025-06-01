@@ -18,11 +18,11 @@ import {
   Instagram,
   LinkedIn,
 } from "@mui/icons-material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
 
-// --- Styled Components ---
+
 const ContactCard = styled(Card)(({ theme }) => ({
-  // ... (styling kept as is)
+
   height: "100%",
   transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
   "&:hover": {
@@ -31,30 +31,28 @@ const ContactCard = styled(Card)(({ theme }) => ({
       theme.palette.mode === "dark"
         ? "rgba(0, 0, 0, 0.2)"
         : "rgba(43, 123, 140, 0.2)"
-    }`, // Adjusted shadow color for theme
+    }`, 
   },
   backgroundColor: theme.palette.background.paper,
-  borderRadius: "12px", // Consistent border radius
+  borderRadius: "12px", 
 }));
 
 const AnimatedIconButton = styled(IconButton)(({ theme }) => ({
-  // ... (styling kept as is)
+  
   backgroundColor: theme.palette.primary.main,
   color: "white",
-  margin: theme.spacing(0.5), // Adjusted margin for better spacing
+  margin: theme.spacing(0.5), 
   transition: "all 0.3s ease",
   "&:hover": {
     backgroundColor: theme.palette.primary.dark,
     transform: "scale(1.15)",
   },
   "&:focus": {
-    // Added focus style for accessibility
     outline: `2px solid ${theme.palette.primary.light}`,
     outlineOffset: "2px",
   },
 }));
 
-// --- Data ---
 const socialLinks = [
   {
     icon: <Facebook />,
@@ -78,7 +76,7 @@ const socialLinks = [
  * ContactInfo Component
  */
 const ContactInfo = () => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Grid container spacing={3} direction="column">
