@@ -1,4 +1,3 @@
-// src/App.js
 import React from "react";
 import "./App.css";
 import {
@@ -6,13 +5,10 @@ import {
   Routes,
   Route,
   Outlet,
-} from "react-router-dom";
+} from "react-rontsuter-dom";
 
-// Layout Components
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
-
-// Feature/Page Imports
 import Home from "./features/home/HomePage";
 import AboutUs from "./features/static/AboutUsPage";
 import Contact from "./features/static/ContactPage";
@@ -25,25 +21,20 @@ import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 import PropertiesPage from "./features/properties/PropertiesPage";
 import PropertyDetailPage from "./features/properties/pages/PropertyDetailPage";
-import MapPage from "./features/map/MapPage"; // Import the MapPage component
+import MapPage from "./features/map/MapPage"; 
 import Saved from "./pages/Saved";
 import UserProfilePage from "./features/profile/UserProfilePage";
-import AdminRoutes from "./admin/AdminRoutes"; // Import the file defining admin routes
-import AdminProtectedRoute from "./components/common/AdminProtectedRoute"; // Import the guard
+import AdminRoutes from "./admin/AdminRoutes"; 
+import AdminProtectedRoute from "./components/common/AdminProtectedRoute"; 
 import ChatPage from "./features/chat/ChatPage";
 import EditPropertyPage from "./pages/EditPropertyPage";
-
-// Theme and Context
 import { theme } from "./styles/theme";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { AuthProvider } from "./context/AuthContext"; // Adjust path if needed
-import { SnackbarProvider } from "./context/SnackbarContext"; // Adjust path if needed
+import { AuthProvider } from "./context/AuthContext";
+import { SnackbarProvider } from "./context/SnackbarContext";
 import { ChatProvider } from "./features/chat/context/ChatContext";
 
-// --- Create Layout Components ---
-
-// Layout for main user-facing pages (includes Navbar and Footer)
 const MainLayout = () => (
   <div
     className="App"
@@ -63,7 +54,6 @@ const MainLayout = () => (
   </div>
 );
 
-// Layout for fullscreen map page (only includes Navbar)
 const MapLayout = () => (
   <div
     className="App"
@@ -84,7 +74,6 @@ const MapLayout = () => (
   </div>
 );
 
-// Layout for pages without Navbar/Footer
 const BlankLayout = () => (
   <div className="App">
     <main className="content">
@@ -102,7 +91,6 @@ function App() {
           <ChatProvider>
             <Router>
               <Routes>
-                {/* Routes using the MainLayout (Navbar/Footer) */}
                 <Route element={<MainLayout />}>
                   <Route index element={<Home />} />
                   <Route path="/home" element={<Home />} />
@@ -128,28 +116,19 @@ function App() {
                   <Route path="/chat/:conversationId" element={<ChatPage />} />
                 </Route>
 
-                {/* Map Routes with Map Layout (Navbar but no Footer) */}
                 <Route element={<MapLayout />}>
                   <Route path="/map" element={<MapPage />} />
                   <Route path="/map/:propertyCode" element={<MapPage />} />
                 </Route>
 
-                {/* Routes using the BlankLayout (No Navbar/Footer) */}
                 <Route element={<BlankLayout />}>
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/verify-otp" element={<VerifyOtp />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/list-property" element={<ListProperty />} />
-                  {/* Add other full-page routes without main nav/footer here */}
                 </Route>
-
-                {/* --- Admin Routes --- */}
-                {/* Wrap the admin routes in the protective component */}
                 <Route element={<AdminProtectedRoute />}>
-                  {/* Render the AdminRoutes component for any path starting with /admin */}
-                  {/* AdminRoutes itself contains the AdminLayout and specific admin page routes */}
-                  {/* Wrap AdminRoutes with SnackbarProvider */}
                   <Route
                     path="/admin/*"
                     element={
@@ -159,10 +138,7 @@ function App() {
                     }
                   />
                 </Route>
-                {/* --- End Admin Routes --- */}
 
-                {/* Optional: Catch-all 404 Not Found Route */}
-                {/* <Route path="*" element={<NotFoundPage />} /> */}
               </Routes>
             </Router>
           </ChatProvider>
