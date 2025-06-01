@@ -3,10 +3,12 @@
 const fetch = require("node-fetch"); // Add fetch for Gemini API
 const axios = require("axios");
 
-const NVIDIA_API_KEY = "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";
+const NVIDIA_API_KEY =
+  "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";
 const NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 const GOOGLE_TRANSLATE_API_KEY = process.env.GOOGLE_TRANSLATE_API_KEY; // Set your Google Translate API key in env
-const GOOGLE_TRANSLATE_URL = "https://translation.googleapis.com/language/translate/v2";
+const GOOGLE_TRANSLATE_URL =
+  "https://translation.googleapis.com/language/translate/v2";
 
 // Helper function to safely access nested properties
 const getSafe = (obj, path, defaultValue = "N/A") => {
@@ -101,12 +103,10 @@ const formatBangladeshDetailsForPrompt = (bdDetails = {}) => {
 
 const generatePropertyDescription = async (req, res) => {
   try {
-    // Debug: Log the language received from frontend
     console.log("[AIController] Received language:", req.body.language);
-
-    // Access the nested propertyData object sent from the frontend
     const propertyDataFromRequest = req.body.propertyData;
-    const language = req.body.language || "en"; // Default to English
+    const language = req.body.language || "en";
+
     if (
       !propertyDataFromRequest ||
       typeof propertyDataFromRequest !== "object"
@@ -114,17 +114,13 @@ const generatePropertyDescription = async (req, res) => {
       return res.status(400).json({ error: "Invalid property data received" });
     }
 
-    // Extract data using safe getter, accessing the correct nested structure
     const basicInfo = propertyDataFromRequest.basicInfo || {};
     const location = propertyDataFromRequest.location || {};
     const features = propertyDataFromRequest.features || {};
     const bdDetails = propertyDataFromRequest.bangladeshDetails || {};
+    const userPromptText = propertyDataFromRequest.userPrompt || ""; // Get the user's prompt
 
-    // --- Build the NEW, Detailed Prompt ---
-    let prompt = "";
-    
-    
-      prompt = `You are an expert real estate copywriter with deep understanding of the Bangladeshi property market, local culture, and what appeals to buyers and renters in different segments. Write a warm, emotionally engaging, and highly appealing property description for the listing below.
+    let prompt = `You are an expert real estate copywriter with deep understanding of the Bangladeshi property market, local culture, and what appeals to buyers and renters in different segments. Write a warm, emotionally engaging, and highly appealing property description for the listing below.
 
 **Instructions:**
 - The tone should be inviting, descriptive, and story-driven—like a trusted friend or real estate advisor is narrating the experience of living in the home.
@@ -139,21 +135,33 @@ const generatePropertyDescription = async (req, res) => {
 - (IMPORTANT) PLEASE GIVE ME THE RESPONSE IN ENGLISH LANGUAGE. DO NOT TRANSLATE. DO NOT USE BANGLA. ONLY ENGLISH.
 - avoid using like in the heart of dhaka or in the heart of dhaka city, instead use like in dhaka city or in dhaka or anything more specific.
 - can you analyse the the location of the property in whatever part of the city it lies and generate a description accoringly avoiding key phrases like in the heart of dhaka or in the heart of dhaka city, instead use like in dhaka city or in dhaka or anything like that.
-
-Length: 150–200 words
 `;
-    
-    prompt += `**Property Details:**
+
+    if (userPromptText) {
+      prompt += `
+**User's Specific Notes (Prioritize these if relevant and sensible):**
+${userPromptText}
+`;
+    }
+
+    prompt += `
+Length: 150–200 words (adjust if user notes imply different length needed)
+
+**Property Details:**
 - Title: ${getSafe(basicInfo, "title")}
 - Property Type: ${getSafe(basicInfo, "propertyType")}
 - Listing Type: For ${getSafe(basicInfo, "listingType")}
-- Price: ${getSafe(basicInfo, "price")} BDT${basicInfo.listingType === "rent" ? " /month" : ""}
+- Price: ${getSafe(basicInfo, "price")} BDT${
+      basicInfo.listingType === "rent" ? " /month" : ""
+    }
 - Size: ${getSafe(basicInfo, "area")} sqft
 - Bedrooms: ${getSafe(basicInfo, "bedrooms", "N/A (Land/Commercial)")}
 - Bathrooms: ${getSafe(basicInfo, "bathrooms", "N/A (Land/Commercial)")}
 
 **Location:**
-- Address: ${getSafe(location, "addressLine1")}${location.addressLine2 ? `, ${location.addressLine2}` : ""}
+- Address: ${getSafe(location, "addressLine1")}${
+      location.addressLine2 ? `, ${location.addressLine2}` : ""
+    }
 - Area/Town: ${getSafe(location, "cityTown")}
 - Upazila/Thana: ${getSafe(location, "upazila")}
 - District: ${getSafe(location, "district")}
@@ -164,37 +172,46 @@ ${formatFeaturesForPrompt(features)}
 
 **Local Highlights & Context:**
 ${formatBangladeshDetailsForPrompt(bdDetails)}`;
-    // --- End of Improved Prompt ---
 
-    console.log("---- Sending Prompt to NVIDIA ----\n", prompt); // Log the prompt for debugging
+    console.log("---- Sending Prompt to NVIDIA ----\n", prompt);
 
     const payload = {
-      model: "mistralai/mistral-medium-3-instruct",
-      messages: [
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      max_tokens: 512,
-      temperature: 1.0,
+      model: "mistralai/mistral-medium-3-instruct", // Consider testing newer/more advanced models if available
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 512, // You might need to adjust this if descriptions are too short/long
+      temperature: 0.8, // Slightly reduced for more focused output, adjust as needed (0.7-1.0)
       top_p: 1.0,
-      stream: false
+      stream: false,
     };
     const headers = {
-      "Authorization": `Bearer ${NVIDIA_API_KEY}`,
-      "Accept": "application/json",
-      "Content-Type": "application/json"
+      Authorization: `Bearer ${NVIDIA_API_KEY}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
     };
     const response = await axios.post(NVIDIA_API_URL, payload, { headers });
-    if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message && response.data.choices[0].message.content) {
+    if (
+      response.data &&
+      response.data.choices &&
+      response.data.choices[0] &&
+      response.data.choices[0].message &&
+      response.data.choices[0].message.content
+    ) {
       let description = response.data.choices[0].message.content.trim();
       // Normalize language code for Bangla
       let normalizedLanguage = language;
-      if (["bangla", "bengali", "bn-BD", "bd", "bangladesh"].includes(language?.toLowerCase())) {
+      if (
+        ["bangla", "bengali", "bn-BD", "bd", "bangladesh"].includes(
+          language?.toLowerCase()
+        )
+      ) {
         normalizedLanguage = "bn";
       }
-      console.log("[AIController] Requested language:", language, "| Normalized:", normalizedLanguage);
+      console.log(
+        "[AIController] Requested language:",
+        language,
+        "| Normalized:",
+        normalizedLanguage
+      );
       // If language is not English, translate using Google Translate API
       if (normalizedLanguage !== "en") {
         try {
@@ -205,13 +222,16 @@ ${formatBangladeshDetailsForPrompt(bdDetails)}`;
               q: description,
               target: normalizedLanguage,
               format: "text",
-              key: GOOGLE_TRANSLATE_API_KEY
+              key: GOOGLE_TRANSLATE_API_KEY,
             }),
             {
-              headers: { "Content-Type": "application/x-www-form-urlencoded" }
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
             }
           );
-          console.log("[AIController] Google Translate response:", translateRes.data);
+          console.log(
+            "[AIController] Google Translate response:",
+            translateRes.data
+          );
           if (
             translateRes.data &&
             translateRes.data.data &&
@@ -223,14 +243,19 @@ ${formatBangladeshDetailsForPrompt(bdDetails)}`;
         } catch (translateErr) {
           console.error(
             "Translation error:",
-            translateErr?.response?.data || translateErr?.message || translateErr
+            translateErr?.response?.data ||
+              translateErr?.message ||
+              translateErr
           );
           // Fallback: return English if translation fails
         }
       }
       res.json({ description });
     } else {
-      console.error("Invalid response structure from NVIDIA API:", response.data);
+      console.error(
+        "Invalid response structure from NVIDIA API:",
+        response.data
+      );
       res.status(500).json({
         error: "Failed to generate property description",
         details: "Invalid response structure from NVIDIA API",

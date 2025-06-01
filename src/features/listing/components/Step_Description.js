@@ -9,37 +9,41 @@ import {
   Typography,
   FormHelperText,
 } from "@mui/material";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh"; // AI Icon
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import { theme } from "./../../../styles/theme";
 import { useTranslation } from "react-i18next";
 
 const Step_Description = ({
   formData,
   errors,
   handleChange,
-  generateDescription,
+  generateDescription, // This is the function from useListingForm
   loadingAI,
 }) => {
   const { t } = useTranslation();
-  // New state for Bangla and English AI descriptions
   const [aiDescriptionEn, setAIDescriptionEn] = useState("");
   const [aiDescriptionBn, setAIDescriptionBn] = useState("");
   const [selectedLang, setSelectedLang] = useState("");
+  const [userPrompt, setUserPrompt] = useState(""); // New state for user's extra details
 
-  // Handler for AI generation in English
-  const handleGenerateEn = async () => {
+  const handleUserPromptChange = (event) => {
+    setUserPrompt(event.target.value);
+  };
+
+  const handleGenerate = async (lang) => {
     if (generateDescription) {
-      const desc = await generateDescription("en");
-      setAIDescriptionEn(desc || "");
+      // Pass the userPrompt to the generateDescription function
+      const desc = await generateDescription(lang, userPrompt);
+      if (desc) {
+        if (lang === "en") {
+          setAIDescriptionEn(desc);
+        } else if (lang === "bn") {
+          setAIDescriptionBn(desc);
+        }
+      }
     }
   };
-  // Handler for AI generation in Bangla
-  const handleGenerateBn = async () => {
-    if (generateDescription) {
-      const desc = await generateDescription("bn");
-      setAIDescriptionBn(desc || "");
-    }
-  };
-  // Handler for selecting a description
+
   const handleSelectDescription = (desc, lang) => {
     handleChange({ target: { name: "description", value: desc } });
     setSelectedLang(lang);
@@ -47,9 +51,6 @@ const Step_Description = ({
 
   return (
     <Box>
-      {/* <Typography variant="h6" gutterBottom>
-        {t("step_description", "Property Description")}
-      </Typography> */}
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <TextField
@@ -66,16 +67,43 @@ const Step_Description = ({
             helperText={
               errors.description ||
               t(
-                "description_helper",
-                "Describe the property's key features, condition, and surroundings. You can also use the AI generator."
+                "description_helper_manual",
+                "Describe the property or use the AI generator below. You can add specific points for the AI in the text box."
               )
             }
           />
-          <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 1 }}>
+        </Grid>
+
+        {/* New TextField for user's additional prompt */}
+        <Grid item xs={12}>
+          <TextField
+            id="userPrompt"
+            name="userPrompt"
+            label={t(
+              "ai_custom_prompt_label",
+              "Optional: Specific details for AI (e.g., mention the quiet neighborhood, or the recent kitchen renovation)"
+            )}
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            value={userPrompt}
+            onChange={handleUserPromptChange}
+            helperText={t(
+              "ai_custom_prompt_helper",
+              "Provide any key points or style you want the AI to focus on."
+            )}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <Box
+            sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 1 }}
+          >
             <Button
               variant="outlined"
               size="small"
-              onClick={handleGenerateEn}
+              onClick={() => handleGenerate("en")} // Updated
               disabled={loadingAI}
               startIcon={
                 loadingAI ? <CircularProgress size={16} /> : <AutoFixHighIcon />
@@ -89,7 +117,7 @@ const Step_Description = ({
             <Button
               variant="outlined"
               size="small"
-              onClick={handleGenerateBn}
+              onClick={() => handleGenerate("bn")} // Updated
               disabled={loadingAI}
               startIcon={
                 loadingAI ? <CircularProgress size={16} /> : <AutoFixHighIcon />
@@ -101,70 +129,90 @@ const Step_Description = ({
                 : t("generate_ai_bn", "Generate with AI (Bangla)")}
             </Button>
           </Box>
-          {/* Show AI-generated descriptions with selection */}
-          {(aiDescriptionEn || aiDescriptionBn) && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                {t("choose_description", "Choose a generated description:")}
-              </Typography>
-              {aiDescriptionEn && (
-                <Box
-                  sx={{
-                    mb: 1,
-                    p: 1,
-                    border: "1px solid #ccc",
-                    borderRadius: 1,
-                  }}
-                >
-                  <input
-                    type="radio"
-                    checked={selectedLang === "en"}
-                    onChange={() => handleSelectDescription(aiDescriptionEn, "en")}
-                    id="desc-en"
-                  />
-                  <label htmlFor="desc-en" style={{ marginLeft: 8 }}>
-                    <b>{t("english", "English")}</b>
-                  </label>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    {aiDescriptionEn}
-                  </Typography>
-                </Box>
-              )}
-              {aiDescriptionBn && (
-                <Box
-                  sx={{
-                    mb: 1,
-                    p: 1,
-                    border: "1px solid #ccc",
-                    borderRadius: 1,
-                  }}
-                >
-                  <input
-                    type="radio"
-                    checked={selectedLang === "bn"}
-                    onChange={() => handleSelectDescription(aiDescriptionBn, "bn")}
-                    id="desc-bn"
-                  />
-                  <label htmlFor="desc-bn" style={{ marginLeft: 8 }}>
-                    <b>{t("bangla", "Bangla")}</b>
-                  </label>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    {aiDescriptionBn}
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          )}
-          {/* Optionally show AI error specifically here if needed */}
-          {errors.description?.includes("Failed to generate") && (
-            <FormHelperText error sx={{ mt: 1 }}>
-              {errors.description}
-            </FormHelperText>
-          )}
         </Grid>
+
+        {(aiDescriptionEn || aiDescriptionBn) && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              {t("choose_description", "Choose a generated description:")}
+            </Typography>
+            {aiDescriptionEn && (
+              <Box
+                sx={{
+                  mb: 1,
+                  p: 1,
+                  border: `1px solid ${
+                    selectedLang === "en" ? theme.palette.primary.main : "#ccc"
+                  }`, // Example: Highlight if selected
+                  borderRadius: 1,
+                  cursor: "pointer",
+                }}
+                onClick={() => handleSelectDescription(aiDescriptionEn, "en")}
+              >
+                <input
+                  type="radio"
+                  checked={selectedLang === "en"}
+                  onChange={() => {}} // Radio is controlled by Box click
+                  readOnly
+                  id="desc-en"
+                  style={{ marginRight: 8 }}
+                />
+                <label htmlFor="desc-en">
+                  <b>{t("english", "English")}</b>
+                </label>
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 1, pl: 3 /* Indent text */ }}
+                >
+                  {aiDescriptionEn}
+                </Typography>
+              </Box>
+            )}
+            {aiDescriptionBn && (
+              <Box
+                sx={{
+                  mb: 1,
+                  p: 1,
+                  border: `1px solid ${
+                    selectedLang === "bn" ? theme.palette.primary.main : "#ccc"
+                  }`, // Example: Highlight if selected
+                  borderRadius: 1,
+                  cursor: "pointer",
+                }}
+                onClick={() => handleSelectDescription(aiDescriptionBn, "bn")}
+              >
+                <input
+                  type="radio"
+                  checked={selectedLang === "bn"}
+                  onChange={() => {}} // Radio is controlled by Box click
+                  readOnly
+                  id="desc-bn"
+                  style={{ marginRight: 8 }}
+                />
+                <label htmlFor="desc-bn">
+                  <b>{t("bangla", "Bangla")}</b>
+                </label>
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 1, pl: 3 /* Indent text */ }}
+                >
+                  {aiDescriptionBn}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+        {errors.description?.includes("Failed to generate") && (
+          <FormHelperText error sx={{ mt: 1 }}>
+            {errors.description}
+          </FormHelperText>
+        )}
       </Grid>
     </Box>
   );
 };
+// Make sure to import 'theme' if you use it for highlighting selected:
+// import { useTheme } from '@mui/material/styles';
+// and then inside the component: const theme = useTheme();
 
 export default Step_Description;

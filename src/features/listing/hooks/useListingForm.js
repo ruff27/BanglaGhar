@@ -231,44 +231,69 @@ const useListingForm = () => {
     [formData, imageUrls] // Added imageUrls dependency for step 4 validation example
   );
 
-  // Accept language argument and send it to backend
   const generateDescription = useCallback(
-    async (language = "en") => {
+    async (language = "en", userPmt = "") => {
+      // userPmt is the user's custom prompt
       setLoadingAI(true);
-      setErrors((prev) => ({ ...prev, description: null })); // Clear previous description errors
+      setErrors((prev) => ({ ...prev, description: null }));
       try {
-        const payload = {
-          propertyData: {
-            basicInfo: {
-              /* ...formData fields ... */
-            },
-            location: {
-              /* ...formData fields ... */
-            },
-            features,
-            bangladeshDetails: formData.bangladeshDetails,
+        const propertyDataForAI = {
+          basicInfo: {
+            title: formData.title,
+            propertyType: formData.propertyType,
+            listingType: formData.listingType,
+            price: formData.price,
+            area: formData.area,
+            bedrooms: formData.bedrooms,
+            bathrooms: formData.bathrooms,
           },
-          language, // <-- Pass language to backend
+          location: {
+            addressLine1: formData.addressLine1,
+            addressLine2: formData.addressLine2,
+            cityTown: formData.cityTown,
+            upazila: formData.upazila,
+            district: formData.district,
+            postalCode: formData.postalCode,
+          },
+          features,
+          bangladeshDetails: formData.bangladeshDetails,
+          userPrompt: userPmt, // Include the user's custom prompt here
         };
+
+        const payload = {
+          propertyData: propertyDataForAI,
+          language,
+        };
+
+        // Debug: Log the payload to ensure it's what you expect
+        console.log(
+          "[useListingForm] Payload for AI:",
+          JSON.stringify(payload, null, 2)
+        );
+
         const res = await axios.post(
           `${API_BASE_URL}/generate-description`,
           payload
         );
-        setFormData((prev) => ({ ...prev, description: res.data.description }));
-        return res.data.description;
+        return res.data.description; // Return the description
       } catch (error) {
-        console.error("Error generating description:", error);
+        console.error(
+          "Error generating description:",
+          error.response ? error.response.data : error.message
+        );
         setSnackbar({
           open: true,
-          message: "Failed to generate description.",
+          message: `Failed to generate description. ${
+            error.response?.data?.details || ""
+          }`,
           severity: "error",
         });
-        return null;
+        return null; // Return null on error
       } finally {
         setLoadingAI(false);
       }
     },
-    [formData, features]
+    [formData, features, API_BASE_URL] // Added API_BASE_URL to dependencies
   );
 
   const handleNext = useCallback(() => {
