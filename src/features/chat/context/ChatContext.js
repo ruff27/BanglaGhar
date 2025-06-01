@@ -299,9 +299,6 @@ export const ChatProvider = ({ children }) => {
             const lastSeenTime = seenTimestamps[convo._id] || 0;
 
             if (lastMessageTime > lastSeenTime) {
-              // This conversation has newer messages than last seen time
-              // For count, we can take the persisted count if it exists and is > 0,
-              // otherwise, default to 1 (or a more sophisticated server-provided unread count if available)
               newUnreadCounts[convo._id] = Math.max(
                 persistedCounts[convo._id] || 0,
                 1
@@ -310,20 +307,13 @@ export const ChatProvider = ({ children }) => {
           }
         });
 
-        // Ensure any counts from persistedCounts (e.g. from offline notifications) for conversations
-        // that are *not* deemed unread by the summary+seenTimestamps logic are cleared.
-        // And also, if a conversation from persistedCounts is no longer in summary, clear its count.
         for (const convoId in persistedCounts) {
           const convoInSummary = conversationsSummary.find(
             (c) => c._id === convoId
           );
           if (!convoInSummary) {
-            // No longer exists or accessible
             if (newUnreadCounts[convoId]) delete newUnreadCounts[convoId]; // Should already not be there
           } else if (!newUnreadCounts[convoId]) {
-            // Exists in summary but summary+seenTimestamps deemed it read
-            // If persistedCounts had it, but our new logic says it's read, it's read.
-            // newUnreadCounts already reflects this state.
           }
         }
 
@@ -381,8 +371,7 @@ export const ChatProvider = ({ children }) => {
           [incomingConvId]: (prevCounts[incomingConvId] || 0) + 1,
         }));
       } else {
-        // Conversation is active, update its "last seen" timestamp to this new message's timestamp
-        const seenTimestampsStorageKey = getLocalStorageKey(); // Key for timestamps
+        const seenTimestampsStorageKey = getLocalStorageKey();
         if (seenTimestampsStorageKey && timestamp) {
           try {
             const seenTimestamps = JSON.parse(
@@ -421,7 +410,6 @@ export const ChatProvider = ({ children }) => {
       setActiveConversationData(null);
       setIsInitialLoadComplete(false);
       activeConversationIdRef.current = null;
-      // Note: localStorage is not cleared on logout by default here.
     }
   }, [
     isLoggedIn,
