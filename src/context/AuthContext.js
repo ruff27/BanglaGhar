@@ -5,7 +5,7 @@ import React, {
   useContext,
   useCallback,
 } from "react";
-import axios from "axios"; 
+import axios from "axios";
 import {
   CognitoUser,
   CognitoUserAttribute,
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }) => {
           }`
         );
         setUser(cognitoUserAttributes);
-        setIsLoggedIn(true); 
+        setIsLoggedIn(true);
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("user", JSON.stringify(cognitoUserAttributes));
         localStorage.removeItem("idToken");
@@ -100,7 +100,6 @@ export const AuthProvider = ({ children }) => {
         setIdToken(token);
 
         currentUser.getUserAttributes(async (attrErr, attributes) => {
-
           if (attrErr) {
             console.error("Attributes error:", attrErr);
             setError(`Failed to get user attributes: ${attrErr.message}`);
@@ -265,20 +264,16 @@ export const AuthProvider = ({ children }) => {
     console.log("User logged out.");
   };
 
-  // --- Update Auth State (Removed - merged into fetchAndSetUserProfile) ---
-  // const updateAuthState = (loggedIn, userData) => { ... } // Removed
-
   const value = {
     isLoggedIn,
-    user, // This now contains merged data including approvalStatus etc.
-    idToken, // Provide the token if needed elsewhere
-    isLoading, // Provide loading state
+    user,
+    idToken,
+    isLoading,
     error,
     login,
     logout,
     signup,
-    checkAuthState, // Keep this for manual checks if needed
-    // updateAuthState, // Removed
+    checkAuthState,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,12 +1,10 @@
-// server/controllers/aiController.js
-
-const fetch = require("node-fetch"); // Add fetch for Gemini API
+const fetch = require("node-fetch");
 const axios = require("axios");
 
-const NVIDIA_API_KEY =
-  "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";
+// Load API keys from environment variables
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 const NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const GOOGLE_TRANSLATE_API_KEY = process.env.GOOGLE_TRANSLATE_API_KEY; // Set your Google Translate API key in env
+const GOOGLE_TRANSLATE_API_KEY = process.env.GOOGLE_TRANSLATE_API_KEY;
 const GOOGLE_TRANSLATE_URL =
   "https://translation.googleapis.com/language/translate/v2";
 
@@ -37,8 +35,7 @@ const formatFeaturesForPrompt = (features = {}) => {
   if (features.pool === true) featureString += "- Swimming Pool\n";
   if (features.furnished && features.furnished !== "no")
     featureString += `- Furnished: ${features.furnished}\n`;
-  // Add other boolean features from your `features` object here...
-  return featureString || "N/A"; // Return N/A if no features listed
+  return featureString || "N/A";
 };
 
 // Helper function to format Bangladesh-specific details for the prompt
@@ -114,6 +111,16 @@ const generatePropertyDescription = async (req, res) => {
       return res.status(400).json({ error: "Invalid property data received" });
     }
 
+    // Check if NVIDIA_API_KEY is loaded
+    if (!NVIDIA_API_KEY) {
+      console.error(
+        "NVIDIA_API_KEY is not defined. Make sure it's in your .env file and dotenv is configured."
+      );
+      return res
+        .status(500)
+        .json({ error: "Server configuration error: NVIDIA_API_KEY missing." });
+    }
+
     const basicInfo = propertyDataFromRequest.basicInfo || {};
     const location = propertyDataFromRequest.location || {};
     const features = propertyDataFromRequest.features || {};
@@ -176,10 +183,10 @@ ${formatBangladeshDetailsForPrompt(bdDetails)}`;
     console.log("---- Sending Prompt to NVIDIA ----\n", prompt);
 
     const payload = {
-      model: "mistralai/mistral-medium-3-instruct", // Consider testing newer/more advanced models if available
+      model: "mistralai/mistral-medium-3-instruct",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 512, // You might need to adjust this if descriptions are too short/long
-      temperature: 0.8, // Slightly reduced for more focused output, adjust as needed (0.7-1.0)
+      max_tokens: 512,
+      temperature: 0.8,
       top_p: 1.0,
       stream: false,
     };
@@ -214,40 +221,50 @@ ${formatBangladeshDetailsForPrompt(bdDetails)}`;
       );
       // If language is not English, translate using Google Translate API
       if (normalizedLanguage !== "en") {
-        try {
-          const qs = require("querystring");
-          const translateRes = await axios.post(
-            GOOGLE_TRANSLATE_URL,
-            qs.stringify({
-              q: description,
-              target: normalizedLanguage,
-              format: "text",
-              key: GOOGLE_TRANSLATE_API_KEY,
-            }),
-            {
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        // Check if GOOGLE_TRANSLATE_API_KEY is available before attempting translation
+        if (!GOOGLE_TRANSLATE_API_KEY) {
+          console.warn(
+            "GOOGLE_TRANSLATE_API_KEY is not defined. Skipping translation."
+          );
+        } else {
+          try {
+            const qs = require("querystring");
+            const translateRes = await axios.post(
+              GOOGLE_TRANSLATE_URL,
+              qs.stringify({
+                q: description,
+                target: normalizedLanguage,
+                format: "text",
+                key: GOOGLE_TRANSLATE_API_KEY,
+              }),
+              {
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+              }
+            );
+            console.log(
+              "[AIController] Google Translate response:",
+              translateRes.data
+            );
+            if (
+              translateRes.data &&
+              translateRes.data.data &&
+              translateRes.data.data.translations &&
+              translateRes.data.data.translations[0]
+            ) {
+              description =
+                translateRes.data.data.translations[0].translatedText;
             }
-          );
-          console.log(
-            "[AIController] Google Translate response:",
-            translateRes.data
-          );
-          if (
-            translateRes.data &&
-            translateRes.data.data &&
-            translateRes.data.data.translations &&
-            translateRes.data.data.translations[0]
-          ) {
-            description = translateRes.data.data.translations[0].translatedText;
+          } catch (translateErr) {
+            console.error(
+              "Translation error:",
+              translateErr?.response?.data ||
+                translateErr?.message ||
+                translateErr
+            );
+            // Fallback: return English if translation fails
           }
-        } catch (translateErr) {
-          console.error(
-            "Translation error:",
-            translateErr?.response?.data ||
-              translateErr?.message ||
-              translateErr
-          );
-          // Fallback: return English if translation fails
         }
       }
       res.json({ description });
