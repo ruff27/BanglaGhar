@@ -12,12 +12,10 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
-// Import the new hook and form components
-import useForgotPassword from "../features/auth/hooks/useForgotPassword"; // Adjust path
-import ForgotPasswordStep1Form from "../features/auth/components/ForgotPasswordStep1Form"; // Adjust path
-import ForgotPasswordStep2Form from "../features/auth/components/ForgotPasswordStep2Form"; // Adjust path
+import useForgotPassword from "../features/auth/hooks/useForgotPassword"; 
+import ForgotPasswordStep1Form from "../features/auth/components/ForgotPasswordStep1Form";
+import ForgotPasswordStep2Form from "../features/auth/components/ForgotPasswordStep2Form"; 
 
-// --- Styled Components (Copied from original - Page structure specific) ---
 const ForgotPasswordPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
@@ -36,15 +34,7 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   height: 56,
 }));
 
-// --- Main Page Component ---
-
-/**
- * ForgotPassword Page Component
- * Renders the multi-step password reset flow.
- * Uses the useForgotPassword hook and renders the appropriate step form.
- */
 const ForgotPassword = () => {
-  // Use the custom hook
   const {
     step,
     email,

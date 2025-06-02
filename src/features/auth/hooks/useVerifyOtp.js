@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CognitoUser } from "amazon-cognito-identity-js";
-import { userPool } from "../../../aws/CognitoConfig"; // Adjust path as needed
+import { userPool } from "../../../aws/CognitoConfig";
 
 /**
  * @hook useVerifyOtp
@@ -12,18 +12,14 @@ const useVerifyOtp = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State for OTP input
   const [otp, setOtp] = useState("");
-  // State for email passed from signup/forgot password
   const [email, setEmail] = useState("");
-  // State for feedback and loading
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
-  // Get email from location state on component mount
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
@@ -35,9 +31,6 @@ const useVerifyOtp = () => {
     }
   }, [location.state]);
 
-  /**
-   * Handles changes in the OTP input field.
-   */
   const handleOtpChange = useCallback(
     (event) => {
       const value = event.target.value.replace(/\D/g, "");
@@ -146,9 +139,6 @@ const useVerifyOtp = () => {
     });
   }, [email]);
 
-  /**
-   * Handles closing the success snackbar.
-   */
   const handleCloseSnackbar = useCallback((event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -156,7 +146,6 @@ const useVerifyOtp = () => {
     setOpenSnackbar(false);
   }, []);
 
-  // Return state and handlers needed by the component
   return {
     otp,
     email,

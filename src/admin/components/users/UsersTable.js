@@ -1,4 +1,3 @@
-// src/admin/components/users/UsersTable.js
 import React from "react";
 import {
   Table,
@@ -16,12 +15,11 @@ import {
   FormControl,
   Tooltip,
   Badge,
-  Paper, // Removed IconButton, Box (not used directly in table structure)
+  Paper,
 } from "@mui/material";
-import BlockIcon from "@mui/icons-material/Block"; // Keep necessary icons
+import BlockIcon from "@mui/icons-material/Block";
 import { format } from "date-fns";
 
-// Keep headCells definition consistent with original
 const headCells = [
   { id: "displayName", numeric: false, disablePadding: false, label: "Name" },
   { id: "email", numeric: false, disablePadding: false, label: "Email" },
@@ -53,7 +51,6 @@ const headCells = [
   },
 ];
 
-// Keep helper functions consistent
 const formatDate = (dateString) => {
   try {
     return format(new Date(dateString), "PPpp");
@@ -107,18 +104,14 @@ const UsersTable = ({
   };
 
   return (
-    // Match original Paper styling
     <Paper sx={{ width: "100%", overflow: "hidden" }} elevation={3}>
-      {/* Match original TableContainer styling */}
       <TableContainer sx={{ maxHeight: "calc(100vh - 340px)" }}>
-        {/* Match original Table styling and aria-label */}
         <Table
           stickyHeader
           sx={{ minWidth: 900 }}
           aria-label="manage users table"
         >
           <TableHead>
-            {/* Match original TableHead TableRow styling */}
             <TableRow
               sx={{
                 "& th": {
@@ -128,7 +121,6 @@ const UsersTable = ({
               }}
             >
               {headCells.map((headCell) => (
-                // Match original TableCell styling and props
                 <TableCell
                   key={headCell.id}
                   align={headCell.numeric ? "right" : "left"}
@@ -136,7 +128,6 @@ const UsersTable = ({
                   sortDirection={orderBy === headCell.id ? order : false}
                 >
                   {headCell.sortable !== false ? (
-                    // Match original TableSortLabel styling and props
                     <TableSortLabel
                       active={orderBy === headCell.id}
                       direction={orderBy === headCell.id ? order : "asc"}
@@ -171,7 +162,6 @@ const UsersTable = ({
             ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={headCells.length} align="center">
-                  {/* Keep conditional message from original if needed */}
                   {"No users found."}
                 </TableCell>
               </TableRow>
@@ -181,7 +171,6 @@ const UsersTable = ({
                 const isLoadingAction = actionLoading[user._id];
                 const isBlocked = user.accountStatus === "blocked";
 
-                // Match original TableRow styling and props
                 return (
                   <TableRow
                     hover
@@ -194,7 +183,6 @@ const UsersTable = ({
                       }),
                     }}
                   >
-                    {/* Match original TableCell styling and props */}
                     <TableCell component="th" scope="row">
                       <Badge
                         badgeContent={
@@ -208,7 +196,6 @@ const UsersTable = ({
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
-                    {/* Admin Status Cell */}
                     <TableCell padding="none" align="center">
                       <Tooltip
                         title={
@@ -220,7 +207,6 @@ const UsersTable = ({
                         }
                       >
                         <span>
-                          {/* Match original Switch styling and props */}
                           <Switch
                             checked={user.isAdmin}
                             onChange={(e) =>
@@ -231,19 +217,16 @@ const UsersTable = ({
                               )
                             }
                             disabled={isCurrentUser || isLoadingAction}
-                            color="success" // Keep original color
-                            size="small" // Keep original size
+                            color="success"
+                            size="small"
                           />
                         </span>
                       </Tooltip>
                     </TableCell>
-                    {/* Account Status Cell */}
                     <TableCell>
                       {getAccountStatusChip(user.accountStatus)}
                     </TableCell>
-                    {/* Approval Status Cell */}
                     <TableCell>
-                      {/* Match original Chip styling and props */}
                       <Chip
                         label={user.approvalStatus?.replace("_", " ") || "N/A"}
                         color={getStatusChipColor(user.approvalStatus)}
@@ -251,15 +234,12 @@ const UsersTable = ({
                         sx={{ textTransform: "capitalize" }}
                       />
                     </TableCell>
-                    {/* Actions Cell */}
                     <TableCell>
-                      {/* Match original FormControl styling and props */}
                       <FormControl
                         size="small"
                         sx={{ minWidth: 130 }}
                         disabled={isLoadingAction}
                       >
-                        {/* Match original Select styling and props */}
                         <Select
                           value={user.approvalStatus || "not_started"}
                           onChange={(e) =>
@@ -269,13 +249,13 @@ const UsersTable = ({
                               e.target.value
                             )
                           }
-                          displayEmpty // Keep original prop
+                          displayEmpty
                           inputProps={{
                             "aria-label": "Change approval status",
-                          }} // Keep original prop
-                          variant="outlined" // Keep original variant (usually default)
+                          }}
+                          variant="outlined"
                           size="small"
-                          sx={{ fontSize: "0.875rem" }} // Keep original sx
+                          sx={{ fontSize: "0.875rem" }}
                         >
                           <MenuItem value="not_started">Not Started</MenuItem>
                           <MenuItem value="pending">Pending</MenuItem>
@@ -283,14 +263,12 @@ const UsersTable = ({
                           <MenuItem value="rejected">Rejected</MenuItem>
                         </Select>
                       </FormControl>
-                      {/* Match original Block/Unblock Switch */}
                       <Tooltip
                         title={
                           isBlocked ? "Unblock User" : "Block User Account"
                         }
                       >
                         <span>
-                          {/* Match original Switch styling and props */}
                           <Switch
                             checked={isBlocked}
                             onChange={(e) =>
@@ -301,13 +279,12 @@ const UsersTable = ({
                               )
                             }
                             disabled={isCurrentUser || isLoadingAction}
-                            color="error" // Keep original color
-                            size="small" // Keep original size
-                            inputProps={{ "aria-label": "Block/Unblock User" }} // Keep original props
+                            color="error"
+                            size="small"
+                            inputProps={{ "aria-label": "Block/Unblock User" }}
                           />
                         </span>
                       </Tooltip>
-                      {/* Match original loading indicator */}
                       {isLoadingAction && (
                         <CircularProgress
                           size={20}

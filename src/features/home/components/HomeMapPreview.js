@@ -10,9 +10,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import axios from "axios"; // Import axios for API calls
-
-// Import the MapComponent from its correct refactored location
+import axios from "axios"; 
 import MapComponent from "../../map/components/MapComponent";
 
 const API_BASE_URL =
@@ -40,13 +38,11 @@ const HomeMapPreview = () => {
         // For example, fetch 10 available featured properties or just recent ones
         const response = await axios.get(`${API_BASE_URL}/properties`, {
           params: {
-            limit: 10, // How many properties to show in the preview
-            featured: true, // Or use another filter like sort by createdAt
-            // includeUnavailable: false, // By default, your backend getAllProperties only shows available
+            limit: 10, 
+            featured: true, 
           },
         });
 
-        // Ensure properties have position data for the map
         const mappableProperties = (response.data || [])
           .map((prop) => {
             const property = prop.toObject ? prop.toObject() : prop;
@@ -75,7 +71,7 @@ const HomeMapPreview = () => {
     };
 
     fetchPreviewProperties();
-  }, [t]); // Added t to dependencies as it's used in error message
+  }, [t]); 
 
   return (
     <Box sx={{ py: 6, backgroundColor: "#f8f9fa" }}>
@@ -109,7 +105,7 @@ const HomeMapPreview = () => {
             overflow: "hidden",
             boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
             mb: 3,
-            position: "relative", // For loading/error overlay
+            position: "relative", 
           }}
         >
           {loading ? (
@@ -142,11 +138,9 @@ const HomeMapPreview = () => {
             </Box>
           ) : (
             <MapComponent
-              properties={properties} // Pass the fetched properties
+              properties={properties}
               mapCenter={[23.8103, 90.4125]} // Default center for Bangladesh
               mapZoom={7} // Default zoom for a country overview
-              // You might want to add a prop to MapComponent to disable map interactions if this is purely a preview
-              // onMarkerClick={() => {}} // Example: disable marker clicks in preview
             />
           )}
         </Paper>

@@ -1,12 +1,10 @@
-// src/admin/pages/ManageUsersPage.js
 import React from "react";
-import { Typography, Container, Alert, TablePagination } from "@mui/material"; // Removed unused imports
-import { useManageUsers } from "../hooks/useManageUsers"; // Import the custom hook
-import UserFilters from "../components/users/UserFilters"; // Import filter component
-import UsersTable from "../components/users/UsersTable"; // Import table component
+import { Typography, Container, Alert, TablePagination } from "@mui/material"; 
+import { useManageUsers } from "../hooks/useManageUsers";
+import UserFilters from "../components/users/UserFilters";
+import UsersTable from "../components/users/UsersTable";
 
 const ManageUsersPage = () => {
-  // Use the custom hook to get state and handlers
   const {
     users,
     loading,
@@ -25,7 +23,7 @@ const ManageUsersPage = () => {
     handleRequestSort,
     handleChangePage,
     handleChangeRowsPerPage,
-    handleUserUpdate, // This is the update function from the hook
+    handleUserUpdate,
   } = useManageUsers();
 
   return (
@@ -34,7 +32,6 @@ const ManageUsersPage = () => {
         Manage Users
       </Typography>
 
-      {/* Render Filter Component */}
       <UserFilters
         searchTerm={searchTerm}
         filterStatus={filterStatus}
@@ -48,14 +45,12 @@ const ManageUsersPage = () => {
           severity="error"
           sx={{ mb: 2 }}
           onClose={() => {
-            /* Optional: Add way to clear error in hook */
           }}
         >
           {fetchError}
         </Alert>
       )}
 
-      {/* Render Table Component */}
       <UsersTable
         users={users}
         loading={loading}
@@ -64,10 +59,9 @@ const ManageUsersPage = () => {
         actionLoading={actionLoading}
         loggedInUser={loggedInUser}
         onRequestSort={handleRequestSort}
-        onUserUpdate={handleUserUpdate} // Pass the handler from the hook
+        onUserUpdate={handleUserUpdate}
       />
 
-      {/* Render Pagination - Kept here as it directly uses hook state */}
       <TablePagination
         rowsPerPageOptions={[10, 25, 50, 100]}
         component="div"
@@ -76,9 +70,7 @@ const ManageUsersPage = () => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        // sx={{ position: 'sticky', bottom: 0, backgroundColor: 'background.paper' }} // Optional: make pagination sticky
       />
-      {/* ConfirmationDialog would also be rendered here if needed for bulk actions */}
     </Container>
   );
 };

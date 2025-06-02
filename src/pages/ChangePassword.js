@@ -10,12 +10,10 @@ import {
   styled,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import useChangePassword from "../features/auth/hooks/useChangePassword"; // Adjust path
-import ChangePasswordForm from "../features/auth/components/ChangePasswordForm"; // Adjust path
+import useChangePassword from "../features/auth/hooks/useChangePassword";
+import ChangePasswordForm from "../features/auth/components/ChangePasswordForm";
 
-/**
- * Styled components for the page
- */
+
 const ChangePasswordPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
@@ -34,14 +32,10 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   height: 56,
 }));
 
-/**
- * ChangePassword Page Component
- * Renders the page for users to change their password when required by Cognito.
- */
+
 const ChangePassword = () => {
   const changePasswordProps = useChangePassword();
 
-  // Check if hook returns valid props
   if (!changePasswordProps) {
     console.error("useChangePassword returned undefined");
     return (

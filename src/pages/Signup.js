@@ -13,11 +13,9 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
-// Import the new hook and form component
-import useSignup from "../features/auth/hooks/useSignup"; // Adjust path
-import SignupForm from "../features/auth/components/SignupForm"; // Adjust path
+import useSignup from "../features/auth/hooks/useSignup";
+import SignupForm from "../features/auth/components/SignupForm"; 
 
-// --- Styled Components (Copied from original - Page structure specific) ---
 const SignupPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
@@ -36,16 +34,9 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   height: 56,
 }));
 
-// --- Main Page Component ---
 
-/**
- * Signup Page Component
- * Renders the signup page structure, including the SignupForm component.
- * Handles displaying errors and success messages from the useSignup hook.
- */
 const Signup = () => {
   const navigate = useNavigate();
-  // Use the custom hook to get state and handlers
   const {
     email,
     username,
@@ -54,8 +45,8 @@ const Signup = () => {
     error,
     isSubmitting,
     openSnackbar,
-    passwordValidation, // Get validation state object
-    isPasswordValid, // Get overall validity boolean
+    passwordValidation, 
+    isPasswordValid, 
     handleEmailChange,
     handleUsernameChange,
     handlePasswordChange,
@@ -65,7 +56,7 @@ const Signup = () => {
   } = useSignup();
 
   const handleCancel = () => {
-    navigate("/home"); // Navigate to the home page
+    navigate("/home"); 
   };
 
   return (
@@ -83,7 +74,6 @@ const Signup = () => {
           Sign Up
         </Typography>
 
-        {/* Display general error messages */}
         {error && (
           <Alert
             severity="error"
@@ -93,15 +83,13 @@ const Signup = () => {
             {error}
           </Alert>
         )}
-
-        {/* Render the SignupForm component */}
         <SignupForm
           email={email}
           username={username}
           password={password}
           confirmPass={confirmPass}
           passwordValidation = {passwordValidation}
-          isPasswordValid={isPasswordValid} // Pass overall validity
+          isPasswordValid={isPasswordValid} 
           onEmailChange={handleEmailChange}
           onUsernameChange={handleUsernameChange}
           onPasswordChange={handlePasswordChange}
@@ -109,8 +97,6 @@ const Signup = () => {
           onSubmit={handleSignupSubmit}
           isSubmitting={isSubmitting}
         />
-
-        {/* Link to Login Page */}
         <Typography variant="body2" sx={{ mt: 2 }}>
           Already have an account?{" "}
           <Link
@@ -131,7 +117,6 @@ const Signup = () => {
         >
           <Button
             variant="outlined"
-            // Use primary color for outline - more visible & professional than inherit grey
             color="primary"
             onClick={handleCancel}
             sx={{ textTransform: "none", borderRadius: "8px" }}
@@ -141,7 +126,6 @@ const Signup = () => {
         </Box>
       </SignupPaper>
 
-      {/* Snackbar for success message */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}

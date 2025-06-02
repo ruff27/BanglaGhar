@@ -1,24 +1,23 @@
-//theme for the application
 import { createTheme } from "@mui/material/styles";
 
 export const theme = createTheme({
   palette: {
     primary: {
-      main: "#2B7B8C", // Stays the same
+      main: "#2B7B8C",
     },
     secondary: {
-      main: "#8FBFBF", // Stays the same
+      main: "#8FBFBF", 
     },
     background: {
-      default: "#EFF9FE", // Stays the same
-      paper: "#EFF9FE", // Stays the same
+      default: "#EFF9FE", 
+      paper: "#EFF9FE",
     },
     text: {
-      primary: "#0B1F23", // Stays the same
-      secondary: "#647C82", // << UPDATED: Was #BFBBB8
+      primary: "#0B1F23", 
+      secondary: "#647C82",
     },
   },
   typography: {
-    fontFamily: ["Roboto", "Arial", "sans-serif"].join(","), // Stays the same
+    fontFamily: ["Roboto", "Arial", "sans-serif"].join(","),
   },
 });

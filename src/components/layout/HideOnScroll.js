@@ -1,4 +1,3 @@
-// src/components/layout/HideOnScroll.js
 import React from "react";
 import { Slide, useScrollTrigger } from "@mui/material";
 

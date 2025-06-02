@@ -1,4 +1,3 @@
-// src/features/chat/services/chatService.js
 import axios from "axios";
 
 const API_BASE_URL =
@@ -21,7 +20,7 @@ export const getAblyTokenRequest = async (authToken) => {
         Authorization: `Bearer ${authToken}`,
       },
     });
-    return response.data; // This should be the tokenRequest object
+    return response.data;
   } catch (error) {
     console.error(
       "Error fetching Ably token:",
@@ -32,8 +31,6 @@ export const getAblyTokenRequest = async (authToken) => {
     );
   }
 };
-
-// --- NEW SERVICE FUNCTIONS ---
 
 /**
  * Initiates or retrieves an existing conversation with another user.
@@ -151,7 +148,7 @@ export const getConversationsSummary = async (authToken) => {
         headers: { Authorization: `Bearer ${authToken}` },
       }
     );
-    return response.data; // Expected: Array of conversation objects
+    return response.data;
   } catch (error) {
     console.error(
       "Error fetching conversations summary:",
@@ -180,7 +177,7 @@ export const getMessagesInConversation = async (
         params: { page, limit },
       }
     );
-    return response.data; // Expected: { messages: [], currentPage, totalPages, totalMessages }
+    return response.data;
   } catch (error) {
     console.error(
       "Error fetching messages:",

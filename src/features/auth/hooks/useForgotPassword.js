@@ -60,7 +60,6 @@ const useForgotPassword = () => {
     return Object.values(passwordValidation).every(Boolean);
   }, [passwordValidation]);
 
-  // --- Input Change Handlers ---
   const handleEmailChange = useCallback(
     (event) => {
       setEmail(event.target.value);
@@ -74,7 +73,6 @@ const useForgotPassword = () => {
       // Allow only digits and limit length if desired (e.g., 6 digits)
       const value = event.target.value.replace(/\D/g, ""); // Remove non-digits
       if (value.length <= 6) {
-        // Example length limit
         setOtp(value);
       }
       if (error) setError("");
@@ -86,7 +84,7 @@ const useForgotPassword = () => {
     (event) => {
       const newPasswordValue = event.target.value;
       setNewPassword(newPasswordValue);
-      validatePassword(newPasswordValue); // Validate on change
+      validatePassword(newPasswordValue);
       if (error) setError("");
     },
     [error, validatePassword]
@@ -106,7 +104,6 @@ const useForgotPassword = () => {
    * @returns {Promise<object>} - Resolves with { exists: boolean, verified: boolean } or rejects on error.
    */
   const validateUser = useCallback(async (userEmail) => {
-    // Ensure the API Gateway URL is set in your environment variables
     const apiUrl = process.env.REACT_APP_APIGATEWAY_URL;
     if (!apiUrl) {
       console.error(
@@ -116,14 +113,13 @@ const useForgotPassword = () => {
     }
 
     try {
-      console.log(`Validating user via API: ${apiUrl} for email: ${userEmail}`); // Debug log
+      console.log(`Validating user via API: ${apiUrl} for email: ${userEmail}`); 
       const response = await axios.post(
         apiUrl,
-        { email: userEmail }, // Ensure payload matches Lambda expectation
+        { email: userEmail },
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log("Validation API response:", response.data); // Debug log
-      // Ensure response has expected structure
+      console.log("Validation API response:", response.data);
       if (
         typeof response.data?.exists !== "boolean" ||
         typeof response.data?.verified !== "boolean"
@@ -131,13 +127,12 @@ const useForgotPassword = () => {
         console.error("Unexpected API response structure:", response.data);
         throw new Error("Invalid response from validation service.");
       }
-      return response.data; // { exists: boolean, verified: boolean }
+      return response.data; 
     } catch (err) {
       console.error(
         "Validation API error:",
         err.response?.data || err.message || err
       );
-      // Provide a generic error, specific details logged above
       throw new Error("Failed to validate user information. Please try again.");
     }
   }, []);
@@ -165,7 +160,6 @@ const useForgotPassword = () => {
       }
 
       try {
-        // 1. Validate user via Lambda
         const { exists, verified } = await validateUser(email);
 
         if (!exists) {
@@ -174,7 +168,6 @@ const useForgotPassword = () => {
           return;
         }
         if (!verified) {
-          // This check might be desired depending on flow. If unverified users *can* reset, remove this.
           setError(
             "Your account email is not verified. Cannot reset password."
           );
@@ -182,15 +175,13 @@ const useForgotPassword = () => {
           return;
         }
 
-        // 2. If valid and verified, proceed with Cognito forgotPassword
         const user = new CognitoUser({ Username: email, Pool: userPool });
-        setCognitoUser(user); // Store user object for step 2
-
+        setCognitoUser(user);
         user.forgotPassword({
           onSuccess: () => {
             console.log("Forgot password OTP sent successfully for:", email);
-            setStep(2); // Move to next step
-            setError(""); // Clear any previous errors
+            setStep(2); 
+            setError(""); 
           },
           onFailure: (err) => {
             console.error("Cognito forgotPassword error:", err);
@@ -201,7 +192,6 @@ const useForgotPassword = () => {
           },
         });
       } catch (err) {
-        // Error from validateUser API call or other issues
         setError(err.message || "An error occurred. Please try again.");
       } finally {
         setIsSubmitting(false);
@@ -220,7 +210,6 @@ const useForgotPassword = () => {
       e.preventDefault();
       setError("");
 
-      // --- Validation ---
       if (!otp || otp.length < 6) {
         setError("Please enter the 6-digit verification code.");
         return;
@@ -234,17 +223,15 @@ const useForgotPassword = () => {
         return;
       }
       if (!cognitoUser) {
-        // Should not happen if flow is correct, but good to check
         setError(
           "User session lost. Please start the password reset process again."
         );
-        setStep(1); // Go back to step 1
+        setStep(1); 
         return;
       }
-      // --- End Validation ---
 
       setIsSubmitting(true);
-      console.log(`Attempting password reset for: ${email} with OTP: ${otp}`); // Debug log
+      console.log(`Attempting password reset for: ${email} with OTP: ${otp}`);
 
       cognitoUser.confirmPassword(otp, newPassword, {
         onSuccess: () => {
@@ -257,7 +244,6 @@ const useForgotPassword = () => {
         },
         onFailure: (err) => {
           console.error("Cognito confirmPassword error:", err);
-          // Provide user-friendly messages
           if (err.code === "CodeMismatchException") {
             setError(
               "Invalid verification code. Please check the code and try again."
@@ -266,13 +252,11 @@ const useForgotPassword = () => {
             setError(
               "Verification code has expired. Please request a new one by starting over."
             );
-            // Optionally force back to step 1
-            // setTimeout(() => setStep(1), 2000);
           } else if (err.code === "InvalidPasswordException") {
             setError(
               "Password does not meet requirements. Check criteria below."
             );
-            validatePassword(newPassword); // Re-validate to show hints
+            validatePassword(newPassword); 
           } else if (err.code === "LimitExceededException") {
             setError("Attempt limit exceeded. Please try again later.");
           } else {
@@ -281,14 +265,7 @@ const useForgotPassword = () => {
             );
           }
         },
-        // Using onFailure for both success and failure based on CognitoUser.js source
-        // but keeping onSuccess structure for clarity if needed
-        // Note: Some versions/flows might only use onFailure
-        // Always check the err object in onFailure
       });
-
-      // confirmPassword doesn't have a separate callback for completion sometimes
-      // We reset isSubmitting here, but success/failure is handled in callbacks
       setIsSubmitting(false);
     },
     [
@@ -301,11 +278,8 @@ const useForgotPassword = () => {
       navigate,
       validatePassword,
     ]
-  ); // Dependencies
+  ); 
 
-  /**
-   * Handles closing the success snackbar.
-   */
   const handleCloseSnackbar = useCallback((event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -313,7 +287,6 @@ const useForgotPassword = () => {
     setOpenSnackbar(false);
   }, []);
 
-  // Return state and handlers
   return {
     step,
     email,

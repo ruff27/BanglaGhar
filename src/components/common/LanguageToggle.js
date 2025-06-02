@@ -1,36 +1,31 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { FormControlLabel, Switch, Typography, Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
 
 const LanguageToggle = () => {
   const { i18n } = useTranslation();
-  const isBangla = i18n.language === "bn";
 
   const handleToggle = () => {
-    const newLang = isBangla ? "en" : "bn";
+    const newLang = i18n.language === "en" ? "bn" : "en";
     i18n.changeLanguage(newLang);
   };
 
+  const getLabel = () => {
+    return i18n.language === "en" ? "বাংলা" : "English";
+  };
+
   return (
-    <Box display="flex" alignItems="center" gap={1}>
-      <Typography
-        variant="body2"
-        color={!isBangla ? "primary" : "textSecondary"}
+    <Box>
+      <Button
+        onClick={handleToggle}
+        sx={{
+          textTransform: "none",
+          color: "text.primary",
+          fontWeight: 600,
+        }}
       >
-        ENG
-      </Typography>
-      <Switch
-        checked={isBangla}
-        onChange={handleToggle}
-        color="primary"
-        size="small"
-      />
-      <Typography
-        variant="body2"
-        color={isBangla ? "primary" : "textSecondary"}
-      >
-        BAN
-      </Typography>
+        {getLabel()}
+      </Button>
     </Box>
   );
 };

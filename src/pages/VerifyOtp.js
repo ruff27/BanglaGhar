@@ -12,12 +12,9 @@ import {
   CircularProgress,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import useVerifyOtp from "../features/auth/hooks/useVerifyOtp"; 
+import VerifyOtpForm from "../features/auth/components/VerifyOtpForm"; 
 
-// Import the new hook and form component
-import useVerifyOtp from "../features/auth/hooks/useVerifyOtp"; // Adjust path
-import VerifyOtpForm from "../features/auth/components/VerifyOtpForm"; // Adjust path
-
-// --- Styled Components ---
 const VerifyOtpPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: "0 8px 24px rgba(43, 123, 140, 0.12)",
@@ -55,13 +52,7 @@ const ResendButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-/**
- * VerifyOtp Page Component
- * Renders the OTP verification page structure.
- * Handles displaying email, errors, and success messages from the useVerifyOtp hook.
- */
 const VerifyOtp = () => {
-  // Use the custom hook to get state and handlers
   const {
     otp,
     email,
@@ -91,7 +82,6 @@ const VerifyOtp = () => {
           Verify Your Email
         </Typography>
 
-        {/* Display the email the OTP was sent to */}
         {email ? (
           <Typography variant="body1" sx={{ mb: 2, textAlign: "center" }}>
             An OTP has been sent to{" "}
@@ -110,7 +100,6 @@ const VerifyOtp = () => {
           </Typography>
         )}
 
-        {/* Display general error messages */}
         {error && (
           <Alert
             severity="error"
@@ -121,7 +110,6 @@ const VerifyOtp = () => {
           </Alert>
         )}
 
-        {/* Render the VerifyOtpForm component only if email is present */}
         {email && (
           <VerifyOtpForm
             otp={otp}
@@ -131,7 +119,6 @@ const VerifyOtp = () => {
           />
         )}
 
-        {/* Resend OTP Button */}
         {email && (
           <ResendButton
             variant="text"
@@ -145,8 +132,6 @@ const VerifyOtp = () => {
           </ResendButton>
         )}
       </VerifyOtpPaper>
-
-      {/* Snackbar for success message */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}

@@ -1,11 +1,10 @@
-// src/admin/pages/ManageListingsPage.js
 import React from "react";
-import { Typography, Container, Alert, TablePagination } from "@mui/material"; // Keep necessary imports
+import { Typography, Container, Alert, TablePagination } from "@mui/material";
 import { useManageListings } from "../hooks/useManageListings";
 import ListingFilters from "../components/listings/ListingFilters";
 import BulkActionsToolbar from "../components/listings/BulkActionsToolbar";
 import ListingsTable from "../components/listings/ListingsTable";
-import ConfirmationDialog from "../../components/common/ConfirmationDialog"; // Keep this import
+import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 
 const ManageListingsPage = () => {
   const {
@@ -51,7 +50,6 @@ const ManageListingsPage = () => {
         Manage Listings
       </Typography>
 
-      {/* Filters */}
       <ListingFilters
         searchTerm={searchTerm}
         filterPropertyType={filterPropertyType}
@@ -66,21 +64,18 @@ const ManageListingsPage = () => {
         setFilterFeatured={setFilterFeatured}
       />
 
-      {/* Bulk Actions Toolbar */}
       <BulkActionsToolbar
         numSelected={selected.length}
-        onDeleteSelected={handleDeleteSelected} // Opens confirm dialog
+        onDeleteSelected={handleDeleteSelected}
         isLoading={bulkDeleteLoading}
       />
 
-      {/* Fetch Error Display */}
       {fetchError && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {fetchError}
         </Alert>
       )}
 
-      {/* Table */}
       <ListingsTable
         listings={listings}
         loading={loading}

@@ -1,4 +1,3 @@
-// src/components/layout/ProfileMenu.js
 import React, { useState } from "react";
 import {
   IconButton,
@@ -44,9 +43,8 @@ export default function ProfileMenu({ handleLogout }) {
     handleClose();
   };
 
-  // Determine badge visibility and content
   const badgeInvisible = isChatLoading || totalUnreadMessages < 1;
-  const badgeContent = isChatLoading ? 0 : totalUnreadMessages; // Show 0 if loading, otherwise actual count
+  const badgeContent = isChatLoading ? 0 : totalUnreadMessages; 
 
   return (
     <>
@@ -61,9 +59,9 @@ export default function ProfileMenu({ handleLogout }) {
             <Avatar sx={{ bgcolor: "primary.main" }}>
               {(
                 user?.displayName?.charAt(0) ||
-                user?.name?.charAt(0) || // Fallback for user.name if displayName is not present
+                user?.name?.charAt(0) ||
                 "U"
-              ) // Ultimate fallback
+              )
                 ?.toUpperCase()}
             </Avatar>
           </Badge>
@@ -77,7 +75,7 @@ export default function ProfileMenu({ handleLogout }) {
           elevation: 3,
           sx: {
             mt: 1.5,
-            minWidth: 220, // Slightly wider for badge room
+            minWidth: 220, 
             overflow: "visible",
             "& .MuiAvatar-root": { width: 32, height: 32, ml: -0.5, mr: 1 },
           },
@@ -118,7 +116,7 @@ export default function ProfileMenu({ handleLogout }) {
         {user?.isAdmin && [
           <Divider sx={{ my: 0.5 }} key="admin-divider" />,
           <MenuItem
-            onClick={() => go("/admin/pending-approvals")} // Assuming this is your main admin page
+            onClick={() => go("/admin/pending-approvals")}
             key="admin-dashboard-link"
           >
             <ListItemIcon>
