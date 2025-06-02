@@ -197,7 +197,7 @@ const Navbar = () => {
                   src={Logo}
                   alt="BanglaGhor Logo"
                   sx={{
-                    height: { xs: 30, sm: 35, md: 40 },  // Small logo on xs, larger on md
+                    height: { xs: 30, sm: 35, md: 40 },
                     marginRight: '10px',
                     objectFit: 'contain',
                   }}
