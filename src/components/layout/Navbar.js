@@ -210,7 +210,7 @@ const Navbar = () => {
                     color: "black",
                     textDecoration: "none",
                     cursor: "pointer",
-                    display: { xs: "none", md: "block" },
+                    display: { xs: "none", sm: "block" },
                   }}
                 >
                   BanglaGhor
