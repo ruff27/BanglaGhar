@@ -192,12 +192,14 @@ const Navbar = () => {
           <Container maxWidth="xl">
             <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
               <RouterLink to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-                <img
+                <Box
+                  component="img"
                   src={Logo}
                   alt="BanglaGhor Logo"
-                  style={{
-                    height: '40px',
-                    marginRight: '10px'
+                  sx={{
+                    height: { xs: 30, sm: 35, md: 40 },  // Small logo on xs, larger on md
+                    marginRight: '10px',
+                    objectFit: 'contain',
                   }}
                 />
                 <Typography
@@ -208,6 +210,7 @@ const Navbar = () => {
                     color: "black",
                     textDecoration: "none",
                     cursor: "pointer",
+                    display: { xs: "none", md: "block" },
                   }}
                 >
                   BanglaGhor
