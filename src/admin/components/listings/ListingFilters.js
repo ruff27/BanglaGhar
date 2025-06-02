@@ -1,4 +1,3 @@
-// src/admin/components/listings/ListingFilters.js
 import React from "react";
 import {
   Grid,
@@ -32,23 +31,20 @@ const ListingFilters = ({
   filterVisibility,
   filterFeatured,
   onSearchChange,
-  onFilterChange, // Use generic handler from hook
-  setFilterPropertyType, // Expect setters from hook
+  onFilterChange,
+  setFilterPropertyType,
   setFilterListingType,
   setFilterVisibility,
   setFilterFeatured,
 }) => {
   return (
-    // Match original Paper styling
     <Paper sx={{ mb: 2, p: 2 }} elevation={2}>
-      {/* Match original Grid container props */}
       <Grid container spacing={2} alignItems="center">
-        {/* Match original Grid item and TextField props */}
         <Grid item xs={12} sm={6} md={3}>
           <TextField
             label="Search Title/Location/Creator"
-            size="small" // Keep original size
-            fullWidth // Keep original prop
+            size="small"
+            fullWidth
             value={searchTerm}
             onChange={onSearchChange}
             InputProps={{
@@ -60,7 +56,6 @@ const ListingFilters = ({
             }}
           />
         </Grid>
-        {/* Match original Grid item and Select props */}
         <Grid item xs={12} sm={6} md={2}>
           <FormControl fullWidth size="small">
             <InputLabel id="property-type-filter-label">
@@ -87,7 +82,6 @@ const ListingFilters = ({
             </Select>
           </FormControl>
         </Grid>
-        {/* Match original Grid item and Select props */}
         <Grid item xs={12} sm={6} md={2}>
           <FormControl fullWidth size="small">
             <InputLabel id="listing-type-filter-label">Listing Type</InputLabel>
@@ -112,7 +106,6 @@ const ListingFilters = ({
             </Select>
           </FormControl>
         </Grid>
-        {/* Match original Grid item and Select props */}
         <Grid item xs={12} sm={6} md={2}>
           <FormControl fullWidth size="small">
             <InputLabel id="visibility-filter-label">Visibility</InputLabel>
@@ -130,7 +123,6 @@ const ListingFilters = ({
             </Select>
           </FormControl>
         </Grid>
-        {/* Match original Grid item and Select props */}
         <Grid item xs={12} sm={6} md={2}>
           <FormControl fullWidth size="small">
             <InputLabel id="featured-filter-label">Featured</InputLabel>

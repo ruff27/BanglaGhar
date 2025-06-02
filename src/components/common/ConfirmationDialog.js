@@ -1,4 +1,3 @@
-// src/components/common/ConfirmationDialog.js
 import React from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -9,9 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import PropTypes from "prop-types";
 import { color } from "framer-motion";
 
-/**
- * A reusable confirmation dialog component.
- */
+
 const ConfirmationDialog = ({
   open,
   onClose,
@@ -20,9 +17,9 @@ const ConfirmationDialog = ({
   message,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  confirmButtonProps = { color: "primary" }, // Default primary color
+  confirmButtonProps = { color: "primary" },
   cancelButtonProps = { color: "inherit" },
-  isConfirming = false, // Optional: Show loading state on confirm button
+  isConfirming = false,
 }) => {
   return (
     <Dialog
@@ -33,7 +30,6 @@ const ConfirmationDialog = ({
     >
       <DialogTitle id="confirmation-dialog-title">{title}</DialogTitle>
       <DialogContent>
-        {/* Allow message to be a string or custom React node */}
         {typeof message === "string" ? (
           <DialogContentText
             id="confirmation-dialog-description"
@@ -57,7 +53,7 @@ const ConfirmationDialog = ({
         <Button
           onClick={onConfirm}
           {...confirmButtonProps}
-          autoFocus // Focus the confirm button
+          autoFocus
           disabled={isConfirming}
         >
           {isConfirming ? "Processing..." : confirmText}
@@ -72,7 +68,7 @@ ConfirmationDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
-  message: PropTypes.node.isRequired, // Can be string or other elements
+  message: PropTypes.node.isRequired,
   confirmText: PropTypes.string,
   cancelText: PropTypes.string,
   confirmButtonProps: PropTypes.object,

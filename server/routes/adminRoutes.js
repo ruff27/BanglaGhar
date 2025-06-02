@@ -1,52 +1,40 @@
-// server/routes/adminRoutes.js
 const express = require("express");
-const { body, param, query } = require("express-validator"); // Keep validator imports
+const { body, param, query } = require("express-validator"); 
 const adminController = require("../controllers/adminController");
 const authMiddleware = require("../middleware/authMiddleware");
-const fetchUserProfileMiddleware = require("../middleware/fetchUserProfileMiddleware"); // <<<--- IMPORT THIS MIDDLEWARE
+const fetchUserProfileMiddleware = require("../middleware/fetchUserProfileMiddleware"); 
 const isAdminMiddleware = require("../middleware/isAdminMiddleware");
 const {
   handleValidationErrors,
-} = require("../middleware/ValidationMiddleware"); // Keep this
+} = require("../middleware/ValidationMiddleware"); 
 
-// Assuming mongoose might be needed if you have custom validation needing it
+
 const mongoose = require("mongoose");
 
 const router = express.Router();
 
-// --- IMPORTANT: Correct Middleware Order ---
-// 1. Authenticate the user (provides req.user, e.g., req.user.email)
-// 2. Fetch the full user profile from DB based on req.user info (provides req.userProfile)
-// 3. Check if the fetched profile (req.userProfile) has admin privileges
+
 router.use(authMiddleware, fetchUserProfileMiddleware, isAdminMiddleware);
-// -------------------------------------------
-// Now, all subsequent routes defined on this router instance will first pass through
-// these three middlewares in the specified order.
 
-// --- Your Admin Routes (Validation remains the same) ---
-
-// GET /api/admin/stats
 router.get("/stats", adminController.getDashboardStats);
 
-// GET /api/admin/pending-approvals
+
 router.get("/pending-approvals", adminController.getPendingApprovals);
 
 router.get(
-  "/get-signed-id-url/:userId", // New distinct path
-  authMiddleware, // MUST be authenticated
-  isAdminMiddleware, // MUST be admin
-  adminController.getSignedIdUrlForAdmin // Use the new controller function
+  "/get-signed-id-url/:userId", 
+  authMiddleware, 
+  isAdminMiddleware, 
+  adminController.getSignedIdUrlForAdmin 
 );
 
-// PUT /api/admin/users/:userId/approve
 router.put(
   "/users/:userId/approve",
   [param("userId").isMongoId().withMessage("Invalid user ID format.")],
   handleValidationErrors,
-  adminController.approveUser // This controller can now safely assume req.userProfile exists if isAdminMiddleware passed
+  adminController.approveUser 
 );
 
-// PUT /api/admin/users/:userId/reject
 router.put(
   "/users/:userId/reject",
   [param("userId").isMongoId().withMessage("Invalid user ID format.")],
@@ -54,7 +42,6 @@ router.put(
   adminController.rejectUser
 );
 
-// GET /api/admin/users
 router.get(
   "/users",
   [
@@ -81,7 +68,6 @@ router.get(
   adminController.getAllUsers
 );
 
-// PUT /api/admin/users/:userId/status
 router.put(
   "/users/:userId/status",
   [
@@ -103,7 +89,6 @@ router.put(
   adminController.updateUserStatus
 );
 
-// GET /api/admin/listings
 router.get(
   "/listings",
   [
@@ -142,7 +127,6 @@ router.get(
   adminController.getAllListings
 );
 
-// PUT /api/admin/listings/:listingId/visibility
 router.put(
   "/listings/:listingId/visibility",
   [
@@ -153,7 +137,6 @@ router.put(
   adminController.updateListingVisibility
 );
 
-// PUT /api/admin/listings/:listingId/feature
 router.put(
   "/listings/:listingId/feature",
   [
@@ -164,7 +147,6 @@ router.put(
   adminController.featureListing
 );
 
-// POST /api/admin/listings/delete-multiple
 router.post(
   "/listings/delete-multiple",
   [

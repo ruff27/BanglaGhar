@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
-// Import axios if you intend to make a real API call
-// import axios from 'axios';
+
 
 /**
  * @hook useContactForm
@@ -12,16 +11,14 @@ const useContactForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "", // Added phone based on original component
+    phone: "", 
     subject: "",
     message: "",
   });
 
-  // State for validation errors
+  
   const [formErrors, setFormErrors] = useState({});
-  // State to track submission status
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // State for general submission success/error feedback
   const [snackbar, setSnackbar] = useState({
     open: false,
     severity: "success",
@@ -41,21 +38,19 @@ const useContactForm = () => {
         [name]: value,
       }));
 
-      // Clear validation error for the field being edited
       if (formErrors[name]) {
         setFormErrors((prev) => {
           const newErrors = { ...prev };
-          delete newErrors[name]; // Remove the specific error
+          delete newErrors[name]; 
           return newErrors;
         });
       }
-      // Close snackbar if it's open when user starts typing again
       if (snackbar.open) {
         setSnackbar((prev) => ({ ...prev, open: false }));
       }
     },
     [formErrors, snackbar.open]
-  ); // Include dependencies
+  );
 
   /**
    * Validates the current form data.
@@ -73,10 +68,6 @@ const useContactForm = () => {
     ) {
       errors.email = "Invalid email address";
     }
-    // Optional phone validation can be added here if needed
-    // if (formData.phone.trim() && !/^\+?[0-9\s-()]{7,}$/.test(formData.phone)) {
-    //   errors.phone = 'Invalid phone number format';
-    // }
     if (!formData.subject.trim()) {
       errors.subject = "Subject is required";
     }
@@ -84,7 +75,7 @@ const useContactForm = () => {
       errors.message = "Message is required";
     }
     return errors;
-  }, [formData]); // Depends on formData
+  }, [formData]); 
 
   /**
    * Handles the form submission process.
@@ -95,26 +86,25 @@ const useContactForm = () => {
     async (e) => {
       e.preventDefault();
       const errors = validateForm();
-      setFormErrors(errors); // Set errors regardless
-
+      setFormErrors(errors); 
       if (Object.keys(errors).length > 0) {
-        // If there are errors, set an error snackbar message immediately
+        
         setSnackbar({
           open: true,
           severity: "error",
           message: "Please fix the errors in the form.",
         });
-        return; // Stop submission if validation fails
+        return; 
       }
 
       setIsSubmitting(true);
-      setSnackbar((prev) => ({ ...prev, open: false })); // Close any previous snackbar
+      setSnackbar((prev) => ({ ...prev, open: false })); 
 
       console.log("Submitting form data:", formData);
 
       // --- Simulate API Call ---
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         console.log("Mock submission successful.");
 
         // Show success message
@@ -142,11 +132,11 @@ const useContactForm = () => {
           message: "Failed to send message. Please try again later.",
         });
       } finally {
-        setIsSubmitting(false); // Ensure submission state is reset
+        setIsSubmitting(false); 
       }
     },
     [formData, validateForm]
-  ); // Depends on formData and validateForm
+  ); 
 
   /**
    * Closes the snackbar.
@@ -158,15 +148,14 @@ const useContactForm = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
-  // Return state and handlers needed by the component
   return {
     formData,
-    formErrors, // Provide errors for field-level feedback
+    formErrors, 
     isSubmitting,
-    snackbar, // Provide snackbar state for page-level feedback
+    snackbar, 
     handleChange,
     handleSubmit,
-    handleCloseSnackbar, // Provide handler to close snackbar from page
+    handleCloseSnackbar, 
   };
 };
 

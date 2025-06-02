@@ -4,7 +4,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { styled } from "@mui/material/styles";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 const ActionButton = styled(Button)(({ theme }) => ({
   padding: theme.spacing(1, 2),
@@ -14,7 +14,7 @@ const ActionButton = styled(Button)(({ theme }) => ({
 }));
 
 const ProfileActions = ({ onEditName, onChangePassword, onDeleteAccount }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Box sx={{ width: "100%", mt: 3 }}>

@@ -1,15 +1,15 @@
 import React from "react";
 import { Box, Container, Typography, Divider } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
-// Import Section Components
+
 import MissionSection from "./components/MissionSection";
 import ValuesSection from "./components/ValuesSection";
 import TeamSection from "./components/TeamSection";
 import AboutCTASection from "./components/AboutCTASection";
 
-// Example: Styled component for the intro section background if needed
+
 const IntroBackground = styled(Box)(({ theme }) => ({
   padding: theme.spacing(8, 2),
   backgroundColor: theme.palette.grey[100],
@@ -20,7 +20,7 @@ const IntroBackground = styled(Box)(({ theme }) => ({
  * AboutUsPage Component
  */
 const AboutUsPage = () => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Box>

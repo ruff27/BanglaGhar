@@ -1,6 +1,3 @@
-// src/features/listing/components/Step4_Images.js
-// (Assuming this is the correct path as per your previous files)
-
 import React, { useState, useCallback } from "react";
 import {
   Box,
@@ -12,25 +9,25 @@ import {
   IconButton,
   FormHelperText,
   CircularProgress,
-  LinearProgress, // Using CircularProgress for individual uploads
+  LinearProgress, 
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from "react-i18next";
 
 const Step4_Images = ({
-  imageUrls, // Receives S3 URLs of successfully uploaded images
-  imageUploadStates, // Receives an object tracking { [tempId]: { loading, error, url, fileName } }
-  handleImageFileSelected, // Function from useListingForm to upload a single file to S3
-  removeImageByUrl, // Function from useListingForm to remove an image by its S3 URL
-  errors, // General errors for the images step from useListingForm
+  imageUrls, 
+  imageUploadStates,
+  handleImageFileSelected, 
+  removeImageByUrl, 
+  errors, 
 }) => {
   const { t } = useTranslation();
-  const [localValidationErrors, setLocalValidationErrors] = useState(null); // For client-side file type/size checks
+  const [localValidationErrors, setLocalValidationErrors] = useState(null); 
 
   const onFileChange = useCallback(
     async (event) => {
-      setLocalValidationErrors(null); // Clear previous local errors
+      setLocalValidationErrors(null); 
       if (event.target.files) {
         const newFiles = Array.from(event.target.files);
         const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
@@ -51,7 +48,7 @@ const Step4_Images = ({
                 "Maximum 10 images allowed. Some files were not processed."
               )
             );
-            break; // Stop processing further files from this selection
+            break; 
           }
 
           if (!allowedTypes.includes(file.type)) {
@@ -71,9 +68,8 @@ const Step4_Images = ({
               )
             );
           } else {
-            // If file is valid on client-side, pass to the upload handler from the hook
-            // This function now also handles the actual upload to S3 via the backend.
-            await handleImageFileSelected(file); // This is asynchronous
+            
+            await handleImageFileSelected(file); 
             totalPotentialImages++;
           }
         }
@@ -81,7 +77,7 @@ const Step4_Images = ({
         if (currentErrorMessages.length > 0) {
           setLocalValidationErrors(currentErrorMessages.join(" "));
         }
-        event.target.value = null; // Clear the file input to allow re-selecting the same file
+        event.target.value = null; 
       }
     },
     [handleImageFileSelected, imageUrls.length, imageUploadStates, t]
@@ -157,7 +153,7 @@ const Step4_Images = ({
 
         {/* Display files currently being uploaded or with errors */}
         {Object.entries(imageUploadStates).map(([tempId, state]) => {
-          // Only render if it's loading or if it errored and hasn't got a successful URL yet
+          
           if (!state.url && (state.loading || state.error)) {
             return (
               <Grid item xs={6} sm={4} md={3} key={tempId}>
@@ -209,7 +205,7 @@ const Step4_Images = ({
               </Grid>
             );
           }
-          return null; // Don't render if successfully uploaded (it's in imageUrls) or not yet processed
+          return null; 
         })}
       </Grid>
       <Typography

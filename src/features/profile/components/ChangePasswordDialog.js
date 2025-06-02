@@ -9,8 +9,7 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
-
+import { useTranslation } from "react-i18next"; 
 const ChangePasswordDialog = ({
   open,
   onClose,
@@ -22,7 +21,7 @@ const ChangePasswordDialog = ({
   isLoading,
   error,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
@@ -46,7 +45,7 @@ const ChangePasswordDialog = ({
         />
         <TextField
           margin="dense"
-          label={t("new_password")} // Applied translation
+          label={t("new_password")} 
           type="password"
           fullWidth
           variant="outlined"

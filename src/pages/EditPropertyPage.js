@@ -1,4 +1,3 @@
-// src/pages/EditPropertyPage.js (New File)
 import React from "react";
 import {
   Container,
@@ -10,9 +9,9 @@ import {
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import useEditPropertyForm from "../features/listing/hooks/useEditPropertyForm"; // We'll create this hook next
-import EditPropertyForm from "../features/listing/components/EditPropertyForm"; // We'll create this form component next
-import { useSnackbar } from "../context/SnackbarContext"; // For showing success/error messages
+import useEditPropertyForm from "../features/listing/hooks/useEditPropertyForm"; 
+import EditPropertyForm from "../features/listing/components/EditPropertyForm"; 
+import { useSnackbar } from "../context/SnackbarContext"; 
 
 const EditPropertyPage = () => {
   const { propertyId } = useParams();
@@ -41,7 +40,7 @@ const EditPropertyPage = () => {
         t("property_updated_success", "Property updated successfully!"),
         "success"
       );
-      navigate("/my-listings"); // Or navigate to the property detail page
+      navigate("/my-listings");
     } else {
       // Error is handled by the hook and displayed in the form or as a general error
       showSnackbar(
@@ -73,7 +72,6 @@ const EditPropertyPage = () => {
   }
 
   if (error && !propertyData) {
-    // If there was an error fetching initial data
     return (
       <Container>
         <Alert severity="error" sx={{ mt: 3 }}>
@@ -84,7 +82,6 @@ const EditPropertyPage = () => {
   }
 
   if (!propertyData) {
-    // Should be caught by loading or error, but as a fallback
     return (
       <Container>
         <Alert severity="warning" sx={{ mt: 3 }}>
@@ -116,12 +113,12 @@ const EditPropertyPage = () => {
         <EditPropertyForm
           formData={propertyData}
           onInputChange={handleInputChange}
-          onFeaturesChange={handleFeaturesChange} // Assuming you have these from a listing form
-          onBangladeshDetailsChange={handleBangladeshDetailsChange} // Assuming these too
+          onFeaturesChange={handleFeaturesChange}
+          onBangladeshDetailsChange={handleBangladeshDetailsChange}
           onSubmit={onSubmit}
           isSubmitting={isSubmitting}
           validationErrors={validationErrors}
-          setFormDataDirectly={setPropertyData} // For fields like image uploads or complex state
+          setFormDataDirectly={setPropertyData}
         />
       </Paper>
     </Container>

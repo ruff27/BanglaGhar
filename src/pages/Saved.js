@@ -11,7 +11,6 @@ import {
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { Link as RouterLink } from "react-router-dom";
-// Ensure this path is correct for your project structure
 import PropertyCard from "../features/properties/components/PropertyCard";
 
 const API_BASE_URL =
@@ -28,8 +27,6 @@ const Saved = () => {
     severity: "info",
   });
 
-  // --- Functions (fetchSavedProperties, handleRemoveFromWishlist, handleCloseSnackbar) ---
-  // Unchanged
   const fetchSavedProperties = useCallback(async () => {
     if (isLoggedIn && user?.email) {
       setLoading(true);
@@ -91,7 +88,6 @@ const Saved = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  // --- Loading/Error/Login States (using maxWidth="lg") ---
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
@@ -118,9 +114,7 @@ const Saved = () => {
     );
   }
 
-  // --- Main Content ---
   return (
-    // Use standard Container settings matching MyListingsPage
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" sx={{ mb: 4 }}>
         Saved Properties
@@ -128,11 +122,9 @@ const Saved = () => {
       {savedProperties.length === 0 && !loading ? (
         <Alert severity="info">You haven't saved any properties yet.</Alert>
       ) : (
-        // Use standard Grid container (no width: 100% needed usually)
         <Grid container spacing={3}>
           {savedProperties.map((property) =>
             property && property._id ? (
-              // Use standard Grid item sizing
               <Grid item xs={12} sm={6} md={4} key={property._id}>
                 <PropertyCard
                   property={property}
@@ -146,7 +138,6 @@ const Saved = () => {
           )}
         </Grid>
       )}
-      {/* --- Snackbar --- */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

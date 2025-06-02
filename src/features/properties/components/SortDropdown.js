@@ -1,4 +1,3 @@
-// src/features/Properties/components/SortDropdown.js
 import React from "react";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import SortIcon from "@mui/icons-material/SortRounded";
@@ -20,8 +19,8 @@ const SortDropdown = ({ sortBy, onSortChange }) => {
     { value: "area_asc", labelKey: "sort_area_asc" },
   ];
 
-  // Define a default sort value consistent with usePropertyFilters initialization
-  const defaultSortValue = "date_desc"; // Or "price_asc" if that was your intended default
+  
+  const defaultSortValue = "date_desc"; 
 
   return (
     <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
@@ -30,7 +29,7 @@ const SortDropdown = ({ sortBy, onSortChange }) => {
         labelId="sort-by-label"
         id="sort-by-select"
         // --- Provide fallback value ---
-        value={sortBy || defaultSortValue} // Use default if sortBy is undefined/null/empty
+        value={sortBy || defaultSortValue} 
         // --- End modification ---
         label={t("sort_by")}
         onChange={handleSortChange}

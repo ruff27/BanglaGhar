@@ -6,9 +6,8 @@ import {
   styled,
   CircularProgress,
 } from "@mui/material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
 
-// --- Styled Components (Copied from original - specific to form button) ---
 const StyledButton = styled(Button)(({ theme }) => ({
   margin: theme.spacing(3, 0, 2),
   padding: theme.spacing(1.5),
@@ -46,7 +45,7 @@ const ForgotPasswordStep1Form = ({
   onSubmit,
   isSubmitting,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
@@ -54,8 +53,8 @@ const ForgotPasswordStep1Form = ({
         margin="normal"
         required
         fullWidth
-        id="email-forgot" // Unique id
-        label={t("email")} // Applied translation
+        id="email-forgot"
+        label={t("email")} 
         name="email"
         autoComplete="email"
         autoFocus
@@ -74,7 +73,6 @@ const ForgotPasswordStep1Form = ({
           isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
         }
       >
-        {/* Applied translation */}
         {isSubmitting ? t("sending") : t("send_verification_code")}
       </StyledButton>
     </Box>

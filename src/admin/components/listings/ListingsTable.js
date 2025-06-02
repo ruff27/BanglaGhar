@@ -1,4 +1,3 @@
-// src/admin/components/listings/ListingsTable.js
 import React from "react";
 import {
   Table,
@@ -22,9 +21,8 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { format } from "date-fns";
-import { formatPrice } from "../../../utils/formatPrice"; // Adjust path
+import { formatPrice } from "../../../utils/formatPrice";
 
-// Keep headCells consistent
 const headCells = [
   {
     id: "select",
@@ -77,7 +75,6 @@ const headCells = [
   },
 ];
 
-// Keep helpers consistent
 const formatDate = (ds) => {
   try {
     return format(new Date(ds), "PP");
@@ -119,14 +116,10 @@ const ListingsTable = ({
   const rowCount = listings.length;
 
   return (
-    // Match original Paper styling
     <Paper sx={{ width: "100%", overflow: "hidden" }} elevation={3}>
-      {/* Match original TableContainer styling */}
       <TableContainer sx={{ maxHeight: "calc(100vh - 350px)" }}>
-        {/* Match original Table styling */}
         <Table stickyHeader sx={{ minWidth: 1000 }}>
           <TableHead>
-            {/* Match original TableHead -> TableRow styling */}
             <TableRow
               sx={{
                 "& th": {
@@ -135,7 +128,6 @@ const ListingsTable = ({
                 },
               }}
             >
-              {/* Match original Select All Checkbox */}
               <TableCell padding="checkbox">
                 <Checkbox
                   color="primary"
@@ -143,7 +135,6 @@ const ListingsTable = ({
                   checked={rowCount > 0 && numSelected === rowCount}
                   onChange={onSelectAllClick}
                   inputProps={{ "aria-label": "select all listings" }}
-                  // Match original Checkbox styling
                   sx={{
                     color: "primary.contrastText",
                     "&.Mui-checked": { color: "primary.contrastText" },
@@ -153,18 +144,16 @@ const ListingsTable = ({
                   }}
                 />
               </TableCell>
-              {/* Match original Header Cells */}
               {headCells.map(
                 (h) =>
                   h.id !== "select" && (
                     <TableCell
                       key={h.id}
                       align={h.numeric ? "right" : "left"}
-                      padding={h.disablePadding ? "none" : "normal"} // Use original padding
+                      padding={h.disablePadding ? "none" : "normal"}
                       sortDirection={orderBy === h.id ? order : false}
                     >
                       {h.sortable !== false ? (
-                        // Match original Sort Label styling
                         <TableSortLabel
                           active={orderBy === h.id}
                           direction={orderBy === h.id ? order : "asc"}
@@ -213,7 +202,6 @@ const ListingsTable = ({
                   actionLoading[hidKey] || actionLoading[featKey];
                 const isFeatured = l.featuredAt != null;
 
-                // Match original TableRow props and styling
                 return (
                   <TableRow
                     key={l._id}
@@ -223,9 +211,8 @@ const ListingsTable = ({
                     aria-checked={isItemSelected}
                     tabIndex={-1}
                     selected={isItemSelected}
-                    sx={{ opacity: l.isHidden ? 0.6 : 1, cursor: "pointer" }} // Keep original sx
+                    sx={{ opacity: l.isHidden ? 0.6 : 1, cursor: "pointer" }}
                   >
-                    {/* Match original Checkbox Cell */}
                     <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
@@ -233,10 +220,8 @@ const ListingsTable = ({
                         inputProps={{ "aria-labelledby": labelId }}
                       />
                     </TableCell>
-                    {/* Match original Image Cell */}
                     <TableCell padding="checkbox">
                       {" "}
-                      {/* Keep original padding */}
                       <Avatar
                         variant="rounded"
                         src={l.images?.[0]}
@@ -245,7 +230,6 @@ const ListingsTable = ({
                         {l.title?.[0]}
                       </Avatar>
                     </TableCell>
-                    {/* Match other Cells */}
                     <TableCell>
                       <Tooltip title={l.title}>
                         <Typography
@@ -284,13 +268,11 @@ const ListingsTable = ({
                     </TableCell>
                     <TableCell>{l.createdBy}</TableCell>
                     <TableCell>{formatDate(l.createdAt)}</TableCell>
-                    {/* Match original Actions Cell */}
                     <TableCell align="center">
                       <Tooltip
                         title={l.isHidden ? "Make Visible" : "Hide Listing"}
                       >
                         <span>
-                          {/* Match original IconButton props */}
                           <IconButton
                             size="small"
                             onClick={(e) => {
@@ -314,7 +296,6 @@ const ListingsTable = ({
                         }
                       >
                         <span>
-                          {/* Match original IconButton props */}
                           <IconButton
                             size="small"
                             onClick={(e) => {

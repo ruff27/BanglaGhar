@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext"; // Assuming this path is correct as per your structure
+import { useAuth } from "../../../context/AuthContext";
 
 /**
  * @hook useLogin

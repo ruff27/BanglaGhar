@@ -1,4 +1,3 @@
-// src/components/layout/Navbar.js
 import React, { useState, useEffect } from "react";
 import {
   AppBar,
@@ -20,7 +19,6 @@ import {
   Divider,
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-// Ensure alpha is imported from @mui/material/styles
 import { styled, alpha } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../context/AuthContext";
@@ -37,6 +35,8 @@ import ContactsIcon from "@mui/icons-material/Contacts";
 import HomeWorkIcon from "@mui/icons-material/HomeWork";
 import { useTranslation } from "react-i18next";
 import UploadIdModal from "../../features/profile/components/UploadIdModal";
+import Logo from '../../pictures/logo.png';
+
 
 function HideOnScroll(props) {
   const { children } = props;
@@ -49,10 +49,9 @@ function HideOnScroll(props) {
 }
 
 const NavbarContainer = styled(AppBar)(({ theme }) => ({
-  // Reverted to original background color definition from your Navbar.js
   backgroundColor: alpha(theme.palette.background.paper, 0.9), //
   backdropFilter: "blur(10px)",
-  boxShadow: "inset 0px -1px 1px #E5E5E5", // Consider theme.palette.divider
+  boxShadow: "inset 0px -1px 1px #E5E5E5",
   color: theme.palette.text.primary,
 }));
 
@@ -127,10 +126,10 @@ const Navbar = () => {
         navigate("/list-property");
         break;
       case "pending":
-        alert(t("listing_pending_approval")); // Consider using Snackbar from context
+        alert(t("listing_pending_approval"));
         break;
       case "rejected":
-        alert(t("listing_rejected_contact_support")); // Consider using Snackbar
+        alert(t("listing_rejected_contact_support"));
         break;
       case "not_started":
       default:
@@ -152,7 +151,6 @@ const Navbar = () => {
 
   const handleNotificationIconClick = async (event) => {
     setNotificationAnchorEl(event.currentTarget);
-    // Fetch summary when menu is opened to ensure details are fresh
     if (
       isLoggedIn &&
       idToken &&
@@ -193,21 +191,32 @@ const Navbar = () => {
         <NavbarContainer position="sticky">
           <Container maxWidth="xl">
             <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-              <Typography
-                variant="h5"
-                noWrap
-                component={RouterLink}
-                to="/"
-                sx={{
-                  mr: 2,
-                  fontWeight: 700,
-                  color: "inherit",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                }}
-              >
-                BanglaGhor
-              </Typography>
+              <RouterLink to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+                <Box
+                  component="img"
+                  src={Logo}
+                  alt="BanglaGhor Logo"
+                  sx={{
+                    height: { xs: 30, sm: 35, md: 40 },
+                    marginRight: '10px',
+                    objectFit: 'contain',
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  noWrap
+                  sx={{
+                    fontWeight: 700,
+                    color: "black",
+                    textDecoration: "none",
+                    cursor: "pointer",
+                    display: { xs: "none", sm: "block" },
+                  }}
+                >
+                  BanglaGhor
+                </Typography>
+              </RouterLink>
+
               {/* Desktop Navigation Area */}
               <Box
                 sx={{
@@ -228,7 +237,7 @@ const Navbar = () => {
                     onClick={handleNotificationIconClick}
                     disabled={isChatLoading && totalUnreadMessages === 0}
                     aria-label="show new notifications"
-                    id="notification-button" // Added for aria-controls in Menu
+                    id="notification-button"
                   >
                     <Badge
                       badgeContent={isChatLoading ? "..." : totalUnreadMessages}
@@ -323,7 +332,7 @@ const Navbar = () => {
         MenuListProps={{ "aria-labelledby": "notification-button" }}
         PaperProps={{
           elevation: 3,
-          style: { maxHeight: 400, width: "320px", borderRadius: "8px" }, // Increased default width
+          style: { maxHeight: 400, width: "320px", borderRadius: "8px" },
         }}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
@@ -341,10 +350,9 @@ const Navbar = () => {
           <Typography variant="subtitle1" fontWeight="bold">
             Notifications
           </Typography>
-          {/* Optional: Link to a "See All" notifications page if you build one */}
         </Box>
         <Divider sx={{ mb: 0.5 }} />
-        {isFetchingMenuDetails && ( // Show loading state for menu items
+        {isFetchingMenuDetails && (
           <MenuItem disabled>
             <ListItemText primary="Loading..." sx={{ textAlign: "center" }} />
           </MenuItem>
@@ -384,7 +392,6 @@ const Navbar = () => {
                     component="span"
                   >
                     {convo.displayName}
-                    {/* Display count if more than 1 for this specific conversation in the menu */}
                     {convo.count > 1 && (
                       <Typography
                         variant="caption"

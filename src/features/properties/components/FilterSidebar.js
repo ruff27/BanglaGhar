@@ -1,5 +1,3 @@
-// src/features/Properties/components/FilterSidebar.js
-
 import React from "react";
 import {
   Box,
@@ -18,7 +16,6 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
 
-// Helper to format numbers into Bangladeshi units
 function formatPriceLabel(value) {
   if (value >= 10_000_000) {
     const cr = value / 10_000_000;
@@ -31,10 +28,9 @@ function formatPriceLabel(value) {
   return `৳${value.toLocaleString()}`;
 }
 
-const BASELINE = 1; // for log scaling (avoid log(0))
-const MAX_PRICE = 50_000_000; // 5 Crore (end of scale)
+const BASELINE = 1;
+const MAX_PRICE = 50_000_000; 
 
-// Map actual price → slider percent (0–100)
 const toPercent = (price) =>
   price <= BASELINE
     ? 0

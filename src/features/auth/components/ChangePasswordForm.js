@@ -84,7 +84,6 @@ const ChangePasswordForm = ({
 
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
-      {/* Name Field */}
       <TextField
         margin="normal"
         required
@@ -108,10 +107,10 @@ const ChangePasswordForm = ({
         label={t("temporary_password", "Temporary Password")}
         name="temporaryPassword"
         type={showTemporaryPassword ? "text" : "password"}
-        autoComplete="off" // Temporary passwords usually shouldn't be autocompleted
+        autoComplete="off" 
         variant="outlined"
         value={temporaryPassword}
-        onChange={onTemporaryPasswordChange} // Use the new handler from props
+        onChange={onTemporaryPasswordChange}
         disabled={isSubmitting}
         sx={{ mb: 2 }}
         InputProps={{
@@ -134,7 +133,6 @@ const ChangePasswordForm = ({
         }}
       />
 
-      {/* New Password Field */}
       <TextField
         margin="normal"
         required
@@ -165,7 +163,6 @@ const ChangePasswordForm = ({
           ),
         }}
       />
-      {/* Confirm Password Field */}
       <TextField
         margin="normal"
         required
@@ -196,7 +193,6 @@ const ChangePasswordForm = ({
           ),
         }}
       />
-      {/* Submit Button */}
       <StyledButton
         type="submit"
         fullWidth

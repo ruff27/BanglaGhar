@@ -1,13 +1,10 @@
-// server/controllers/propertyController.js
-const Property = require("../models/property");
+const Property = require("../models/property.js");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
 
-// Helper function to check if coordinates are within Bangladesh
 
-// S3 Client specifically for Property Images
 const propertyImagesS3Client = new S3Client({
   region: process.env.APP_AWS_REGION, // Assuming region is the same for both buckets
   credentials: {
@@ -67,17 +64,14 @@ const getDistrictCoordinates = (district) => {
     Rangpur: { lat: 25.7439, lng: 89.2752 },
   };
 
-  // Normalize district name for lookup (lowercase and remove extra spaces)
   const normalizedDistrict = district.toLowerCase().trim();
 
-  // Try to find an exact match
   for (const [key, value] of Object.entries(districtMap)) {
     if (key.toLowerCase() === normalizedDistrict) {
       return value;
     }
   }
 
-  // If no exact match, try partial match
   for (const [key, value] of Object.entries(districtMap)) {
     if (
       normalizedDistrict.includes(key.toLowerCase()) ||
@@ -211,7 +205,6 @@ const geocodeAddress = async (addressData) => {
   }
 };
 
-// Create Property with enhanced geocoding
 exports.createProperty = async (req, res) => {
   if (!req.userProfile || !req.userProfile._id) {
     return res
@@ -220,7 +213,6 @@ exports.createProperty = async (req, res) => {
   }
 
   try {
-    // **Extract address data from req.body for geocoding**
     const addressData = {
       addressLine1: req.body.addressLine1,
       addressLine2: req.body.addressLine2,
@@ -298,7 +290,6 @@ exports.createProperty = async (req, res) => {
   }
 };
 
-// Get All Properties with enhanced filtering
 exports.getAllProperties = async (req, res) => {
   console.log("--- getAllProperties: Received req.query:", req.query);
 
@@ -312,9 +303,7 @@ exports.getAllProperties = async (req, res) => {
       isHidden: { $ne: true },
     };
 
-    // This could be enhanced by checking req.userProfile.isAdmin if needed.
     if (req.query.includeUnavailable !== "true") {
-      // Add a query param to optionally include non-available
       baseFilter.listingStatus = "available";
     }
 
@@ -329,7 +318,6 @@ exports.getAllProperties = async (req, res) => {
         { $match: baseFilter },
         { $sample: { size: limit } },
       ]);
-      // For random properties, if populated createdBy is critical:
       const propertyIds = properties.map((p) => p._id);
       properties = await Property.find({ _id: { $in: propertyIds } }).populate(
         "createdBy",
@@ -356,12 +344,9 @@ exports.getAllProperties = async (req, res) => {
       if (req.query.listingType)
         queryFilters.listingType = req.query.listingType;
 
-      // comment modification 🎉🎉🎉🎉🎉🎉 start modification
-      // Allow overriding listingStatus filter if explicitly provided in query (e.g., for admin or specific views)
       if (req.query.listingStatus) {
         queryFilters.listingStatus = req.query.listingStatus;
       }
-      // comment modification 🎉🎉🎉🎉🎉🎉 end modification
 
       if (req.query.nearLat && req.query.nearLng && req.query.radius) {
         const lat = parseFloat(req.query.nearLat);
@@ -571,10 +556,8 @@ exports.deleteProperty = async (req, res) => {
     }
 
     const deletedProperty = await Property.findByIdAndDelete(propertyId);
-    // findByIdAndDelete itself returns the deleted document or null if not found.
-    // The initial check for propertyToDelete makes the !deletedProperty check somewhat redundant if no other process deletes it in between.
     if (!deletedProperty) {
-      // This case implies the property was deleted between the findById and findByIdAndDelete calls.
+      
       return res
         .status(404)
         .json({ error: "Property not found, may have been deleted already." });
@@ -589,7 +572,6 @@ exports.deleteProperty = async (req, res) => {
   }
 };
 
-// NEW: API endpoint to manually update coordinates for a property
 // ... (updatePropertyCoordinates function remains the same, but add authorization if needed)
 exports.updatePropertyCoordinates = async (req, res) => {
   try {
@@ -639,8 +621,8 @@ exports.updatePropertyCoordinates = async (req, res) => {
         latitude,
         longitude,
         position: { lat: latitude, lng: longitude },
-        locationAccuracy: "precise", // User-provided coordinates are marked as precise
-        manuallyUpdated: true, // Consider if this field is still needed or if locationAccuracy covers it
+        locationAccuracy: "precise", 
+        manuallyUpdated: true, 
       },
       { new: true, runValidators: true }
     );
@@ -685,11 +667,11 @@ exports.uploadPropertyImageToS3 = async (req, res) => {
       Key: fileName,
       Body: file.buffer,
       ContentType: file.mimetype,
-      ACL: "public-read", // Default to private; change if needed
-      // ACL: 'public-read', // If you need this, ensure PutObjectAcl is in the IAM policy
+      ACL: "public-read", 
+      
     };
 
-    // Use the specific S3 client for property images
+    
     await propertyImagesS3Client.send(new PutObjectCommand(uploadParams));
 
     const imageUrl = `https://${S3_PROPERTY_IMAGES_BUCKET}.s3.${process.env.APP_AWS_REGION}.amazonaws.com/${fileName}`;
@@ -698,7 +680,7 @@ exports.uploadPropertyImageToS3 = async (req, res) => {
       .json({ message: "Image uploaded successfully", imageUrl: imageUrl });
   } catch (error) {
     console.error("Error uploading property image to S3:", error);
-    // Check for specific AWS SDK errors if needed
+    
     if (error.name === "CredentialsError" || error.name === "AccessDenied") {
       console.error(
         "AWS Credentials or Permissions issue for Property Images S3 Client."
@@ -708,13 +690,12 @@ exports.uploadPropertyImageToS3 = async (req, res) => {
   }
 };
 
-// NEW: Batch geocode properties
-// ... (batchGeocodeProperties function remains the same)
-// This should be an admin-only endpoint
+ 
+
 exports.batchGeocodeProperties = async (req, res) => {
-  // Ensure user is an admin (req.userProfile should be set by fetchUserProfileMiddleware)
+  
   if (!req.userProfile || !req.userProfile.isAdmin) {
-    // Corrected to use req.userProfile.isAdmin
+    
     return res
       .status(403)
       .json({ error: "Admin privileges required for batch geocoding." });
@@ -730,16 +711,16 @@ exports.batchGeocodeProperties = async (req, res) => {
       });
     }
 
-    // Find properties with missing coordinates or unknown accuracy that might benefit from geocoding
+    
     const properties = await Property.find({
       $or: [
         { latitude: { $exists: false } },
         { longitude: { $exists: false } },
         { position: { $exists: false } },
-        { locationAccuracy: "unknown" }, // Also try to geocode if accuracy is unknown
+        { locationAccuracy: "unknown" }, 
       ],
-      // Optionally add a filter to not re-geocode recently attempted ones if you add such a field
-    }).limit(parsedLimit); // Use the parsed and validated limit
+      
+    }).limit(parsedLimit); 
 
     console.log(
       `Found ${properties.length} properties to geocode (limit: ${parsedLimit})`
@@ -769,16 +750,15 @@ exports.batchGeocodeProperties = async (req, res) => {
       };
 
       try {
-        // Respect API rate limits; OpenCage free tier is typically 1 req/sec
-        await new Promise((resolve) => setTimeout(resolve, 1100)); // Slightly more than 1 second
-
+        
+        await new Promise((resolve) => setTimeout(resolve, 1100)); 
         const geocodeResult = await geocodeAddress(addressData);
 
         if (geocodeResult) {
-          // Update the property with geocoded data
+          
           await Property.findByIdAndUpdate(property._id, {
             ...geocodeResult,
-            // Optionally, add a field like 'lastGeocodeAttempt': new Date()
+            
           });
 
           results.successfulGeocodes++;
@@ -798,8 +778,7 @@ exports.batchGeocodeProperties = async (req, res) => {
               "Geocoding returned no results for the constructed address.",
             addressAttempted: constructGeocodingAddress(addressData),
           });
-          // Optionally, mark this property so it's not picked up again immediately
-          // await Property.findByIdAndUpdate(property._id, { locationAccuracy: 'failed_attempt' });
+          
         }
       } catch (error) {
         results.failedGeocodes++;

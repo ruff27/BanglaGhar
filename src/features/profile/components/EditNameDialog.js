@@ -9,7 +9,7 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 const EditNameDialog = ({
   open,
@@ -20,7 +20,7 @@ const EditNameDialog = ({
   isLoading,
   error,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
@@ -34,7 +34,7 @@ const EditNameDialog = ({
         <TextField
           autoFocus
           margin="dense"
-          label={t("name")} // Applied translation
+          label={t("name")} 
           type="text"
           fullWidth
           variant="outlined"

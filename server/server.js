@@ -5,17 +5,7 @@ require("dotenv").config({
   path: path.resolve(__dirname, "./.env"), // Updated to point to root directory
 });
 
-// just for debugging purposes:
-// console.log("------------------------------------------");
-// console.log("[DEBUG Server Start] Loading environment variables...");
-// console.log("[DEBUG Server Start] AWS_REGION:", process.env.REACT_AWS_REGION);
-// console.log(
-//   "[DEBUG Server Start] REACT_APP_USERPOOLID:",
-//   process.env.REACT_APP_USERPOOLID);
-// console.log("[DEBUG Server Start] MONGO_URI:",
-//   process.env.MONGO_URI ? "Loaded successfully" : "!!! MONGO_URI NOT LOADED !!!"
-// );
-// console.log("------------------------------------------");
+
 
 const aiRoutes = require("./routes/aiRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");

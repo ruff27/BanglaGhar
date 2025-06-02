@@ -1,5 +1,4 @@
-// src/admin/hooks/useManageUsers.js
-import { useState, useEffect, useCallback, useMemo } from "react"; // Added useMemo
+import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { debounce } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
@@ -25,22 +24,18 @@ export const useManageUsers = () => {
   const [filterStatus, setFilterStatus] = useState("");
   const [actionLoading, setActionLoading] = useState({});
 
-  // --- REVISED Debounced Reset Page Logic ---
-  // Create the core function to be debounced
   const resetPage = useCallback(() => {
     setPage(0);
-  }, [setPage]); // Depends only on the stable setPage
+  }, [setPage]);
 
-  // Memoize the debounced version of the resetPage function
   const debouncedResetPage = useMemo(() => {
     return debounce(resetPage, 500);
-  }, [resetPage]); // Depends on the stable resetPage callback
-  // --- End of Revised Logic ---
+  }, [resetPage]);
 
   // Debounce cleanup on unmount
   useEffect(() => {
     return () => {
-      debouncedResetPage.clear(); // Clear any pending debounce timers
+      debouncedResetPage.clear();
     };
   }, [debouncedResetPage]);
 
@@ -54,7 +49,7 @@ export const useManageUsers = () => {
     debouncedResetPage(); // Call the memoized debounced function
   };
 
-  // Fetch Users Effect (No changes needed here)
+  // Fetch Users Effect
   useEffect(() => {
     const fetchUsers = async () => {
       if (!idToken) return;
@@ -90,7 +85,7 @@ export const useManageUsers = () => {
     fetchUsers();
   }, [idToken, page, rowsPerPage, orderBy, order, searchTerm, filterStatus]);
 
-  // Handlers for Sorting, Pagination (No changes needed here)
+  // Handlers for Sorting, Pagination
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -107,7 +102,7 @@ export const useManageUsers = () => {
     setPage(0);
   };
 
-  // Handler for User Status Updates (No changes needed here, assuming previous fix applied)
+  // Handler for User Status Updates
   const handleUserUpdate = useCallback(
     async (userId, field, value) => {
       if (!idToken) {

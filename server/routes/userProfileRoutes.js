@@ -1,25 +1,11 @@
-// server/routes/userProfileRoutes.js
 const express = require("express");
 const router = express.Router();
-const path = require("path"); // Keep path if needed for extension checking, etc.
-// const fs = require("fs"); // Removed: No longer needed for directory creation
-const multer = require("multer"); // Import multer
+const path = require("path"); 
+const multer = require("multer"); 
 const userProfileController = require("../controllers/userProfileController");
 const authMiddleware = require("../middleware/authMiddleware");
 
-// --- Multer Configuration ---
-// REMOVED: const UPLOAD_DIR = path.resolve(__dirname, "../uploads/govt_ids");
-
-// REMOVED: Ensure upload directory exists block
-// if (!fs.existsSync(UPLOAD_DIR)) {
-//   console.log(`Creating upload directory: ${UPLOAD_DIR}`);
-//   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-// }
-
-// CHANGED: Use memoryStorage instead of diskStorage
-const storage = multer.memoryStorage(); // Store file in memory as a Buffer
-
-// Optional: File filter (example: accept only images/PDF) - Keep this
+const storage = multer.memoryStorage(); 
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype === "image/jpeg" ||
@@ -32,7 +18,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer with memory storage and previous limits/filter
+
 const upload = multer({
   storage: storage, // Use memory storage
   limits: {
@@ -57,21 +43,21 @@ router.put(
 router.post(
   "/me/upload-id",
   authMiddleware,
-  upload.single("govtId"), // 'govtId' must match the name attribute of your file input field
-  userProfileController.uploadGovtId // Controller needs to handle req.file.buffer
+  upload.single("govtId"), 
+  userProfileController.uploadGovtId 
 );
 
 // GET /api/user-profiles/me/listings - Fetch properties listed by current user
 router.get(
   "/me/listings",
-  authMiddleware, // Ensure user is logged in
+  authMiddleware, 
   userProfileController.getMyListings // Use the new controller function
 );
 
 // --- Multer Error Handling Middleware --- (Keep this as is)
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
-    // A Multer error occurred when uploading.
+    
     console.error("Multer Error:", error);
     if (error.code === "LIMIT_FILE_SIZE") {
       return res
@@ -82,9 +68,9 @@ router.use((error, req, res, next) => {
       .status(400)
       .json({ message: `File upload error: ${error.message}` });
   } else if (error) {
-    // An unknown error occurred when uploading.
+    
     console.error("File Upload Error (Non-Multer):", error);
-    // Handle specific errors like the fileFilter error
+    
     if (error.message.startsWith("Invalid file type")) {
       return res.status(400).json({ message: error.message });
     }
@@ -92,7 +78,7 @@ router.use((error, req, res, next) => {
       .status(500)
       .json({ message: `File upload failed: ${error.message}` });
   }
-  // Everything went fine.
+  
   next();
 });
 

@@ -1,6 +1,5 @@
-// src/features/chat/components/AblyConnectionStatus.js
 import React from "react";
-import { useChatContext } from "../context/ChatContext"; // Adjust path if needed
+import { useChatContext } from "../context/ChatContext"; 
 
 const AblyConnectionStatus = () => {
   const { isAblyConnected, ablyError } = useChatContext();
@@ -12,10 +11,10 @@ const AblyConnectionStatus = () => {
         margin: "10px",
         border: "1px solid #ccc",
         backgroundColor: "#f9f9f9",
-        position: "fixed", // Or place it statically in a page
+        position: "fixed", 
         bottom: "10px",
         right: "10px",
-        zIndex: 10000, // Ensure it's visible
+        zIndex: 10000, 
       }}
     >
       <h4>Ably Connection Status</h4>

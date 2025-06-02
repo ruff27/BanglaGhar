@@ -1,24 +1,20 @@
-// src/features/map/components/MapComponent.js
-import React, { useEffect, useRef } from "react"; // Removed useState if mapReady not strictly needed
+import React, { useEffect, useRef } from "react"; 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-// Removed MapLibre-GL specific imports as TileLayer is used for OpenStreetMap directly.
-// If you intend to use MapLibre GL as the renderer for vector tiles,
-// ensure '@maplibre/maplibre-gl-leaflet' is correctly configured and used.
-// For simplicity with OpenStreetMap raster tiles, those are not needed.
 
-import { Box, Typography, Alert, CircularProgress } from "@mui/material"; // Kept for exports
-import { useTranslation } from "react-i18next"; // Kept for exports
-// Removed divisionCenters and normalizePositionArray, assuming properties are pre-processed by useMapData
 
-import { MapContainer, TileLayer, useMap } from "react-leaflet"; // Added useMap
+import { Box, Typography, Alert, CircularProgress } from "@mui/material"; 
+import { useTranslation } from "react-i18next"; 
+
+
+import { MapContainer, TileLayer, useMap } from "react-leaflet"; 
 import MapMarker from "./MapMarker";
 
-const DEFAULT_CENTER = [23.8103, 90.4125]; // Dhaka
+const DEFAULT_CENTER = [23.8103, 90.4125]; 
 const DEFAULT_ZOOM = 7;
 const BANGLADESH_BOUNDS = L.latLngBounds(
-  L.latLng(20.0, 88.0), // Southwest
-  L.latLng(26.75, 92.75) // Northeast
+  L.latLng(20.0, 88.0), 
+  L.latLng(26.75, 92.75) 
 );
 
 // Component to handle map view updates
@@ -38,18 +34,18 @@ function ChangeView({ center, zoom }) {
 }
 
 const MapComponent = ({
-  properties = [], // Expects properties with pre-processed .position objects
-  mapCenter = DEFAULT_CENTER, // Expected as [lat, lng]
+  properties = [], 
+  mapCenter = DEFAULT_CENTER, 
   mapZoom = DEFAULT_ZOOM,
-  // userLocation, // userLocation prop is available if you want to show a marker for it
+  
   selectedProperty,
-  onMarkerClick, // This is onPropertySelect from MapPage
-  onMapMove, // This is handleMapMove from useMapData via MapPage
-  // showLocationAccuracy prop removed, as MapMarker doesn't need it if icon is generic
+  onMarkerClick, 
+  onMapMove, 
+ 
 }) => {
-  const mapRef = useRef(null); // To store the map instance if needed outside react-leaflet context
+  const mapRef = useRef(null); 
 
-  // Ensure mapCenter is always a valid array for <MapContainer/>
+
   const currentCenter =
     Array.isArray(mapCenter) &&
     mapCenter.length === 2 &&
@@ -64,7 +60,7 @@ const MapComponent = ({
   const handleLeafletMapMove = (event) => {
     if (onMapMove) {
       const map = event.target;
-      onMapMove(map.getCenter(), map.getZoom()); // Pass {lat, lng} and zoom
+      onMapMove(map.getCenter(), map.getZoom()); 
     }
   };
 
@@ -85,10 +81,10 @@ const MapComponent = ({
         style={{ height: "100%", width: "100%" }}
         whenCreated={(instance) => {
           mapRef.current = instance;
-        }} // Store map instance
+        }} 
         maxBounds={BANGLADESH_BOUNDS}
-        minZoom={6} // Set a reasonable min zoom for Bangladesh
-        onMoveend={handleLeafletMapMove} // Use onMoveend for less frequent updates
+        minZoom={6} 
+        onMoveend={handleLeafletMapMove} 
         onZoomend={handleLeafletMapMove}
       >
         <ChangeView center={currentCenter} zoom={mapZoom} />
@@ -98,16 +94,14 @@ const MapComponent = ({
         />
 
         {properties.map((property) => {
-          // property.position should be {lat, lng} from useMapData
           if (property && property._id && property.position) {
             return (
               <MapMarker
                 key={property._id}
-                property={property} // Pass the whole property object
-                // position prop is now derived inside MapMarker from property.position
+                property={property} 
                 isSelected={selectedProperty?._id === property._id}
-                onClick={onMarkerClick} // This will call onPropertySelect(property) in MapPage
-                // showPrice can be a prop for MapMarker if needed
+                onClick={onMarkerClick} 
+                
               />
             );
           }
@@ -124,7 +118,6 @@ const MapComponent = ({
   );
 };
 
-// Loading state and Error state components remain the same as in your provided file
 export const MapLoadingState = () => {
   const { t } = useTranslation();
   return (

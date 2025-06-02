@@ -1,5 +1,4 @@
-// src/pages/MyListingsPage.js
-import React from "react"; // Make sure React is imported
+import React from "react";
 import {
   Container,
   Typography,
@@ -9,13 +8,12 @@ import {
   Alert,
   Button,
 } from "@mui/material";
-import useMyListings from "../features/profile/hooks/useMyListings"; // Adjust path
-import PropertyCard from "../features/properties/components/PropertyCard"; // Adjust path
+import useMyListings from "../features/profile/hooks/useMyListings";
+import PropertyCard from "../features/properties/components/PropertyCard"; 
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-// --- START: Import Wishlist Hook and Snackbar Hook ---
-import useWishlist from "../features/properties/hooks/useWishlist"; // <<< Adjust path
-import { useSnackbar } from "../context/SnackbarContext"; // <<< Adjust path
-// --- END: Import ---
+import useWishlist from "../features/properties/hooks/useWishlist"; 
+import { useSnackbar } from "../context/SnackbarContext";
+
 
 const MyListingsPage = () => {
   const { myListings, loading, error, refetchListings } = useMyListings();
@@ -26,10 +24,8 @@ const MyListingsPage = () => {
   const handleEditProperty = (propertyId) => {
     navigate(`/edit-property/${propertyId}`);
   };
-  // --- END: Use Hooks ---
 
   const renderContent = () => {
-    // Use main loading state for initial page load
     if (loading) {
       return (
         <Box sx={{ display: "flex", justifyContent: "center", my: 5 }}>
@@ -69,23 +65,18 @@ const MyListingsPage = () => {
     return (
       <Grid container spacing={3} sx={{ mt: 1 }}>
         {myListings.map((property) => {
-          // --- START: Determine wishlist status and setup toggle ---
           const isWishlisted = wishlistIds.has(property._id);
           const handleToggle = () => {
-            // Pass property ID and the snackbar function as the callback
             toggleWishlist(property._id, (message, severity) => {
               showSnackbar(message, severity);
             });
           };
-          // --- END: Wishlist Logic ---
-
           return (
             <Grid item xs={12} sm={6} md={4} key={property._id}>
-              {/* --- START: Pass wishlist props to PropertyCard --- */}
               <PropertyCard
                 property={property}
-                isWishlisted={isWishlisted} // Pass current status
-                onWishlistToggle={handleToggle} // Pass toggle handler
+                isWishlisted={isWishlisted} 
+                onWishlistToggle={handleToggle} 
               />
 
               <Box
@@ -103,16 +94,7 @@ const MyListingsPage = () => {
                 >
                   Edit Property
                 </Button>
-                {/* You might also add a delete button here later */}
               </Box>
-              {/* --- END: Pass wishlist props --- */}
-              {/* Add Edit/Delete buttons specific to user's own listings here */}
-              {/* Example:
-                            <Box sx={{mt: 1, display: 'flex', gap: 1}}>
-                                <Button size="small" variant="outlined">Edit</Button>
-                                <Button size="small" variant="outlined" color="error">Delete</Button>
-                            </Box>
-                             */}
             </Grid>
           );
         })}
@@ -125,7 +107,6 @@ const MyListingsPage = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         My Listed Properties
       </Typography>
-      {/* Optionally show a small spinner if only the wishlist is loading */}
       {loadingWishlist && <CircularProgress size={20} sx={{ mb: 1 }} />}
       {renderContent()}
     </Container>

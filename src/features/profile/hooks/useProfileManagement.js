@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { CognitoUserAttribute } from "amazon-cognito-identity-js";
-import { userPool } from "../../../aws/CognitoConfig"; // Adjust path as needed
-import { useAuth } from "../../../context/AuthContext"; // Adjust path as needed
+import { userPool } from "../../../aws/CognitoConfig"; 
+import { useAuth } from "../../../context/AuthContext";
 import axios from "axios"; // <<< ADDED for API calls
 
-// Define the API base URL (should match AuthContext or be centralized)
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
@@ -14,21 +13,20 @@ const API_BASE_URL =
  * updates (name, picture, password), account deletion, and dialog states.
  */
 const useProfileManagement = () => {
-  // Get user context, including the JWT token (idToken) and potentially a refresh function
   const {
     user: contextUser,
     logout,
     isLoggedIn,
     idToken,
     checkAuthState,
-  } = useAuth(); // <<< Added idToken and checkAuthState
+  } = useAuth();
 
   // --- State ---
-  const [profileData, setProfileData] = useState(null); // Local copy for display/editing
+  const [profileData, setProfileData] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isUpdating, setIsUpdating] = useState(false); // For async operations (updates, delete)
-  const [dialogError, setDialogError] = useState(""); // For errors within dialogs
+  const [isUpdating, setIsUpdating] = useState(false); 
+  const [dialogError, setDialogError] = useState(""); 
 
   // Dialog states
   const [editNameOpen, setEditNameOpen] = useState(false);
@@ -36,13 +34,9 @@ const useProfileManagement = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Form states for dialogs
-  const [editNameValue, setEditNameValue] = useState(""); // Will hold displayName for editing
+  const [editNameValue, setEditNameValue] = useState(""); 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
-  // --- Fetching (Original Logic - gets Cognito attrs) ---
-  // Keep the original fetch for now, as the previous attempt to remove it caused issues.
-  // We will primarily *use* profileData.displayName later.
   const fetchProfileData = useCallback(async () => {
     if (!isLoggedIn) {
       setLoading(false);
@@ -91,19 +85,13 @@ const useProfileManagement = () => {
         "HOOK: Cognito Attrs Before Merge:",
         JSON.stringify(userAttrs, null, 2)
       );
-
-      // *** IMPORTANT: Merge with contextUser data to get displayName ***
-      // Ensure profileData includes fields from both Cognito (like email_verified)
-      // AND the backend profile (like displayName, approvalStatus)
       const mergedData = {
-        ...userAttrs, // Cognito attributes first
-        ...(contextUser || {}), // Backend profile data from context (overwrites 'name', adds 'displayName', etc.)
-        // Ensure email consistency if needed
+        ...userAttrs, 
+        ...(contextUser || {}), 
         email: userAttrs.email || contextUser?.email,
       };
 
       setProfileData(mergedData);
-      // Initialize edit field with displayName from merged data
       setEditNameValue(mergedData.displayName || mergedData.name || "");
     } catch (err) {
       console.error("Profile Hook Fetch Error:", err);
@@ -112,26 +100,21 @@ const useProfileManagement = () => {
           err?.message || "Unknown error"
         }. Please try logging in again.`
       );
-      setProfileData(null); // Clear data on error
+      setProfileData(null); 
     } finally {
       setLoading(false);
     }
-    // Depend on contextUser as well now
   }, [isLoggedIn, contextUser]);
 
   useEffect(() => {
-    // Fetch data when login status changes OR when contextUser potentially updates (e.g., after login)
     fetchProfileData();
-  }, [fetchProfileData]); // fetchProfileData depends on isLoggedIn and contextUser
+  }, [fetchProfileData]);
 
-  // --- Dialog Open/Close ---
   const openEditNameDialog = useCallback(() => {
-    // START MODIFICATION: Initialize with displayName
-    setEditNameValue(profileData?.displayName || profileData?.name || ""); // Use displayName from profileData
-    // END MODIFICATION
+    setEditNameValue(profileData?.displayName || profileData?.name || "");
     setDialogError("");
     setEditNameOpen(true);
-  }, [profileData]); // Depend on profileData which holds the displayName
+  }, [profileData]);
 
   const closeEditNameDialog = useCallback(() => setEditNameOpen(false), []);
   const openPasswordDialog = useCallback(() => {
@@ -147,9 +130,7 @@ const useProfileManagement = () => {
   }, []);
   const closeDeleteDialog = useCallback(() => setDeleteOpen(false), []);
 
-  // --- Helper for Cognito Actions (Unchanged - Used for Password/Delete/Picture) ---
   const performCognitoAction = useCallback(async (action) => {
-    // ... (Your existing performCognitoAction code remains here) ...
     setIsUpdating(true);
     setDialogError("");
     setError(null);
@@ -181,10 +162,6 @@ const useProfileManagement = () => {
       setIsUpdating(false);
     }
   }, []);
-
-  // --- Action Handlers ---
-
-  // START MODIFICATION: handleUpdateName uses backend API now
   const handleUpdateName = useCallback(async () => {
     if (!editNameValue.trim()) {
       setDialogError("Display name cannot be empty.");
@@ -197,55 +174,51 @@ const useProfileManagement = () => {
 
     setIsUpdating(true);
     setDialogError("");
-    setError(null); // Clear page error
+    setError(null);
 
     try {
-      // Call the backend PUT endpoint
       const response = await axios.put(
-        `${API_BASE_URL}/user-profiles/me`, // Use your API endpoint
-        { displayName: editNameValue.trim() }, // Send only the displayName
+        `${API_BASE_URL}/user-profiles/me`, 
+        { displayName: editNameValue.trim() }, 
         {
           headers: {
-            Authorization: `Bearer ${idToken}`, // Send the JWT token
+            Authorization: `Bearer ${idToken}`, 
             "Content-Type": "application/json",
           },
         }
       );
 
       const updatedDisplayName =
-        response.data.userProfile?.displayName || editNameValue.trim(); // Prefer backend response
+        response.data.userProfile?.displayName || editNameValue.trim(); 
 
       setProfileData((prev) => ({
         ...prev,
-        displayName: updatedDisplayName, // Update displayName in local state
+        displayName: updatedDisplayName, 
       }));
 
       if (checkAuthState) {
-        // This refreshes AuthContext's user object
-        await checkAuthState(); // Make sure to await if it's async
+        await checkAuthState();
       }
 
       closeEditNameDialog();
-      // Consider showing a success snackbar via context or props
     } catch (err) {
       console.error("Error updating profile via API:", err.response || err);
       const apiErrorMessage =
         err.response?.data?.message || "Failed to update profile name.";
-      setDialogError(apiErrorMessage); // Show error in the dialog
-      setError(apiErrorMessage); // Optionally show error on the page too
+      setDialogError(apiErrorMessage);
+      setError(apiErrorMessage);
     } finally {
       setIsUpdating(false);
     }
   }, [
     editNameValue,
-    idToken, // Need token for API call
+    idToken, 
     closeEditNameDialog,
-    checkAuthState, // Add if using context refresh
+    checkAuthState,
   ]);
-  // END MODIFICATION
+  
 
   const handleChangePassword = useCallback(async () => {
-    // ... (Your existing change password logic using performCognitoAction remains here) ...
     if (!oldPassword || !newPassword) {
       setDialogError("Please enter both current and new passwords.");
       return;
@@ -279,7 +252,7 @@ const useProfileManagement = () => {
 
   const handleUpdatePicture = useCallback(
     async (base64String) => {
-      // ... (Your existing update picture logic using performCognitoAction remains here) ...
+
       if (!base64String || !base64String.startsWith("data:image")) {
         setError("Invalid image data format.");
         return;
@@ -296,16 +269,13 @@ const useProfileManagement = () => {
       });
       if (success) {
         setProfileData((prev) => ({ ...prev, picture: base64String }));
-        // Optionally trigger context refresh if picture URL needs to be globally updated
-        // if (checkAuthState) { checkAuthState(); }
       }
     },
     [performCognitoAction /*, checkAuthState*/] // Add dependency if using refresh
   );
 
   return {
-    // Data & State
-    profileData, // Contains merged data including displayName
+    profileData, 
     loading,
     error,
     isUpdating,
@@ -315,7 +285,7 @@ const useProfileManagement = () => {
     passwordOpen,
     deleteOpen,
     // Form Values
-    editNameValue, // Corresponds to displayName now
+    editNameValue, 
     oldPassword,
     newPassword,
     // Form Setters
@@ -330,10 +300,10 @@ const useProfileManagement = () => {
     openDeleteDialog,
     closeDeleteDialog,
     // Actions
-    handleUpdateName, // Updated to use backend API
-    handleChangePassword, // Unchanged
-    handleDeleteAccount, // Unchanged
-    handleUpdatePicture, // Unchanged (still uses Cognito)
+    handleUpdateName, 
+    handleChangePassword, 
+    handleDeleteAccount, 
+    handleUpdatePicture, 
   };
 };
 

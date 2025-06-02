@@ -1,7 +1,3 @@
-// src/admin/components/AdminLayout.js
-// Updated color scheme for a cohesive dark admin dashboard
-// citeturn5file0
-
 import React, { useState } from "react";
 import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -41,17 +37,13 @@ const AdminLayout = () => {
   const handleLogout = () => logout();
 
   const adminNavItems = [
-    // dashboard
     { text: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard" },
-    // pending approvals
     {
       text: "Pending Approvals",
       icon: <PendingActionsIcon />,
       path: "/admin/pending-approvals",
     },
-    // manage users
     { text: "Manage Users", icon: <PeopleIcon />, path: "/admin/users" },
-    // manage listings
     { text: "Manage Listings", icon: <ListAltIcon />, path: "/admin/listings" },
   ];
 

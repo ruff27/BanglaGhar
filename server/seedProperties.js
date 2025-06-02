@@ -1,7 +1,7 @@
 // seedProperties.js (Updated for New Schema & ReferenceError Fix)
 const mongoose = require("mongoose");
 // Ensure this path points to your UPDATED Property model definition
-const Property = require("./models/Property"); // Adjust path if needed
+const Property = require("./models/property"); // Adjust path if needed
 
 // Use your existing connection string or environment variable
 const MONGO_URI =

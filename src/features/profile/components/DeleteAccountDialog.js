@@ -9,7 +9,7 @@ import {
   CircularProgress,
   Typography,
 } from "@mui/material";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 const DeleteAccountDialog = ({
   open,
@@ -18,7 +18,7 @@ const DeleteAccountDialog = ({
   isLoading,
   error,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">

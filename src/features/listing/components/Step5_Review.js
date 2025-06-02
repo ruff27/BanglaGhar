@@ -1,4 +1,3 @@
-// src/features/ListPropertyPage/components/Step5_Review.js (Acts as Step 6: Review)
 import React from "react";
 import {
   Box,
@@ -9,11 +8,11 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Chip, // Added for displaying tags/features
+  Chip, 
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-// Helper to format price (keep as is or enhance)
+
 const formatDisplayPrice = (price, mode) => {
   if (!price) return "N/A";
   const numericPrice = Number(price);
@@ -21,13 +20,12 @@ const formatDisplayPrice = (price, mode) => {
   return `৳ ${numericPrice.toLocaleString()}${mode === "rent" ? "/mo" : ""}`;
 };
 
-// Helper to display boolean/string values nicely
 const formatValue = (value, t) => {
   if (value === true || value === "yes") return t("yes", "Yes");
   if (value === false || value === "no") return t("no", "No");
   if (typeof value === "string" && value) return value;
   if (Array.isArray(value) && value.length > 0) return value.join(", ");
-  return value || "-"; // Handle null, undefined, empty string
+  return value || "-"; 
 };
 
 /**
@@ -45,13 +43,13 @@ const Step5_Review = ({ formData, features, images }) => {
   const isLandOrCommercial =
     formData.propertyType === "land" || formData.propertyType === "commercial";
 
-  // Mapping for standard features (from Step 2)
+  
   const standardFeatureList = [
     { key: "parking", labelKey: "parking" },
     { key: "garden", labelKey: "garden" },
     { key: "airConditioning", labelKey: "air_conditioning" },
     { key: "pool", labelKey: "swimming_pool" },
-    // Add others included in Step3_Features checkboxes
+    
   ];
 
   return (

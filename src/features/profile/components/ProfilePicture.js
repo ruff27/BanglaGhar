@@ -12,7 +12,7 @@ import {
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import PersonIcon from "@mui/icons-material/Person";
 import { styled } from "@mui/material/styles";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 const Input = styled("input")({
   display: "none",
@@ -51,13 +51,12 @@ const ProfilePicture = ({
   isUpdating,
   onError,
 }) => {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("image/")) {
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        // Error message kept as is, no key found
         if (onError) onError(`Image size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
         event.target.value = null;
         return;
@@ -67,12 +66,11 @@ const ProfilePicture = ({
         onPictureChange(reader.result);
       };
       reader.onerror = () => {
-        // Error message kept as is, no key found
         if (onError) onError("Failed to read image file.");
       };
       reader.readAsDataURL(file);
     } else if (file) {
-      // Error message kept as is, no key found
+
       if (onError)
         onError("Please select a valid image file (JPEG, PNG, GIF, etc.).");
     }

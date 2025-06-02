@@ -1,4 +1,3 @@
-// src/features/map/components/MapPopup.js
 import React from "react";
 import { Popup } from "react-leaflet";
 import { Box, Typography, Button, Divider, Chip, Stack } from "@mui/material";
@@ -30,23 +29,23 @@ const formatPrice = (price, listingType) => {
  */
 const constructLocationString = (property) => {
   if (!property) return "Location unavailable";
-  // If the property has a pre-constructed address string (e.g., from useMapData), use it
+  
   if (property.address) return property.address;
-  // If the property has a legacy location field, use it
+  
   if (property.location) return property.location;
 
-  // Otherwise construct from individual fields
+  
   const locationParts = [
-    // Variable is declared as 'locationParts'
+
     property.addressLine1,
     property.addressLine2,
     property.upazila,
     property.cityTown,
     property.district,
     property.postalCode,
-  ].filter(Boolean); // filter(Boolean) removes any null, undefined, or empty string values
+  ].filter(Boolean);
 
-  // Use 'locationParts' here
+  
   return locationParts.length > 0
     ? locationParts.join(", ")
     : "Location details not available";

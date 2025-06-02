@@ -1,5 +1,4 @@
-// src/admin/hooks/useManageListings.js
-import { useState, useEffect, useCallback, useMemo } from "react"; // Added useMemo
+import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { debounce } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
@@ -33,7 +32,6 @@ export const useManageListings = () => {
   const [selected, setSelected] = useState([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  // --- REVISED Debounced Reset Page Logic ---
   const resetPage = useCallback(() => {
     setPage(0);
   }, [setPage]);
@@ -41,7 +39,6 @@ export const useManageListings = () => {
   const debouncedResetPage = useMemo(() => {
     return debounce(resetPage, 500);
   }, [resetPage]);
-  // --- End of Revised Logic ---
 
   // Debounce cleanup on unmount
   useEffect(() => {
@@ -61,7 +58,6 @@ export const useManageListings = () => {
     debouncedResetPage(); // Call memoized debounced function
   };
 
-  // Fetch Listings Effect (No changes needed here)
   useEffect(() => {
     const fetchListings = async () => {
       if (!idToken) return;
@@ -112,7 +108,6 @@ export const useManageListings = () => {
     filterFeatured,
   ]);
 
-  // --- Selection Handlers (No changes needed here) ---
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
       const newSelecteds = listings.map((n) => n._id);
@@ -140,7 +135,6 @@ export const useManageListings = () => {
 
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  // --- Sorting & Pagination Handlers (No changes needed here) ---
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -153,7 +147,6 @@ export const useManageListings = () => {
     setPage(0);
   };
 
-  // --- Individual Action Handlers (No changes needed here, assuming previous fix applied) ---
   const handleVisibilityToggle = useCallback(
     async (id, isHidden) => {
       if (!idToken) {
@@ -182,7 +175,7 @@ export const useManageListings = () => {
         setActionLoading((prev) => ({ ...prev, [currentActionKey]: false }));
       }
     },
-    [idToken, showSnackbar, setListings, setActionLoading] // Keep dependencies updated
+    [idToken, showSnackbar, setListings, setActionLoading]
   );
 
   const handleFeatureToggle = useCallback(
@@ -223,10 +216,9 @@ export const useManageListings = () => {
         setActionLoading((prev) => ({ ...prev, [currentActionKey]: false }));
       }
     },
-    [idToken, showSnackbar, setListings, setActionLoading] // Keep dependencies updated
+    [idToken, showSnackbar, setListings, setActionLoading]
   );
 
-  // --- Bulk Delete Handlers (No changes needed here) ---
   const handleDeleteSelected = () => {
     if (selected.length === 0 || !idToken) return;
     setConfirmDialogOpen(true);
@@ -262,7 +254,6 @@ export const useManageListings = () => {
     setConfirmDialogOpen(false);
   };
 
-  // Return state and handlers
   return {
     listings,
     loading,

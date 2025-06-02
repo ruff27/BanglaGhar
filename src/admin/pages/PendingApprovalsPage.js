@@ -1,4 +1,3 @@
-// src/admin/pages/PendingApprovalsPage.js
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import {
@@ -16,14 +15,13 @@ import {
   TableRow,
   Button,
   Link,
-  Snackbar, // Added Link, Snackbar
+  Snackbar,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import VisibilityIcon from "@mui/icons-material/Visibility"; // For viewing ID potentially
-import { useAuth } from "../../context/AuthContext"; // Adjust path as needed
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { useAuth } from "../../context/AuthContext";
 
-// Define the API base URL
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
@@ -32,7 +30,7 @@ const PendingApprovalsPage = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [actionLoading, setActionLoading] = useState({}); // Loading state per user action
+  const [actionLoading, setActionLoading] = useState({});
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -103,7 +101,6 @@ const PendingApprovalsPage = () => {
         endpoint,
         {},
         {
-          // PUT request, empty body ok
           headers: { Authorization: `Bearer ${idToken}` },
         }
       );
@@ -123,9 +120,8 @@ const PendingApprovalsPage = () => {
       const errorMsg =
         err.response?.data?.message || `Failed to ${action} user.`;
       setSnackbar({ open: true, message: errorMsg, severity: "error" });
-      // setError(errorMsg); // Optionally set page-level error too
     } finally {
-      setActionLoading((prev) => ({ ...prev, [userId]: false })); // Clear loading for specific user
+      setActionLoading((prev) => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -138,13 +134,11 @@ const PendingApprovalsPage = () => {
       });
       return;
     }
-    setViewIdLoading((prev) => ({ ...prev, [userId]: true })); // Set loading for this button
+    setViewIdLoading((prev) => ({ ...prev, [userId]: true }));
 
     try {
       const response = await axios.get(
-        // 👇👇👇 THIS IS THE CORRECTED LINE 👇👇👇
         `${API_BASE_URL}/admin/get-signed-id-url/${userId}`,
-        // 👆👆👆 THIS IS THE CORRECTED LINE 👆👆👆
         {
           headers: { Authorization: `Bearer ${idToken}` },
         }
@@ -161,7 +155,6 @@ const PendingApprovalsPage = () => {
         });
       }
     } catch (err) {
-      // Updated error logging from previous step:
       console.error(
         `Error fetching signed URL for user ${userId}. Requested URL: ${API_BASE_URL}/admin/get-signed-id-url/${userId}`,
         err.response?.data || err.message
@@ -174,8 +167,6 @@ const PendingApprovalsPage = () => {
     }
   };
 
-  // --- Render Logic ---
-
   if (isLoading) {
     return (
       <Container
@@ -183,7 +174,7 @@ const PendingApprovalsPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: "calc(100vh - 128px)" /* Adjust based on layout */,
+          minHeight: "calc(100vh - 128px)"
         }}
       >
         <CircularProgress />
@@ -234,9 +225,7 @@ const PendingApprovalsPage = () => {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    {/* Format date nicely */}
                     {new Date(user.createdAt).toLocaleDateString("en-AU", {
-                      // Example locale
                       year: "numeric",
                       month: "short",
                       day: "numeric",
@@ -247,10 +236,10 @@ const PendingApprovalsPage = () => {
                   <TableCell sx={{ wordBreak: "break-all" }}>
                     {user.govtIdUrl ? (
                       <Button
-                        variant="outlined" // Or "text"
+                        variant="outlined"
                         size="small"
-                        onClick={() => handleViewIdClick(user._id)} // Call the handler
-                        disabled={viewIdLoading[user._id]} // Disable while loading this specific ID's URL
+                        onClick={() => handleViewIdClick(user._id)}
+                        disabled={viewIdLoading[user._id]}
                         startIcon={
                           viewIdLoading[user._id] ? (
                             <CircularProgress size={14} />

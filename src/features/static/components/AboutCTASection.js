@@ -1,14 +1,14 @@
 import React from "react";
 import { Box, Typography, Button, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next"; 
 
 /**
  * AboutCTASection Component
  */
 const AboutCTASection = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation(); 
 
   return (
     <Box sx={{ textAlign: "center", py: 6, backgroundColor: "#f8f9fa" }}>

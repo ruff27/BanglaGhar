@@ -131,11 +131,9 @@ const authMiddleware = async (req, res, next) => {
 
     // 2. Check if PEM exists for this kid
     if (!pem) {
-      // If PEM is missing even after potential fetch above, the key might be new or fetch failed transiently
       console.warn(
         `[Auth Middleware] No PEM found for kid: ${kid}. Token might be invalid or JWKs outdated.`
       );
-      // Optionally try one more fetch here? Or just reject. Let's reject for now.
       return res.status(401).json({
         message: `Cannot verify token: Unknown key ID. Please try again.`,
       });

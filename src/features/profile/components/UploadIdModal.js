@@ -1,7 +1,3 @@
-// src/features/profile/components/UploadIdModal.js
-// Polished Upload Modal with compact, professional UX
-// citeturn2file0
-
 import React, { useState, useCallback } from "react";
 import axios from "axios";
 import { styled, alpha } from "@mui/material/styles";

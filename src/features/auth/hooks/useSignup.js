@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
+import { useAuth } from "../../../context/AuthContext"; 
 
 /** 
  * @hook useSignup
@@ -9,10 +9,10 @@ import { useAuth } from "../../../context/AuthContext"; // Adjust path if needed
  */
 const useSignup = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth(); // Get signup function from context
+  const { signup } = useAuth(); 
 
   // Form fields state
-  const [email, setEmail] = useState(""); // Renamed from useremail for consistency
+  const [email, setEmail] = useState(""); 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -38,7 +38,7 @@ const useSignup = () => {
   const validatePassword = useCallback((pwd) => {
     setPasswordValidation({
       hasNumber: /\d/.test(pwd),
-      hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd), // Match Cognito special chars
+      hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd), 
       hasUppercase: /[A-Z]/.test(pwd),
       hasLowercase: /[a-z]/.test(pwd),
       hasMinLength: pwd.length >= 8, 
@@ -53,7 +53,6 @@ const useSignup = () => {
     return Object.values(passwordValidation).every(Boolean);
   }, [passwordValidation]);
 
-  // --- Input Change Handlers ---
   const handleEmailChange = useCallback(
     (event) => {
       setEmail(event.target.value);
@@ -74,7 +73,7 @@ const useSignup = () => {
     (event) => {
       const newPassword = event.target.value;
       setPassword(newPassword);
-      validatePassword(newPassword); // Validate on change
+      validatePassword(newPassword); 
       if (error) setError("");
     },
     [error, validatePassword]
@@ -96,7 +95,7 @@ const useSignup = () => {
   const handleSignupSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      setError(""); // Clear previous errors
+      setError(""); 
 
       // --- Validation ---
       if (!email || !username || !password || !confirmPass) {
@@ -120,18 +119,15 @@ const useSignup = () => {
       setIsSubmitting(true);
 
       try {
-        console.log(`Attempting signup for: ${email}, username: ${username}`); // Debug log
-        await signup(email, username, password); // Call signup from AuthContext
-        console.log(`Signup successful for: ${email}`); // Debug log
-        setOpenSnackbar(true); // Show success message
-        // Navigate to OTP verification page after delay
+        console.log(`Attempting signup for: ${email}, username: ${username}`); 
+        await signup(email, username, password); 
+        console.log(`Signup successful for: ${email}`); 
+        setOpenSnackbar(true); 
         setTimeout(() => {
-          // Pass email to OTP page for verification lookup
           navigate("/verify-otp", { state: { email: email } });
         }, 1500);
       } catch (err) {
-        console.error("Signup error:", err); // Log actual error
-        // Provide user-friendly error messages
+        console.error("Signup error:", err); 
         const message = err.message || "Signup failed. Please try again.";
         if (message.includes("UsernameExistsException")) {
           setError("An account with this email already exists.");
@@ -139,7 +135,6 @@ const useSignup = () => {
           setError(
             "Password does not meet requirements. Check criteria below."
           );
-          // Re-validate to ensure UI hints are correct (though isPasswordValid should prevent this)
           validatePassword(password);
         } else {
           setError(message);
@@ -158,11 +153,8 @@ const useSignup = () => {
       navigate,
       validatePassword,
     ]
-  ); // Dependencies
-
-  /**
-   * Handles closing the success snackbar.
-   */
+  );
+  
   const handleCloseSnackbar = useCallback((event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -170,7 +162,6 @@ const useSignup = () => {
     setOpenSnackbar(false);
   }, []);
 
-  // Return state and handlers needed by the component
   return {
     email,
     username,
@@ -179,8 +170,8 @@ const useSignup = () => {
     error,
     isSubmitting,
     openSnackbar,
-    passwordValidation, // Pass validation state for UI feedback
-    isPasswordValid: isPasswordValid(), // Pass the result of the check
+    passwordValidation, 
+    isPasswordValid: isPasswordValid(), 
     handleEmailChange,
     handleUsernameChange,
     handlePasswordChange,
