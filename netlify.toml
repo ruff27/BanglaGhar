@@ -1,0 +1,10 @@
+# netlify.toml
+[build]
+  base = "server"
+  functions = "netlify/functions"
+  command = "npm install"
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true

@@ -5,8 +5,6 @@ require("dotenv").config({
   path: path.resolve(__dirname, "./.env"), // Updated to point to root directory
 });
 
-
-
 const aiRoutes = require("./routes/aiRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
@@ -59,8 +57,10 @@ app.get("/", (req, res) => {
   res.send("Hello from the backend server! MongoDB connection is active.");
 });
 
-// 7) Start Server
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+// // 7) Start Server
+// const PORT = process.env.PORT || 5001;
+// app.listen(PORT, () => {
+//   console.log(`Server listening on port ${PORT}`);
+// });  🎉  This has been commented out for deployment on Netlify 🎉
+
+module.exports = { app };
