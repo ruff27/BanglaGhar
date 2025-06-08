@@ -1,4 +1,5 @@
 import React from "react";
+import axios from "axios";
 import "./App.css";
 import {
   BrowserRouter as Router,
@@ -21,11 +22,11 @@ import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 import PropertiesPage from "./features/properties/PropertiesPage";
 import PropertyDetailPage from "./features/properties/pages/PropertyDetailPage";
-import MapPage from "./features/map/MapPage"; 
+import MapPage from "./features/map/MapPage";
 import Saved from "./pages/Saved";
 import UserProfilePage from "./features/profile/UserProfilePage";
-import AdminRoutes from "./admin/AdminRoutes"; 
-import AdminProtectedRoute from "./components/common/AdminProtectedRoute"; 
+import AdminRoutes from "./admin/AdminRoutes";
+import AdminProtectedRoute from "./components/common/AdminProtectedRoute";
 import ChatPage from "./features/chat/ChatPage";
 import EditPropertyPage from "./pages/EditPropertyPage";
 import { theme } from "./styles/theme";
@@ -34,6 +35,22 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider } from "./context/AuthContext";
 import { SnackbarProvider } from "./context/SnackbarContext";
 import { ChatProvider } from "./features/chat/context/ChatContext";
+
+// Global Axios Configuration
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || '/api';
+
+axios.interceptors.request.use(
+  (config) => {
+    const idToken = localStorage.getItem('idToken');
+    if (idToken) {
+      config.headers['Authorization'] = `Bearer ${idToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 const MainLayout = () => (
   <div
@@ -110,7 +127,6 @@ function App() {
                     path="/edit-property/:propertyId"
                     element={<EditPropertyPage />}
                   />
-
                   <Route path="/user-profile" element={<UserProfilePage />} />
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/chat/:conversationId" element={<ChatPage />} />
@@ -128,6 +144,7 @@ function App() {
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/list-property" element={<ListProperty />} />
                 </Route>
+
                 <Route element={<AdminProtectedRoute />}>
                   <Route
                     path="/admin/*"
@@ -138,7 +155,6 @@ function App() {
                     }
                   />
                 </Route>
-
               </Routes>
             </Router>
           </ChatProvider>
