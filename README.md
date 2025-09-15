@@ -1,70 +1,103 @@
-# Getting Started with Create React App
+# 🏠 BanglaGhar – Real Estate Platform for Bangladesh
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![React](https://img.shields.io/badge/Frontend-React-blue?logo=react) 
+![Next.js](https://img.shields.io/badge/Framework-Next.js-black?logo=next.js) 
+![Node.js](https://img.shields.io/badge/Backend-Node.js-green?logo=node.js) 
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-green?logo=mongodb) 
+![AWS](https://img.shields.io/badge/Cloud-AWS-orange?logo=amazonaws) 
+![Netlify](https://img.shields.io/badge/Hosting-Netlify-teal?logo=netlify) 
+![Vercel](https://img.shields.io/badge/Hosting-Vercel-black?logo=vercel)
 
-## Available Scripts
+BanglaGhar is a **bilingual web-based real estate platform** tailored for the Bangladeshi property market.  
+It connects **property advertisers (landlords)** with **tenants** through a **secure, user-friendly, and localized** experience.  
 
-In the project directory, you can run:
+The platform includes property listings, interactive maps, dual-language support (English & Bangla), real-time chat, AI-generated property descriptions, and an admin dashboard for secure verification and content moderation.  
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## ✨ Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 🏡 Property Listings
+- Detailed listings with **price, area, images, amenities, and location** info.
+- Editable AI-generated property descriptions (using **NVIDIA AI + Google Translate**).
+- **Bangla/English toggle** via `react-i18next`.
 
-### `npm test`
+### 🔎 Search & Filter
+- Filter by **city/area, property type, price, bedrooms, bathrooms, area (sqft)**.
+- Interactive **map-based property browsing** using **Leaflet.js + OpenStreetMap**.
+- Alert system for inaccurate location data.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 💬 Real-Time Chat & Notifications
+- **Private chat** between tenants and landlords (Ably API).
+- In-app **notifications** when receiving new messages.
 
-### `npm run build`
+### 👤 Secure Authentication & User Roles
+- OTP-based **email login** with **AWS Cognito**.
+- User roles: **Tenant, Landlord, Admin**.
+- Admin dashboard for:
+  - Approving/rejecting listings.
+  - Verifying user NID uploads.
+  - Managing users and content.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 🌐 Bilingual Support
+- Seamless **language toggle (English/Bangla)**.
+- Improved translation with **Google Translate API** and manual refinements.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📸 Screenshots
 
-### `npm run eject`
+| Homepage | Property Listing | Map Integration |
+|----------|-----------------|-----------------|
+| ![Home](./screenshots/home.png) | ![Listing](./screenshots/listing.png) | ![Map](./screenshots/map.png) |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Chat System | Admin Dashboard | Bangla Translation |
+|-------------|----------------|-------------------|
+| ![Chat](./screenshots/chat.png) | ![Admin](./screenshots/admin.png) | ![Bangla](./screenshots/bangla.png) |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+> 🖼️ Place all images inside the `/screenshots` folder in your project root.  
+> Filenames should match what you put in the links above.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🛠 Tech Stack
 
-## Learn More
+**Frontend:**  
+- React.js + Material UI  
+- Next.js (for frontend + API routes)  
+- Tailwind CSS  
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+**Backend & Cloud Services:**  
+- Node.js + Express  
+- Netlify (backend hosting)  
+- MongoDB Atlas (database)  
+- AWS Cognito (authentication)  
+- AWS S3 (file & image storage)  
+- AWS Lambda + API Gateway  
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Integrations:**  
+- Ably API (real-time chat)  
+- NVIDIA AI + Google Translate (property descriptions)  
+- Leaflet.js + OpenStreetMap (maps & geolocation)  
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## ⚙️ Deployment
 
-### Analyzing the Bundle Size
+Deployment follows a **Vercel + Netlify + AWS** setup :contentReference[oaicite:0]{index=0}:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 🔧 Prerequisites
+- GitHub repository access
+- Vercel account (for frontend)
+- Netlify account (for backend)
+- AWS account with:
+  - Cognito (user authentication)
+  - S3 bucket (image & ID storage)
+  - IAM roles
+  - Lambda + API Gateway (backend services)
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### 🚀 Steps
+1. **Clone the repo**  
+   ```bash
+   git clone <repo-url>
+   cd banglaghar
