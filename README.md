@@ -17,76 +17,59 @@ The platform includes property listings, interactive maps, dual-language support
 
 ## ✨ Features
 
-### 🏡 Property Listings
-- Detailed listings with **price, area, images, amenities, and location** info.
-- Editable AI-generated property descriptions (using **NVIDIA AI + Google Translate**).
-- **Bangla/English toggle** via `react-i18next`.
-
-### 🔎 Search & Filter
-- Filter by **city/area, property type, price, bedrooms, bathrooms, area (sqft)**.
-- Interactive **map-based property browsing** using **Leaflet.js + OpenStreetMap**.
-- Alert system for inaccurate location data.
-
-### 💬 Real-Time Chat & Notifications
-- **Private chat** between tenants and landlords (Ably API).
-- In-app **notifications** when receiving new messages.
-
-### 👤 Secure Authentication & User Roles
-- OTP-based **email login** with **AWS Cognito**.
-- User roles: **Tenant, Landlord, Admin**.
-- Admin dashboard for:
-  - Approving/rejecting listings.
-  - Verifying user NID uploads.
-  - Managing users and content.
-
-### 🌐 Bilingual Support
-- Seamless **language toggle (English/Bangla)**.
-- Improved translation with **Google Translate API** and manual refinements.
+- 🏡 Property Listings with filters, images, AI-generated descriptions, and Bangla/English toggle.  
+- 🔎 Search & Filter by city, price, property type, rooms, and area.  
+- 💬 Real-Time Chat and Notifications (Ably API).  
+- 👤 Secure OTP-based Authentication (AWS Cognito).  
+- 🛠️ Admin Dashboard for NID verification, listing approval, and user management.  
+- 🌐 Bilingual Support (English + Bangla).  
 
 ---
 
 ## 📸 Screenshots
 
 ### 🔑 Authentication
-![OTP Login](./screenshots/otp.png)  
-*Secure OTP-based login using AWS Cognito.*
+Secure OTP-based login powered by **AWS Cognito**.  
+![OTP Login](./screenshots/otp.png)
 
 ---
 
-### 🏘️ Property Listings
-![Property Page](./screenshots/property.png)  
-![Property Page 2](./screenshots/property2.png)  
-*Detailed listings with images, amenities, and price filters.*
+### 🏘️ Property Browsing
+Browse properties with a clean UI, filters, and Bangla/English toggle.  
+| Property View | Alternative Property Layout |
+|---------------|-----------------------------|
+| ![Property](./screenshots/property.png) | ![Property2](./screenshots/property2.png) |
 
 ---
 
 ### 📝 Add & Manage Listings
-![Add Listing](./screenshots/listing.png)  
-![Manage Listings](./screenshots/mnglistings.png)  
-*Landlords can post and manage property listings.*
+Post new properties and manage existing listings.  
+| Add New Listing | Manage Listings |
+|-----------------|-----------------|
+| ![Listing](./screenshots/listing.png) | ![Manage Listings](./screenshots/mnglistings.png) |
 
 ---
 
 ### 💬 Communication
-![Chat](./screenshots/chat.png)  
-![Notification](./screenshots/notification.png)  
-*Real-time chat with in-app notifications.*
+Real-time chat between landlords and tenants, plus notifications for new messages.  
+| Chat Window | Notifications |
+|-------------|---------------|
+| ![Chat](./screenshots/chat.png) | ![Notification](./screenshots/notification.png) |
 
 ---
 
-### 🛠️ Admin & Deployment
-![Admin Dashboard](./screenshots/admindashboard.png)  
-![AWS Deployment](./screenshots/awsuser.png)  
-*Admin dashboard for verification and AWS service setup.*
+### 🛠️ Administration & Deployment
+Admin dashboard for secure verification and AWS deployment interface.  
+| Admin Dashboard | AWS User Setup |
+|-----------------|----------------|
+| ![Admin](./screenshots/admindashboard.png) | ![AWS User](./screenshots/awsuser.png) |
 
 ---
 
 ## 🛠 Tech Stack
 
 **Frontend:**  
-- React.js + Material UI  
-- Next.js (for frontend + API routes)  
-- Tailwind CSS  
+- React.js + Material UI (for frontend and API routes)
 
 **Backend & Cloud Services:**  
 - Node.js + Express  
@@ -99,7 +82,7 @@ The platform includes property listings, interactive maps, dual-language support
 **Integrations:**  
 - Ably API (real-time chat)  
 - NVIDIA AI + Google Translate (property descriptions)  
-- Leaflet.js + OpenStreetMap (maps & geolocation)  
+- OpenCageMap (maps & geolocation)  
 
 ---
 
@@ -107,18 +90,38 @@ The platform includes property listings, interactive maps, dual-language support
 
 Deployment follows a **Vercel + Netlify + AWS** setup :contentReference[oaicite:0]{index=0}:
 
-### 🔧 Prerequisites
-- GitHub repository access
-- Vercel account (for frontend)
-- Netlify account (for backend)
-- AWS account with:
-  - Cognito (user authentication)
-  - S3 bucket (image & ID storage)
-  - IAM roles
-  - Lambda + API Gateway (backend services)
+1. Clone repo → `git clone <repo-url>`  
+2. Configure environment variables on **Netlify** (backend) and **Vercel** (frontend).  
+3. Deploy backend (Netlify) → runs via `netlify.toml`.  
+4. Deploy frontend (Vercel).  
+5. Verify with OTP login, property listings, chat, and admin dashboard.  
 
-### 🚀 Steps
-1. **Clone the repo**  
-   ```bash
-   git clone <repo-url>
-   cd banglaghar
+---
+
+## 👥 Contributors
+
+| Name | ID | Contributions |
+|------|----|---------------|
+| Ruffin Remad | 103840173 | UI development, Map API integration, property updates, static page translations, chat UI prototype:contentReference[oaicite:1]{index=1}:contentReference[oaicite:2]{index=2} |
+| Ankit Malik | 103531273 | Chat & notifications, AI descriptions, AWS S3/IAM setup, bug fixes:contentReference[oaicite:3]{index=3}:contentReference[oaicite:4]{index=4} |
+| Shivam Sharma | 103800575 | Backend for chat, NVIDIA AI integration, translation API:contentReference[oaicite:5]{index=5}:contentReference[oaicite:6]{index=6} |
+| Aaradhya Lamsal | 103828166 | UI/UX design, frontend enhancements, map improvements:contentReference[oaicite:7]{index=7}:contentReference[oaicite:8]{index=8} |
+| Prabesh Bhattarai | 104085535 | AWS services deployment, Sprint documentation:contentReference[oaicite:9]{index=9}:contentReference[oaicite:10]{index=10} |
+| Ashim Adhikari | 104104333 | System architecture docs, Scrum (Jira), OTP in Cognito:contentReference[oaicite:11]{index=11}:contentReference[oaicite:12]{index=12} |
+| Nur E Siam | 103842784 | Dual translation feature, UI fixes, final delivery:contentReference[oaicite:13]{index=13}:contentReference[oaicite:14]{index=14} |
+
+---
+
+## 📚 Learning Outcomes
+
+From this project, I (Ruffin) gained valuable technical and professional skills :contentReference[oaicite:15]{index=15}:  
+- **Technical:** React.js, Node.js/Express, MongoDB Atlas, AWS Cognito/S3, Ably API, Leaflet/OSM.  
+- **Professional:** Agile teamwork, sprint planning, client communication, technical documentation, problem-solving.  
+
+This project has been pivotal in shaping my understanding of **full-stack development** and the challenges of delivering a **production-ready platform** in a team environment.  
+
+---
+
+## 📜 License
+This project was developed as part of **COS40006/EAT40006 Engineering Project B** at **Swinburne University of Technology**.  
+All rights reserved by the project contributors.
