@@ -102,13 +102,13 @@ Deployment follows a **Vercel + Netlify + AWS** setup :contentReference[oaicite:
 
 | Name | ID | Contributions |
 |------|----|---------------|
-| Ruffin Remad | 103840173 | UI development, Map API integration, property updates, static page translations, chat UI prototype:contentReference[oaicite:1]{index=1}:contentReference[oaicite:2]{index=2} |
-| Ankit Malik | 103531273 | Chat & notifications, AI descriptions, AWS S3/IAM setup, bug fixes:contentReference[oaicite:3]{index=3}:contentReference[oaicite:4]{index=4} |
-| Shivam Sharma | 103800575 | Backend for chat, NVIDIA AI integration, translation API:contentReference[oaicite:5]{index=5}:contentReference[oaicite:6]{index=6} |
-| Aaradhya Lamsal | 103828166 | UI/UX design, frontend enhancements, map improvements:contentReference[oaicite:7]{index=7}:contentReference[oaicite:8]{index=8} |
-| Prabesh Bhattarai | 104085535 | AWS services deployment, Sprint documentation:contentReference[oaicite:9]{index=9}:contentReference[oaicite:10]{index=10} |
-| Ashim Adhikari | 104104333 | System architecture docs, Scrum (Jira), OTP in Cognito:contentReference[oaicite:11]{index=11}:contentReference[oaicite:12]{index=12} |
-| Nur E Siam | 103842784 | Dual translation feature, UI fixes, final delivery:contentReference[oaicite:13]{index=13}:contentReference[oaicite:14]{index=14} |
+| Ruffin Remad | 103840173 | UI development, Map API integration, property updates, static page translations, chat UI |
+| Ankit Malik | 103531273 | Chat & notifications, AI descriptions, AWS S3/IAM setup, bug fixes |
+| Shivam Sharma | 103800575 | Backend for chat, NVIDIA AI integration, translation API |
+| Aaradhya Lamsal | 103828166 | UI/UX design, frontend enhancements, map improvements |
+| Prabesh Bhattarai | 104085535 | AWS services deployment, Sprint documentation |
+| Ashim Adhikari | 104104333 | System architecture docs, Scrum (Jira), OTP in Cognito |
+| Nur E Siam | 103842784 | Dual translation feature, UI fixes, final delivery |
 
 ---
 
