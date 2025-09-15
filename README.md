@@ -47,16 +47,37 @@ The platform includes property listings, interactive maps, dual-language support
 
 ## 📸 Screenshots
 
-| Homepage | Property Listing | Map Integration |
-|----------|-----------------|-----------------|
-| ![Home](./screenshots/home.png) | ![Listing](./screenshots/listing.png) | ![Map](./screenshots/map.png) |
+### 🔑 Authentication
+![OTP Login](./screenshots/otp.png)  
+*Secure OTP-based login using AWS Cognito.*
 
-| Chat System | Admin Dashboard | Bangla Translation |
-|-------------|----------------|-------------------|
-| ![Chat](./screenshots/chat.png) | ![Admin](./screenshots/admin.png) | ![Bangla](./screenshots/bangla.png) |
+---
 
-> 🖼️ Place all images inside the `/screenshots` folder in your project root.  
-> Filenames should match what you put in the links above.
+### 🏘️ Property Listings
+![Property Page](./screenshots/property.png)  
+![Property Page 2](./screenshots/property2.png)  
+*Detailed listings with images, amenities, and price filters.*
+
+---
+
+### 📝 Add & Manage Listings
+![Add Listing](./screenshots/listing.png)  
+![Manage Listings](./screenshots/mnglistings.png)  
+*Landlords can post and manage property listings.*
+
+---
+
+### 💬 Communication
+![Chat](./screenshots/chat.png)  
+![Notification](./screenshots/notification.png)  
+*Real-time chat with in-app notifications.*
+
+---
+
+### 🛠️ Admin & Deployment
+![Admin Dashboard](./screenshots/admindashboard.png)  
+![AWS Deployment](./screenshots/awsuser.png)  
+*Admin dashboard for verification and AWS service setup.*
 
 ---
 
