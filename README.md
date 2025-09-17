@@ -11,7 +11,15 @@
 BanglaGhar is a **bilingual web-based real estate platform** tailored for the Bangladeshi property market.  
 It connects **property advertisers (landlords)** with **tenants** through a **secure, user-friendly, and localized** experience.  
 
-The platform includes property listings, interactive maps, dual-language support (English & Bangla), real-time chat, AI-generated property descriptions, and an admin dashboard for secure verification and content moderation.  
+---
+
+## 🌍 Homepage (Bilingual Support)
+
+Bangla and English versions of the homepage.  
+
+| Bangla Homepage | English Homepage |  
+|-----------------|------------------|  
+| ![Bangla Home](./screenshots/homebng.png) | ![English Home](./screenshots/homeeng.png) |  
 
 ---
 
@@ -28,41 +36,48 @@ The platform includes property listings, interactive maps, dual-language support
 
 ## 📸 Screenshots
 
-### 🔑 Authentication
-Secure OTP-based login powered by **AWS Cognito**.  
-![OTP Login](./screenshots/otp.png)
+### 🔑 Authentication  
+Full authentication workflow with sign-in, sign-up, and OTP verification.  
+
+| Sign In | Sign Up | OTP Verification |  
+|---------|----------|------------------|  
+| ![Sign In](./screenshots/signin.png) | ![Sign Up](./screenshots/signup.png) | ![OTP Login](./screenshots/otp.png) |  
 
 ---
 
-### 🏘️ Property Browsing
+### 🏘️ Property Browsing  
 Browse properties with a clean UI, filters, and Bangla/English toggle.  
-| Property View | Alternative Property Layout |
-|---------------|-----------------------------|
-| ![Property](./screenshots/property.png) | ![Property2](./screenshots/property2.png) |
+
+| Property View | Alternative Property Layout |  
+|---------------|-----------------------------|  
+| ![Property](./screenshots/property.png) | ![Property2](./screenshots/property2.png) |  
 
 ---
 
-### 📝 Add & Manage Listings
+### 📝 Add & Manage Listings  
 Post new properties and manage existing listings.  
-| Add New Listing | Manage Listings |
-|-----------------|-----------------|
-| ![Listing](./screenshots/listing.png) | ![Manage Listings](./screenshots/mnglistings.png) |
+
+| Add New Listing | Manage Listings |  
+|-----------------|-----------------|  
+| ![Listing](./screenshots/listing.png) | ![Manage Listings](./screenshots/mnglistings.png) |  
 
 ---
 
-### 💬 Communication
+### 💬 Communication  
 Real-time chat between landlords and tenants, plus notifications for new messages.  
-| Chat Window | Notifications |
-|-------------|---------------|
-| ![Chat](./screenshots/chat.png) | ![Notification](./screenshots/notification.png) |
+
+| Chat Window | Notifications |  
+|-------------|---------------|  
+| ![Chat](./screenshots/chat.png) | ![Notification](./screenshots/notification.png) |  
 
 ---
 
-### 🛠️ Administration & Deployment
+### 🛠️ Administration & Deployment  
 Admin dashboard for secure verification and AWS deployment interface.  
-| Admin Dashboard | AWS User Setup |
-|-----------------|----------------|
-| ![Admin](./screenshots/admindashboard.png) | ![AWS User](./screenshots/awsuser.png) |
+
+| Admin Dashboard | AWS User Setup |  
+|-----------------|----------------|  
+| ![Admin](./screenshots/admindashboard.png) | ![AWS User](./screenshots/awsuser.png) |  
 
 ---
 
@@ -88,7 +103,7 @@ Admin dashboard for secure verification and AWS deployment interface.
 
 ## ⚙️ Deployment
 
-Deployment follows a **Vercel + Netlify + AWS** setup :contentReference[oaicite:0]{index=0}:
+Deployment follows a **Vercel + Netlify + AWS** setup:
 
 1. Clone repo → `git clone <repo-url>`  
 2. Configure environment variables on **Netlify** (backend) and **Vercel** (frontend).  
@@ -114,7 +129,7 @@ Deployment follows a **Vercel + Netlify + AWS** setup :contentReference[oaicite:
 
 ## 📚 Learning Outcomes
 
-From this project, I (Ruffin) gained valuable technical and professional skills :contentReference[oaicite:15]{index=15}:  
+From this project, I (Ruffin) gained valuable technical and professional skills:  
 - **Technical:** React.js, Node.js/Express, MongoDB Atlas, AWS Cognito/S3, Ably API, Leaflet/OSM.  
 - **Professional:** Agile teamwork, sprint planning, client communication, technical documentation, problem-solving.  
 
